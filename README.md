@@ -1,10 +1,10 @@
-# attestomcp-website
+# credentagent-website
 
-The marketing/landing site for **AttestoMCP — the consent layer for AI agents**.
+The marketing/landing site for **CredentAgent — the consent layer for AI agents**.
 
 > An AI agent proves a verifiable credential from the user's wallet before a consequential
 > action completes. Identity leads; payments is one application.
-> Library: https://github.com/openmobilehub/attestomcp
+> Library: https://github.com/openmobilehub/credentagent
 
 ## What this is
 
@@ -25,7 +25,7 @@ GitHub Pages, via `.github/workflows/pages.yml`, on every push to `main`. Enable
 
 The **"Honest by design"** section mirrors the SDK's trust model. It must never claim a stronger
 guarantee than the library actually provides. The canonical source is
-`docs/reference/trust-model.md` in https://github.com/openmobilehub/attestomcp. When the SDK's
+`docs/reference/trust-model.md` in https://github.com/openmobilehub/credentagent. When the SDK's
 `trust_level` advances (e.g. to issuer-verified), update the trust table here to match — the site
 follows the SDK, never the reverse. Presence-only rails are labeled presence-only and are never
 presented as a real safety control.

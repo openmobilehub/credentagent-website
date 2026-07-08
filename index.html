@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AttestoMCP — the consent layer for AI agents</title>
+<title>CredentAgent — the consent layer for AI agents</title>
 <meta name="description" content="An AI agent proves a verifiable credential from the user's wallet before a consequential action completes. Identity leads; payments is one application. Open source, Apache-2.0.">
-<meta property="og:title" content="AttestoMCP — the consent layer for AI agents">
+<meta property="og:title" content="CredentAgent — the consent layer for AI agents">
 <meta property="og:description" content="Make AI agents ask first: prove a verifiable credential before a consequential action completes.">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary">
@@ -292,16 +292,16 @@
 
   <nav>
     <div class="nav-left">
-      <span class="wordmark">ATTESTOMCP</span>
+      <span class="wordmark">CREDENTAGENT</span>
       <span class="pill">v0.2 · OPENWALLET FOUNDATION · AAIF FOUNDATION</span>
     </div>
     <div class="nav-right">
       <div class="nav-links">
         <a href="#how">How it works</a>
-        <a href="https://github.com/openmobilehub/attestomcp/tree/main/docs/reference">Docs</a>
-        <a href="https://github.com/openmobilehub/attestomcp">GitHub</a>
+        <a href="https://github.com/openmobilehub/credentagent/tree/main/docs/reference">Docs</a>
+        <a href="https://github.com/openmobilehub/credentagent">GitHub</a>
       </div>
-      <a class="npm-btn" href="https://www.npmjs.com/package/@openmobilehub/attestomcp-gate">npm install</a>
+      <a class="npm-btn" href="https://www.npmjs.com/package/@openmobilehub/credentagent-gate">npm install</a>
     </div>
   </nav>
 
@@ -311,8 +311,8 @@
       <h1>AI agents are learning to act.<span class="ask">Make them ask first.</span></h1>
       <p class="subhead">An agent proves a verifiable credential from the user's wallet before a consequential action completes. <b style="color:var(--ink)">Identity leads; payments is one application.</b></p>
       <div class="ctas">
-        <a class="cta-primary" href="https://www.npmjs.com/package/@openmobilehub/attestomcp-gate">npm i @openmobilehub/attestomcp-gate</a>
-        <a class="cta-ghost" href="https://github.com/openmobilehub/attestomcp/tree/main/docs/reference">Read the docs →</a>
+        <a class="cta-primary" href="https://www.npmjs.com/package/@openmobilehub/credentagent-gate">npm i @openmobilehub/credentagent-gate</a>
+        <a class="cta-ghost" href="https://github.com/openmobilehub/credentagent/tree/main/docs/reference">Read the docs →</a>
       </div>
     </div>
 
@@ -320,7 +320,7 @@
       <div class="chat" role="img" aria-label="An AI agent pauses to prove age_over_21 and payment credentials from the user's wallet before placing an order.">
         <div class="chat-head">
           <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-          <span class="chat-title">agent session · attestomcp-gate</span>
+          <span class="chat-title">agent session · credentagent-gate</span>
         </div>
         <div class="chat-body" id="stage">
           <!-- 1: user message (typewriter) -->
@@ -374,7 +374,7 @@
   <section><div class="wrap">
     <div class="seclabel">Try it live</div>
     <h2>A complete MCP storefront — no setup required.</h2>
-    <p class="sub">attestomcp-storefront is a ready-to-run MCP server: nine shopping tools, a product widget, and a gated checkout. Add the hosted connector and order the whiskey — the age gate fires automatically.</p>
+    <p class="sub">credentagent-storefront is a ready-to-run MCP server: nine shopping tools, a product widget, and a gated checkout. Add the hosted connector and order the whiskey — the age gate fires automatically.</p>
     <div class="try-cols">
 
       <div>
@@ -411,7 +411,7 @@
         <div class="yt-embed">
           <div class="yt-frame-wrap">
             <iframe src="https://www.youtube.com/embed/biTqHo2dL7M"
-                    title="AttestoMCP — consent flow demo"
+                    title="CredentAgent — consent flow demo"
                     allowfullscreen loading="lazy" frameborder="0"></iframe>
           </div>
           <div class="yt-caption">
@@ -422,7 +422,7 @@
         <div class="demo-static" role="img" aria-label="An AI agent adds the whiskey, the checkout tool requires age_over_21, the user proves it on their device, and the order completes.">
           <div class="chat-head">
             <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-            <span class="chat-title">claude · attestomcp-storefront</span>
+            <span class="chat-title">claude · credentagent-storefront</span>
           </div>
           <div class="demo-body-static">
             <div class="s-row user"><div class="s-bubble">Add the whiskey and check out.</div></div>
@@ -435,13 +435,13 @@
         <div class="module-cards">
           <div class="module-card">
             <div class="module-role">Demo app</div>
-            <div class="module-pkg">attestomcp-storefront</div>
+            <div class="module-pkg">credentagent-storefront</div>
             <h4>Run &amp; customize</h4>
             <p>Nine MCP tools, product widget, gated checkout. Inject your catalog, own the code.</p>
           </div>
           <div class="module-card">
             <div class="module-role">Gate library</div>
-            <div class="module-pkg">attestomcp-gate</div>
+            <div class="module-pkg">credentagent-gate</div>
             <h4>Gate any app</h4>
             <p>Mount on any Express app. <code style="color:var(--teal)">required()</code> / <code style="color:var(--teal)">optional()</code> over any credential.</p>
           </div>
@@ -464,14 +464,14 @@
   <!-- QUICKSTART (gates as a ladder) -->
   <section style="background:var(--bg2)"><div class="wrap">
     <div class="seclabel">Quickstart</div><h2>Mount it on any app in ten lines.</h2>
-    <div class="code" style="max-width:48rem"><span class="c-key">import</span> { <span class="c-fn">createStorefront</span> } <span class="c-key">from</span> <span class="c-str">"@openmobilehub/attestomcp-storefront/server"</span>;
-<span class="c-key">import</span> { <span class="c-fn">AttestoMCP</span>, <span class="c-fn">age</span>, <span class="c-fn">membership</span>, <span class="c-fn">payment</span>, <span class="c-fn">required</span>, <span class="c-fn">optional</span> } <span class="c-key">from</span> <span class="c-str">"@openmobilehub/attestomcp-gate"</span>;
+    <div class="code" style="max-width:48rem"><span class="c-key">import</span> { <span class="c-fn">createStorefront</span> } <span class="c-key">from</span> <span class="c-str">"@openmobilehub/credentagent-storefront/server"</span>;
+<span class="c-key">import</span> { <span class="c-fn">CredentAgent</span>, <span class="c-fn">age</span>, <span class="c-fn">membership</span>, <span class="c-fn">payment</span>, <span class="c-fn">required</span>, <span class="c-fn">optional</span> } <span class="c-key">from</span> <span class="c-str">"@openmobilehub/credentagent-gate"</span>;
 
 <span class="c-key">const</span> store = <span class="c-fn">createStorefront</span>();
-<span class="c-key">const</span> attestomcp = <span class="c-key">new</span> <span class="c-fn">AttestoMCP</span>();
-attestomcp.<span class="c-fn">mount</span>(store.app);  <span class="c-cm">// wires the /attestomcp/* wallet rails</span>
+<span class="c-key">const</span> credentagent = <span class="c-key">new</span> <span class="c-fn">CredentAgent</span>();
+credentagent.<span class="c-fn">mount</span>(store.app);  <span class="c-cm">// wires the /credentagent/* wallet rails</span>
 
-store.<span class="c-fn">gate</span>((order) =&gt; attestomcp.<span class="c-fn">requirements</span>(order, [
+store.<span class="c-fn">gate</span>((order) =&gt; credentagent.<span class="c-fn">requirements</span>(order, [
   <span class="c-fn">required</span>(<span class="c-fn">age</span>.over(<span class="c-num">21</span>)),
   <span class="c-fn">optional</span>(<span class="c-fn">membership</span>.discount(<span class="c-num">10</span>)),
   <span class="c-fn">required</span>(<span class="c-fn">payment</span>.in(<span class="c-str">"usd"</span>)),
@@ -505,7 +505,7 @@ store.<span class="c-fn">gate</span>((order) =&gt; attestomcp.<span class="c-fn"
   <!-- FOR DEVELOPERS -->
   <section style="background:var(--bg2)"><div class="wrap">
     <div class="seclabel">For developers</div><h2>Two packages. Apache-2.0. Ships its own types.</h2>
-    <div class="cta"><span class="btn">@openmobilehub/attestomcp-gate</span><span class="btn-ghost">@openmobilehub/attestomcp-storefront</span><span style="color:var(--mut)">· Docs · Examples · Reference demo →</span></div>
+    <div class="cta"><span class="btn">@openmobilehub/credentagent-gate</span><span class="btn-ghost">@openmobilehub/credentagent-storefront</span><span style="color:var(--mut)">· Docs · Examples · Reference demo →</span></div>
   </div></section>
 
   <footer><div class="wrap">Apache-2.0 · GitHub · npm · An Open Mobile Hub project (Linux Foundation / OpenWallet Foundation) · heading to GDC</div></footer>

@@ -1,7 +1,7 @@
-# CLAUDE.md — attestomcp-website
+# CLAUDE.md — credentagent-website
 
 Project context for Claude (and humans). Read before editing. This repo is the **marketing/landing
-site for AttestoMCP** — "the consent layer for AI agents."
+site for CredentAgent** — "the consent layer for AI agents."
 
 ## What this is
 
@@ -9,19 +9,25 @@ A single, **self-contained** static landing page (`index.html`) — inline CSS +
 runtime dependencies**, no framework, no bundler, no build step. It renders identically opened
 directly from `file://`.
 
-- **Live:** https://openmobilehub.github.io/attestomcp-website/ (GitHub Pages, **GitHub Actions** source).
+- **Live:** https://openmobilehub.github.io/credentagent-website/ (GitHub Pages, **GitHub Actions** source).
 - **Deploy:** `.github/workflows/pages.yml` deploys on every push to `main`. Pages is already enabled
   (Settings → Pages → Source: GitHub Actions). A merge to `main` auto-redeploys.
 - **Local dev:** open `index.html` in a browser, or `python3 -m http.server` and visit it.
 
 ## The product it markets (so the copy stays accurate)
 
-AttestoMCP: an AI agent proves a verifiable credential from the user's wallet **before** a consequential
+CredentAgent: an AI agent proves a verifiable credential from the user's wallet **before** a consequential
 action completes. **Identity leads; payments is one application.** An OpenMobileHub / OpenWallet
 Foundation / AAIF Foundation project, heading to the Global Digital Collaboration Conference (Sept 1–2)
-co-presented with Multipaz. Two npm packages, both live at `0.2.0`: `@openmobilehub/attestomcp-gate`
-(the Gate — `new AttestoMCP()`, `attestomcp.mount(app)`, policy of `required()`/`optional()` credentials)
-and `@openmobilehub/attestomcp-storefront`.
+<<<<<<< HEAD
+co-presented with Multipaz. Two npm packages, both live at `0.2.0`: `@openmobilehub/credentagent-gate`
+(the Gate — `new CredentAgent()`, `credentagent.mount(app)`, policy of `required()`/`optional()` credentials)
+and `@openmobilehub/credentagent-storefront`.
+=======
+co-presented with Multipaz. Two npm packages, both live at `0.2.0`: `@openmobilehub/credentagent-gate`
+(the Gate — `new CredentAgent()`, `credentagent.mount(app)`, policy of `required()`/`optional()` credentials)
+and `@openmobilehub/credentagent-storefront`.
+>>>>>>> origin/main
 
 ## Design
 
@@ -54,7 +60,7 @@ and `@openmobilehub/attestomcp-storefront`.
   push straight to `main` without sign-off.
 - **Honesty rule (load-bearing):** the **"Honest by design"** trust table mirrors the SDK's
   `trust_level`. The site must **never** claim a stronger guarantee than the library actually provides.
-  Canonical source: `docs/reference/trust-model.md` in https://github.com/openmobilehub/attestomcp. When the
+  Canonical source: `docs/reference/trust-model.md` in https://github.com/openmobilehub/credentagent. When the
   SDK's `trust_level` advances (e.g. to issuer-verified), update the table here — **the site follows the
   SDK, never the reverse.** Presence-only rails are labeled presence-only and are never presented as a
   real safety control.
@@ -62,16 +68,16 @@ and `@openmobilehub/attestomcp-storefront`.
 ## Current state (2026-06-29)
 
 - The site is **LIVE and current**.
-- All repos and npm packages have been renamed: `openmobilehub/attestomcp` (library),
-  `openmobilehub/attestomcp-website` (this repo), `@openmobilehub/attestomcp-gate`,
-  `@openmobilehub/attestomcp-storefront`.
+- All repos and npm packages have been renamed: `openmobilehub/credentagent` (library),
+  `openmobilehub/credentagent-website` (this repo), `@openmobilehub/credentagent-gate`,
+  `@openmobilehub/credentagent-storefront`.
 - Open ideas for "continue updating the website" (not yet done): an OG/social image; a docs/blog; a
   custom domain (`CNAME`); splitting `index.html` into `styles.css` + `app.js` if it grows.
 
 ## Links
 
-- **Library (public):** https://github.com/openmobilehub/attestomcp
-- **npm:** https://www.npmjs.com/package/@openmobilehub/attestomcp-gate ·
-  https://www.npmjs.com/package/@openmobilehub/attestomcp-storefront
+- **Library (public):** https://github.com/openmobilehub/credentagent
+- **npm:** https://www.npmjs.com/package/@openmobilehub/credentagent-gate ·
+  https://www.npmjs.com/package/@openmobilehub/credentagent-storefront
 - **Reference demo + project dashboard (the cross-project hub, with `STATUS.md` + the design specs/plans):**
   https://github.com/openmobilehub/mcp-apps-shopping-demo
