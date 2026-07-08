@@ -1,4 +1,4 @@
-# AttestoMCP Website — Storefront First-Class & Rebrand
+# CredentAgent Website — Storefront First-Class & Rebrand
 
 _Date: 2026-06-29 · Status: approved design · Next: implementation (writing-plans)_
 
@@ -6,11 +6,11 @@ _Date: 2026-06-29 · Status: approved design · Next: implementation (writing-pl
 
 Three coordinated changes to `index.html`:
 
-1. **Brand rename** — "Attesto" → "AttestoMCP" everywhere on the site (product brand only; npm package names are published and do not change).
+1. **Brand rename** — "Attesto" → "CredentAgent" everywhere on the site (product brand only; npm package names are published and do not change).
 2. **Hero animation update** — demo product changes from `"Order the 2021 reserve cabernet."` to `"Add the whiskey and check out."` to match the real catalog item (`oak-whiskey`, 21+) and the attesto-storefront example script.
 3. **New "Try it live" section** — adds attesto-storefront as a first-class citizen alongside attesto-gate, with a hosted connector URL and two-column layout.
 
-## Rename: Attesto → AttestoMCP
+## Rename: Attesto → CredentAgent
 
 **Scope: website only.** npm package names (`@openmobilehub/attesto-gate`, `@openmobilehub/attesto-storefront`), GitHub repo names, and all external URLs are unchanged — they are already published and cannot be renamed here.
 
@@ -18,10 +18,10 @@ Three coordinated changes to `index.html`:
 
 | Location | Before | After |
 |---|---|---|
-| `<title>` | `Attesto — the consent layer…` | `AttestoMCP — the consent layer…` |
+| `<title>` | `Attesto — the consent layer…` | `CredentAgent — the consent layer…` |
 | `<meta name="description">` | `An AI agent proves…` | `An AI agent proves…` (unchanged, no brand name in it) |
-| `og:title` | `Attesto — the consent layer…` | `AttestoMCP — the consent layer…` |
-| Nav wordmark `.wordmark` | `ATTESTO` | `ATTESTOMCP` |
+| `og:title` | `Attesto — the consent layer…` | `CredentAgent — the consent layer…` |
+| Nav wordmark `.wordmark` | `ATTESTO` | `CREDENTAGENT` |
 | Nav pill `.pill` | `v0.1 · OPENWALLET FOUNDATION` | unchanged |
 | Hero eyebrow | `THE CONSENT LAYER FOR AI AGENTS` | unchanged |
 | Hero H1 | `AI agents are learning to act.` / `Make them ask first.` | unchanged |

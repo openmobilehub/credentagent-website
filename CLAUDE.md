@@ -19,9 +19,15 @@ directly from `file://`.
 CredentAgent: an AI agent proves a verifiable credential from the user's wallet **before** a consequential
 action completes. **Identity leads; payments is one application.** An OpenMobileHub / OpenWallet
 Foundation / AAIF Foundation project, heading to the Global Digital Collaboration Conference (Sept 1–2)
+<<<<<<< HEAD
 co-presented with Multipaz. Two npm packages, both live at `0.2.0`: `@openmobilehub/credentagent-gate`
 (the Gate — `new CredentAgent()`, `credentagent.mount(app)`, policy of `required()`/`optional()` credentials)
 and `@openmobilehub/credentagent-storefront`.
+=======
+co-presented with Multipaz. Two npm packages, both live at `0.2.0`: `@openmobilehub/credentagent-gate`
+(the Gate — `new CredentAgent()`, `credentagent.mount(app)`, policy of `required()`/`optional()` credentials)
+and `@openmobilehub/credentagent-storefront`.
+>>>>>>> origin/main
 
 ## Design
 
