@@ -849,7 +849,7 @@ var CADemo = (function () {
   api.pickWidget = function (toolsListResult, toolName) {
     var tools = (toolsListResult && toolsListResult.tools) || [];
     for (var i = 0; i < tools.length; i++) {
-      if (tools[i].name !== toolName) continue;
+      if (!tools[i] || tools[i].name !== toolName) continue;
       var meta = tools[i]._meta || {};
       var uri = (meta.ui && meta.ui.resourceUri) || meta['ui/resourceUri'];
       return uri ? { tool: tools[i], uri: uri } : null;
@@ -878,7 +878,7 @@ var CADemo = (function () {
   // What the agent says after checkout — derived ONLY from the real `requires` manifest.
   api.summarizeCheckout = function (result) {
     var body = api.toolText(result) || {};
-    var requires = Array.isArray(body.requires) ? body.requires : [];
+    var requires = (Array.isArray(body.requires) ? body.requires : []).filter(function (r) { return r && typeof r === 'object'; });
     var label = function (r) { return r.label || r.credential; };
     var required = requires.filter(function (r) { return r.required; });
     var optional = requires.filter(function (r) { return !r.required; });

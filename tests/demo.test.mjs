@@ -158,3 +158,19 @@ test('scenarios name the exact product to tap', () => {
   assert.equal(D.tapLine(D.SCENARIOS.whiskey), 'Tap + on the Oak Reserve Whiskey Collection, then Checkout.');
   assert.equal(D.tapLine(D.SCENARIOS.headphones), 'Tap + on the Aurora Wireless Headphones, then Checkout.');
 });
+
+test('summarizeCheckout and pickWidget skip malformed array entries instead of crashing', () => {
+  const s = plain(D.summarizeCheckout({ content: [{ type: 'text', text: JSON.stringify({
+    orderId: 'O', checkoutUrl: 'https://x/c',
+    requires: [null, 'junk', { credential: 'age', required: true, label: 'Age 21+' }] }) }] }));
+  assert.equal(s.gated, true);
+  assert.equal(s.chip, '→ 🔒 Age 21+');
+  const w = D.pickWidget({ tools: [null, 7, { name: 'browse-products', _meta: { ui: { resourceUri: 'ui://p.html' } } }] }, 'browse-products');
+  assert.equal(w.uri, 'ui://p.html');
+});
+
+test('summarizeCheckout reports optional credentials on an ungated order', () => {
+  const s = plain(D.summarizeCheckout(HEADPHONES_CHECKOUT));
+  assert.equal(s.lines[1], 'Optional: 10% member discount.');
+  assert.equal(s.chip, '→ 🔒 Pay (USD)');
+});
