@@ -174,3 +174,37 @@ test('summarizeCheckout reports optional credentials on an ungated order', () =>
   assert.equal(s.lines[1], 'Optional: 10% member discount.');
   assert.equal(s.chip, '→ 🔒 Pay (USD)');
 });
+
+// ---- sandboxing helpers ----
+test('buildSrcdoc enforces the widget’s declared CSP', () => {
+  const out = D.buildSrcdoc('<!doctype html><html><head><title>w</title></head><body></body></html>', {
+    resourceDomains: ['https://picsum.photos', 'data:'],
+    connectDomains: ['https://credentagent-demo-dev.vercel.app'],
+  });
+  assert.ok(out.includes(
+    '<head><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src \'unsafe-inline\'; ' +
+    'style-src \'unsafe-inline\'; img-src https://picsum.photos data:; font-src https://picsum.photos data:; ' +
+    'media-src https://picsum.photos data:; connect-src https://credentagent-demo-dev.vercel.app"><title>'));
+});
+
+test('buildSrcdoc locks everything down when no CSP is declared', () => {
+  const out = D.buildSrcdoc('<p>hi</p>', undefined);
+  assert.ok(out.startsWith('<meta http-equiv="Content-Security-Policy"'));
+  assert.ok(out.includes("img-src 'none'"));
+  assert.ok(out.includes("connect-src 'none'"));
+  assert.ok(out.endsWith('<p>hi</p>'));
+});
+
+test('run guard: only the latest run is current', () => {
+  const g = D.createRunGuard();
+  const a = g.next(), b = g.next();
+  assert.equal(g.isCurrent(a), false);
+  assert.equal(g.isCurrent(b), true);
+});
+
+test('acceptMessage only accepts messages from our own frame', () => {
+  const frame = {}, other = {};
+  assert.deepEqual(plain(D.acceptMessage({ source: frame, data: { jsonrpc: '2.0' } }, frame)), { jsonrpc: '2.0' });
+  assert.equal(D.acceptMessage({ source: other, data: { jsonrpc: '2.0' } }, frame), null);
+  assert.equal(D.acceptMessage({ source: frame, data: { jsonrpc: '2.0' } }, null), null);
+});

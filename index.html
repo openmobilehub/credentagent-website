@@ -904,6 +904,35 @@ var CADemo = (function () {
     return '✓ Order placed' + (money ? ' — ' + money : '') + '.';
   };
 
+  // Enforce the widget's own declared CSP (_meta.ui.csp) inside the sandboxed frame.
+  api.buildSrcdoc = function (html, csp) {
+    csp = csp || {};
+    var res = (csp.resourceDomains || []).join(' ') || "'none'";
+    var conn = (csp.connectDomains || []).join(' ') || "'none'";
+    var policy = [
+      "default-src 'none'", "script-src 'unsafe-inline'", "style-src 'unsafe-inline'",
+      'img-src ' + res, 'font-src ' + res, 'media-src ' + res, 'connect-src ' + conn
+    ].join('; ');
+    var meta = '<meta http-equiv="Content-Security-Policy" content="' + policy.replace(/"/g, '&quot;') + '">';
+    return /<head[^>]*>/i.test(html)
+      ? html.replace(/<head[^>]*>/i, function (m) { return m + meta; })
+      : meta + html;
+  };
+
+  // Each run gets a token; late replies from an abandoned run are dropped.
+  api.createRunGuard = function () {
+    var current = 0;
+    return {
+      next: function () { return ++current; },
+      isCurrent: function (t) { return t === current; }
+    };
+  };
+
+  // Only messages whose source is OUR iframe reach the bridge.
+  api.acceptMessage = function (event, frameWindow) {
+    return frameWindow && event && event.source === frameWindow ? event.data : null;
+  };
+
   return api;
 })();
 /* ca-demo-core:end */
