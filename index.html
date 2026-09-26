@@ -1289,5 +1289,232 @@ var CADemo = (function () {
 })();
 /* ca-demo-core:end */
 </script>
+<script>
+// In-browser agent demo — see docs/superpowers/specs/2026-09-25-in-browser-agent-design.md
+(function(){
+  var root = document.getElementById('demo');
+  if (!root || !window.CADemo) return;
+  var D = window.CADemo;
+  var ENDPOINT = '/marketplace-dev/mcp';     // same-origin via the credentagent.ai router; '/marketplace/mcp' = published 0.4.0
+  var WIDGET_TOOL = 'browse-products';
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var log = document.getElementById('demo-log');
+  var resetBtn = document.getElementById('demo-reset');
+  var scnBtns = [].slice.call(root.querySelectorAll('.demo-scn'));
+
+  if (!D.isDemoOrigin(location.hostname)) {
+    document.getElementById('demo-offsite').hidden = false;
+    scnBtns.forEach(function(b){ b.disabled = true; });
+    return;
+  }
+
+  var mcp = D.createMcpClient({ endpoint: ENDPOINT, fetch: window.fetch.bind(window) });
+  var guard = D.createRunGuard();
+  var run = null;   // { token, frame, bridge, onMessage, readyTimer, ready }
+
+  function el(tag, cls, text){ var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+  function pause(ms){ return new Promise(function(r){ setTimeout(r, reduce ? 0 : ms); }); }
+  function add(node){ log.appendChild(node); return node; }
+  function say(who, text, cls){
+    var row = el('div', 'd-row ' + who);
+    row.appendChild(el('div', 'd-bubble' + (cls ? ' ' + cls : ''), text));
+    return add(row);
+  }
+  function chip(label, args){
+    var c = el('div', 'd-chip');
+    c.appendChild(document.createTextNode('⚙ '));
+    c.appendChild(el('b', null, label));
+    var a = D.formatArgs(args);
+    if (a) c.appendChild(document.createTextNode(' ' + a));
+    var st = el('span', 'st', '…');
+    c.appendChild(st);
+    add(c);
+    var t0 = performance.now();
+    return {
+      ok: function(extra){ c.classList.add('ok'); st.textContent = '✓ ' + Math.round(performance.now() - t0) + ' ms' + (extra ? ' ' + extra : ''); },
+      fail: function(msg){ c.classList.add('err'); st.textContent = '✗ ' + msg; }
+    };
+  }
+  // Every MCP call — the page's own and the widget's (via the bridge) — shows as one real chip.
+  function rpc(token, method, params, label, chipArgs, describe){
+    var c = chip(label, chipArgs);
+    return mcp.call(method, params).then(function(result){
+      if (guard.isCurrent(token)) {
+        if (result && result.isError) c.fail('tool error');
+        else c.ok(describe ? describe(result) : '');
+      }
+      return result;
+    }, function(err){
+      if (guard.isCurrent(token)) c.fail(err.message);
+      throw err;
+    });
+  }
+  function tool(token, name, args, describe){
+    return rpc(token, 'tools/call', { name: name, arguments: args || {} }, name, args, describe);
+  }
+
+  function teardown(){
+    if (!run) return;
+    clearTimeout(run.readyTimer);
+    if (run.onMessage) window.removeEventListener('message', run.onMessage);
+    if (run.bridge) run.bridge.teardown();
+    if (run.frame && run.frame.parentNode) run.frame.parentNode.removeChild(run.frame);
+    run = null;
+  }
+  function reset(){
+    guard.next();
+    teardown();
+    log.textContent = '';
+    scnBtns.forEach(function(b){ b.setAttribute('aria-pressed', 'false'); });
+    resetBtn.hidden = true;
+  }
+  function retryRow(message, retry){
+    say('agent', message, 'err');
+    var actions = el('div', 'd-actions');
+    var again = el('button', 'd-link', 'Retry');
+    again.type = 'button';
+    again.addEventListener('click', retry);
+    var alt = el('button', 'd-link', 'Use it in Claude / ChatGPT / Goose instead');
+    alt.type = 'button';
+    alt.addEventListener('click', function(){ document.getElementById('t-connector').click(); });
+    actions.appendChild(again);
+    actions.appendChild(alt);
+    add(actions);
+  }
+
+  function start(key){
+    reset();
+    var s = D.SCENARIOS[key], token = guard.next();
+    var state = { browse: null, checkout: null, handedOff: false, done: false };
+    run = { token: token };
+    scnBtns.forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-scenario') === key ? 'true' : 'false'); });
+    resetBtn.hidden = false;
+    var retry = function(){ start(key); };
+    var widget;
+
+    say('user', s.prompt);
+    pause(450).then(function(){
+      if (!guard.isCurrent(token)) return;
+      say('agent', 'Let me open the store.');
+      return rpc(token, 'tools/list', {}, 'tools/list').then(function(list){
+        widget = D.pickWidget(list, WIDGET_TOOL);
+        if (!widget) throw new Error('the store has no product picker');
+        return tool(token, WIDGET_TOOL, {});
+      }).then(function(browse){
+        state.browse = browse;
+        return rpc(token, 'resources/read', { uri: widget.uri }, 'resources/read', { uri: widget.uri });
+      }).then(function(read){
+        if (!guard.isCurrent(token)) return;
+        var content = read && read.contents && read.contents[0];
+        if (!content || !content.text) throw new Error('the product picker resource is empty');
+        mountWidget(token, s, widget, state, content, retry);
+      }).catch(function(err){
+        if (guard.isCurrent(token)) retryRow('The demo store isn’t responding right now (' + err.message + ').', retry);
+      });
+    });
+  }
+
+  function mountWidget(token, s, widget, state, content, retry){
+    var r = run;
+    var frame = el('iframe', 'd-frame');
+    frame.setAttribute('sandbox', 'allow-scripts allow-forms');
+    frame.setAttribute('title', 'Product picker — the MCP app served by the CredentAgent storefront');
+    frame.srcdoc = D.buildSrcdoc(content.text, content._meta && content._meta.ui && content._meta.ui.csp);
+
+    var bridge = D.createHostBridge({
+      post: function(m){ if (frame.contentWindow) frame.contentWindow.postMessage(m, '*'); },
+      context: { toolInfo: { tool: widget.tool } },
+      callTool: function(name, args){
+        var describe = name === 'checkout' ? function(res){ return D.summarizeCheckout(res).chip; } : null;
+        return tool(token, name, args, describe).then(function(result){
+          if (guard.isCurrent(token) && name === 'checkout') onCheckout(token, state, result);
+          return result;
+        });
+      },
+      onReady: function(){
+        if (!guard.isCurrent(token)) return;
+        clearTimeout(r.readyTimer);
+        r.ready = true;
+        bridge.notify('ui/notifications/tool-input', { arguments: {} });
+        bridge.notify('ui/notifications/tool-result', state.browse);
+        pause(300).then(function(){ if (guard.isCurrent(token)) say('agent', D.tapLine(s)); });
+      },
+      onSize: function(h){ if (typeof h === 'number' && h > 0) frame.style.height = Math.min(h, 900) + 'px'; },
+      onOpenLink: function(url){ if (guard.isCurrent(token)) handOff(token, state, url); },
+      onModelContext: function(){ if (guard.isCurrent(token)) finish(token, state, false); }
+    });
+
+    var onMessage = function(e){
+      var msg = D.acceptMessage(e, frame.contentWindow);
+      if (msg && guard.isCurrent(token)) bridge.handle(msg);
+    };
+    window.addEventListener('message', onMessage);
+    r.frame = frame; r.bridge = bridge; r.onMessage = onMessage;
+    r.readyTimer = setTimeout(function(){
+      if (!guard.isCurrent(token) || r.ready) return;
+      teardown();
+      retryRow('The product picker didn’t load.', retry);
+    }, 10000);
+    add(frame);
+  }
+
+  function onCheckout(token, state, result){
+    var sum = D.summarizeCheckout(result);
+    if (!sum.ok) return;
+    state.checkout = sum;
+    sum.lines.forEach(function(line, i){
+      pause(250 * (i + 1)).then(function(){ if (guard.isCurrent(token)) say('agent', line); });
+    });
+  }
+
+  function handOff(token, state, url){
+    if (state.handedOff) return;
+    state.handedOff = true;
+    var card = el('div', 'd-card');
+    var showQr = window.matchMedia && window.matchMedia('(pointer: fine)').matches;
+    if (showQr) {
+      try {
+        var qr = el('div', 'qr');
+        qr.innerHTML = D.qrSvg(url, 264);    // generated SVG: path data only, no URL text inside
+        card.appendChild(qr);
+      } catch (e) { showQr = false; }
+    }
+    var body = el('div', 'body');
+    var go = el('a', 'btn', 'Continue to checkout ↗');
+    go.href = url; go.target = '_blank'; go.rel = 'noopener';
+    body.appendChild(go);
+    function line(html){ var n = el('div'); n.innerHTML = html; body.appendChild(n); }   // static strings only
+    line('📱 Proving needs <a href="https://apps.multipaz.org" target="_blank" rel="noopener">Multipaz Wallet</a> · Chrome 141+ on Android or iOS 18+ — the checkout page uses the W3C Digital Credentials API.');
+    if (showQr) line('On a computer? Scan the QR code to open this checkout on your phone.');
+    line('No wallet or unsupported browser? The checkout page offers an <b>instant demo</b> button.');
+    var check = el('button', 'd-link', 'I’ve finished — check the order');
+    check.type = 'button';
+    check.addEventListener('click', function(){ finish(token, state, true); });
+    body.appendChild(check);
+    body.appendChild(el('div', 'honest', '🔒 presence-only-demo · the wire crypto is real; the issuer trust anchor is not'));
+    card.appendChild(body);
+    add(card);
+    say('agent', 'I’ll wait here while you prove it.');
+  }
+
+  // Completion is read from the SETTLED order — never assumed.
+  function finish(token, state, manual){
+    if (state.done || !state.checkout) return;
+    var origin = new URL(state.checkout.checkoutUrl).origin;
+    fetch(origin + '/checkout/order-status?orderId=' + encodeURIComponent(state.checkout.orderId))
+      .then(function(res){ return res.ok ? res.json() : null; })
+      .then(function(s){
+        if (!guard.isCurrent(token) || state.done) return;
+        if (s && s.completed) { state.done = true; say('agent', D.completionLine(s.order), 'ok'); }
+        else if (manual) say('agent', 'Not completed yet — finish the proof and payment on the checkout page, then check again.');
+      }, function(){
+        if (manual && guard.isCurrent(token)) say('agent', 'I couldn’t reach the order status just now — try again in a moment.', 'err');
+      });
+  }
+
+  scnBtns.forEach(function(b){ b.addEventListener('click', function(){ start(b.getAttribute('data-scenario')); }); });
+  resetBtn.addEventListener('click', reset);
+})();
+</script>
 </body>
 </html>
