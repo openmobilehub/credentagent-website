@@ -9,7 +9,9 @@ A single, **self-contained** static landing page (`index.html`) — inline CSS +
 runtime dependencies**, no framework, no bundler, no build step. It renders identically opened
 directly from `file://`.
 
-- **Live:** https://openmobilehub.github.io/credentagent-website/ (GitHub Pages, **GitHub Actions** source).
+- **Live:** https://credentagent.ai/ — the `credentagent.ai` router (in the library repo, `deploy/router`)
+  serves this same page under that domain; also at https://openmobilehub.github.io/credentagent-website/
+  (GitHub Pages, **GitHub Actions** source). All serve the identical `index.html`.
 - **Deploy:** `.github/workflows/pages.yml` deploys on every push to `main`. Pages is already enabled
   (Settings → Pages → Source: GitHub Actions). A merge to `main` auto-redeploys.
 - **Local dev:** open `index.html` in a browser, or `python3 -m http.server` and visit it.
@@ -19,15 +21,10 @@ directly from `file://`.
 CredentAgent: an AI agent proves a verifiable credential from the user's wallet **before** a consequential
 action completes. **Identity leads; payments is one application.** An OpenMobileHub / OpenWallet
 Foundation / AAIF Foundation project, heading to the Global Digital Collaboration Conference (Sept 1–2)
-<<<<<<< HEAD
-co-presented with Multipaz. Two npm packages, both live at `0.2.0`: `@openmobilehub/credentagent-gate`
-(the Gate — `new CredentAgent()`, `credentagent.mount(app)`, policy of `required()`/`optional()` credentials)
-and `@openmobilehub/credentagent-storefront`.
-=======
-co-presented with Multipaz. Two npm packages, both live at `0.2.0`: `@openmobilehub/credentagent-gate`
-(the Gate — `new CredentAgent()`, `credentagent.mount(app)`, policy of `required()`/`optional()` credentials)
-and `@openmobilehub/credentagent-storefront`.
->>>>>>> origin/main
+co-presented with Multipaz. Two npm packages, versioned in lockstep, both live at `0.4.0`:
+`@openmobilehub/credentagent-gate` (the Gate — `new CredentAgent()`, `credentagent.mount(app)`, policy of
+`required()`/`optional()` credentials, plus `orders`, `grants`, `webhooks`, `defineHost()`, `doctor()`,
+`branding`) and `@openmobilehub/credentagent-storefront`.
 
 ## Design
 
@@ -39,6 +36,7 @@ and `@openmobilehub/credentagent-storefront`.
   statically, no motion).
 - **Sections (top→bottom):** sticky nav → animated hero → problem band → try-it-live (YouTube demo +
   hosted connector) → how-it-works (3 cards) → quickstart (gate policy ladder with imports) →
+  **what's new** (tabbed code: orders / grants / defineHost / webhooks + doctor/branding/iPhone cards) →
   gate-any-credential → **Honest by design** (the trust table) → built-on-open-standards →
   for-developers → footer.
 - **Full rationale:** `docs/2026-06-28-attesto-website-design.md` (a synced copy; the canonical version
@@ -65,14 +63,25 @@ and `@openmobilehub/credentagent-storefront`.
   SDK, never the reverse.** Presence-only rails are labeled presence-only and are never presented as a
   real safety control.
 
-## Current state (2026-06-29)
+## Current state (2026-09-25)
 
-- The site is **LIVE and current**.
+- The site reflects the published **0.4.0** packages (not unreleased `main`). Hosted connector:
+  `https://credentagent.ai/marketplace/mcp` (dev twin running `main`: `/marketplace-dev/mcp`).
 - All repos and npm packages have been renamed: `openmobilehub/credentagent` (library),
   `openmobilehub/credentagent-website` (this repo), `@openmobilehub/credentagent-gate`,
   `@openmobilehub/credentagent-storefront`.
-- Open ideas for "continue updating the website" (not yet done): an OG/social image; a docs/blog; a
-  custom domain (`CNAME`); splitting `index.html` into `styles.css` + `app.js` if it grows.
+- Open ideas for "continue updating the website" (not yet done): an OG/social image; a docs/blog;
+  splitting `index.html` into `styles.css` + `app.js` if it grows. (Custom domain: done — `credentagent.ai`
+  via the router, no `CNAME` needed here.)
+- **Idea — in-browser agent (2026-09-25, not started):** let visitors trigger the flow from the page itself,
+  with no connector registration in Claude/ChatGPT/Gemini: drive the hosted MCP store, render the MCP app /
+  product picker, fire the checkout, and hand the proof to the wallet — with a clear "install Multipaz
+  Wallet" prompt. Open questions: scripted (no LLM) vs. a real LLM (needs a backend for the API key — not
+  static); CORS on `credentagent.ai/marketplace/mcp`; this breaks the zero-network-calls convention, so it
+  needs an explicit carve-out like the YouTube embed.
+- **Idea — zero-install web wallet (2026-09-25, not started):** a browser-based wallet holding a generic
+  demo credential, so a visitor can complete a proof without installing anything. Must stay labeled
+  `presence-only-demo` per the honesty rule.
 
 ## Links
 
