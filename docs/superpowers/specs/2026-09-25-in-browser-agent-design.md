@@ -67,8 +67,10 @@ Four small units:
 ## Data flow
 
 1. Visitor clicks a scenario → `chat` user bubble → agent: "Let me open the store."
-2. `mcp` `tools/call browse-products` → chip → `_meta.ui.resourceUri`.
-3. `mcp` `resources/read {uri}` → `host` creates the iframe.
+2. `mcp` `tools/list` → chip → the `browse-products` **definition's** `_meta.ui.resourceUri`
+   (the call *result* carries only `_meta["product-picker/catalog"|"product-picker/cart"]`, verified 2026-09-25).
+   Then `tools/call browse-products` → chip (its result is later sent to the widget).
+3. `mcp` `resources/read {uri}` → chip → `host` creates the iframe.
 4. **Handshake:**
    - widget → `ui/initialize`: reply with `protocolVersion`, `hostInfo`, `hostCapabilities` (open links,
      server tools, model context), `hostContext` (`theme: "dark"`, `displayMode: "inline"`)
@@ -89,7 +91,12 @@ Four small units:
    - 🔒 presence-only-demo · the wire crypto is real; the issuer trust anchor is not
 9. On the gate tab: "Verify with my digital ID" → DC API → Multipaz → Pay.
 10. The widget's own `order-status` polling sees `completed: true` → `get-cart` (relayed, chip) →
-    `ui/update-model-context` → agent: "✓ Order placed: $124 USD."
+    `ui/update-model-context`. The page then reads `<checkout origin>/checkout/order-status?orderId=…`
+    itself (`Access-Control-Allow-Origin: *`) and says "✓ Order placed: $<order.amount>". It uses the
+    **settled** amount (a member discount changes it); it never uses the cart, because the widget's
+    final `get-cart` returns the emptied cart.
+11. The widget stops polling after 5 minutes. The hand-off card therefore has an
+    **"I've finished — check the order"** button that does the same `order-status` read on demand.
 
 **Honesty invariants:**
 - Every chip is a real call with its real latency.
