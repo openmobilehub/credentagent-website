@@ -305,3 +305,17 @@ test('bridge.notify and bridge.teardown post the right shapes', () => {
   assert.equal(posted[1].method, 'ui/resource-teardown');
   assert.equal(posted[1].id, 'teardown-1');
 });
+
+test('bridge acknowledges the widget even if the page callback throws', () => {
+  const { bridge, posted } = makeBridge({ onOpenLink: () => { throw new Error('boom'); }, onModelContext: () => { throw new Error('boom'); } });
+  assert.throws(() => bridge.handle({ jsonrpc: '2.0', id: 10, method: 'ui/open-link', params: { url: 'https://x' } }));
+  assert.throws(() => bridge.handle({ jsonrpc: '2.0', id: 11, method: 'ui/update-model-context', params: {} }));
+  assert.deepEqual(posted, [{ jsonrpc: '2.0', id: 10, result: {} }, { jsonrpc: '2.0', id: 11, result: {} }]);
+});
+
+test('bridge never posts an undefined tool result', async () => {
+  const { bridge, posted } = makeBridge({ callTool: () => Promise.resolve(undefined) });
+  bridge.handle({ jsonrpc: '2.0', id: 12, method: 'tools/call', params: { name: 'get-cart', arguments: {} } });
+  await tick();
+  assert.deepEqual(posted[0], { jsonrpc: '2.0', id: 12, result: { content: [] } });
+});

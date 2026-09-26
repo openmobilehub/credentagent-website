@@ -951,6 +951,7 @@ var CADemo = (function () {
       var p = msg.params || {};
       switch (msg.method) {
         case 'ui/initialize':
+          // h.context.toolInfo.tool must be the full MCP Tool from tools/list (name + inputSchema): the App zod-validates it.
           reply(msg.id, {
             protocolVersion: p.protocolVersion || api.HOST_PROTOCOL,
             hostInfo: { name: 'credentagent.ai', version: '1.0.0' },
@@ -961,16 +962,16 @@ var CADemo = (function () {
         case 'tools/call':
           Promise.resolve()
             .then(function () { return h.callTool(p.name, p.arguments || {}); })
-            .then(function (result) { reply(msg.id, result); },
+            .then(function (result) { reply(msg.id, result || { content: [] }); },
                   function (err) { fail(msg.id, -32603, (err && err.message) || 'Tool call failed'); });
           return;
         case 'ui/open-link':
-          if (h.onOpenLink) h.onOpenLink(p.url);
           reply(msg.id, {});
+          if (h.onOpenLink) h.onOpenLink(p.url);
           return;
         case 'ui/update-model-context':
-          if (h.onModelContext) h.onModelContext(p);
           reply(msg.id, {});
+          if (h.onModelContext) h.onModelContext(p);
           return;
         case 'ui/message':
           reply(msg.id, {});
