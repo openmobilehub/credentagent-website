@@ -102,7 +102,7 @@ Four small units:
 - Every chip is a real call with its real latency.
 - Agent lines are scripted but only ever *react* to real results.
 - The page never calls `set-quantity` or `checkout`.
-- A ✓ is shown only after the widget reports completion.
+- A ✓ is shown only after `order-status` reports `completed: true` (triggered by the widget's completion signal or the visitor's 'check the order' button).
 
 ## Error handling
 

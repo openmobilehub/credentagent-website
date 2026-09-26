@@ -322,6 +322,8 @@
     .caret{display:none}
     .gate.pulsing .gate-ring{animation:none;opacity:.4}
     .beam{display:none}
+    .demo-scn{transition:none}
+    .demo-scn:hover{transform:none}
   }
 
   /* ---------- responsive ---------- */
@@ -1358,6 +1360,10 @@ var CADemo = (function () {
   }
   // Every MCP call — the page's own and the widget's (via the bridge) — shows as one real chip.
   function rpc(token, method, params, label, chipArgs, describe){
+    if (!guard.isCurrent(token)) {          // an abandoned run: no chip, no network
+      var stale = new Error('stale run'); stale.kind = 'stale';
+      return Promise.reject(stale);
+    }
     var c = chip(label, chipArgs);
     return mcp.call(method, params).then(function(result){
       if (guard.isCurrent(token)) {
@@ -1397,7 +1403,7 @@ var CADemo = (function () {
     again.addEventListener('click', retry);
     var alt = el('button', 'd-link', 'Use it in Claude / ChatGPT / Goose instead');
     alt.type = 'button';
-    alt.addEventListener('click', function(){ document.getElementById('t-connector').click(); });
+    alt.addEventListener('click', function(){ var t = document.getElementById('t-connector'); t.click(); t.focus(); });
     actions.appendChild(again);
     actions.appendChild(alt);
     add(actions);
@@ -1406,7 +1412,7 @@ var CADemo = (function () {
   function start(key){
     reset();
     var s = D.SCENARIOS[key], token = guard.next();
-    var state = { browse: null, checkout: null, handedOff: false, done: false };
+    var state = { browse: null, checkout: null, handedOff: false, card: null, checking: false, checkBtn: null, done: false };
     run = { token: token };
     scnBtns.forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-scenario') === key ? 'true' : 'false'); });
     resetBtn.hidden = false;
@@ -1418,10 +1424,12 @@ var CADemo = (function () {
       if (!guard.isCurrent(token)) return;
       say('agent', 'Let me open the store.');
       return rpc(token, 'tools/list', {}, 'tools/list').then(function(list){
+        if (!guard.isCurrent(token)) return;
         widget = D.pickWidget(list, WIDGET_TOOL);
         if (!widget) throw new Error('the store has no product picker');
         return tool(token, WIDGET_TOOL, {});
       }).then(function(browse){
+        if (!guard.isCurrent(token)) return;
         state.browse = browse;
         return rpc(token, 'resources/read', { uri: widget.uri }, 'resources/read', { uri: widget.uri });
       }).then(function(read){
@@ -1430,6 +1438,7 @@ var CADemo = (function () {
         if (!content || !content.text) throw new Error('the product picker resource is empty');
         mountWidget(token, s, widget, state, content, retry);
       }).catch(function(err){
+        if (err && err.kind === 'stale') return;
         if (guard.isCurrent(token)) retryRow('The demo store isn’t responding right now (' + err.message + ').', retry);
       });
     });
@@ -1444,6 +1453,7 @@ var CADemo = (function () {
 
     var bridge = D.createHostBridge({
       post: function(m){ if (frame.contentWindow) frame.contentWindow.postMessage(m, '*'); },
+      allowTools: ['browse-products', 'get-cart', 'set-quantity', 'add-to-cart', 'remove-from-cart', 'checkout'],
       context: { toolInfo: { tool: widget.tool } },
       callTool: function(name, args){
         var describe = name === 'checkout' ? function(res){ return D.summarizeCheckout(res).chip; } : null;
@@ -1454,6 +1464,7 @@ var CADemo = (function () {
       },
       onReady: function(){
         if (!guard.isCurrent(token)) return;
+        if (r.ready) return;                  // a repeated initialized must not replay the result
         clearTimeout(r.readyTimer);
         r.ready = true;
         bridge.notify('ui/notifications/tool-input', { arguments: {} });
@@ -1482,15 +1493,23 @@ var CADemo = (function () {
   function onCheckout(token, state, result){
     var sum = D.summarizeCheckout(result);
     if (!sum.ok) return;
+    if (state.card) {                          // a re-checkout replaces the old order's hand-off
+      if (state.card.parentNode) state.card.parentNode.removeChild(state.card);
+      state.card = null;
+      state.checkBtn = null;
+    }
+    state.handedOff = false;
+    state.done = false;
     state.checkout = sum;
     sum.lines.forEach(function(line){ say('agent', line); });
   }
 
   function handOff(token, state, url){
     if (state.handedOff) return;
-    if (!D.isHttpsUrl(url)) return;
+    if (!D.isHandoffUrl(state.checkout, url)) return;   // only the checkout this page itself received
     state.handedOff = true;
     var card = el('div', 'd-card');
+    state.card = card;
     var showQr = window.matchMedia && window.matchMedia('(pointer: fine)').matches;
     if (showQr) {
       try {
@@ -1510,6 +1529,7 @@ var CADemo = (function () {
     var check = el('button', 'd-link', 'I’ve finished — check the order');
     check.type = 'button';
     check.addEventListener('click', function(){ finish(token, state, true); });
+    state.checkBtn = check;
     body.appendChild(check);
     body.appendChild(el('div', 'honest', '🔒 presence-only-demo · the wire crypto is real; the issuer trust anchor is not'));
     card.appendChild(body);
@@ -1519,16 +1539,24 @@ var CADemo = (function () {
 
   // Completion is read from the SETTLED order — never assumed.
   function finish(token, state, manual){
-    if (state.done || !state.checkout) return;
-    var origin = new URL(state.checkout.checkoutUrl).origin;
-    fetch(origin + '/checkout/order-status?orderId=' + encodeURIComponent(state.checkout.orderId))
+    if (state.done || state.checking || !state.checkout) return;
+    state.checking = true;
+    var co = state.checkout;                   // the reply must belong to the order we asked about
+    var origin = new URL(co.checkoutUrl).origin;
+    fetch(origin + '/checkout/order-status?orderId=' + encodeURIComponent(co.orderId))
       .then(function(res){ return res.ok ? res.json() : null; })
       .then(function(s){
-        if (!guard.isCurrent(token) || state.done) return;
-        if (s && s.completed) { state.done = true; say('agent', D.completionLine(s.order), 'ok'); }
+        state.checking = false;
+        if (!guard.isCurrent(token) || state.done || state.checkout !== co) return;
+        if (s && s.completed) {
+          state.done = true;
+          if (state.checkBtn) state.checkBtn.disabled = true;
+          say('agent', D.completionLine(s.order), 'ok');
+        }
         else if (manual) say('agent', 'Not completed yet — finish the proof and payment on the checkout page, then check again.');
       }, function(){
-        if (manual && guard.isCurrent(token)) say('agent', 'I couldn’t reach the order status just now — try again in a moment.', 'err');
+        state.checking = false;
+        if (manual && guard.isCurrent(token) && state.checkout === co) say('agent', 'I couldn’t reach the order status just now — try again in a moment.', 'err');
       });
   }
 

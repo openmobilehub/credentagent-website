@@ -88,7 +88,9 @@ co-presented with Multipaz. Two npm packages, versioned in lockstep, both live a
 
 ## Current state (2026-09-25)
 
-- The site reflects the published **0.4.0** packages (not unreleased `main`). Hosted connector:
+- The site reflects the published **0.4.0** packages (not unreleased `main`) — except the in-browser
+  demo, which deliberately targets `/marketplace-dev/mcp` (library `main`), so a library merge can change
+  or break it; `node tests/contract.mjs` catches that. Hosted connector:
   `https://credentagent.ai/marketplace/mcp` (dev twin running `main`: `/marketplace-dev/mcp`).
 - All repos and npm packages have been renamed: `openmobilehub/credentagent` (library),
   `openmobilehub/credentagent-website` (this repo), `@openmobilehub/credentagent-gate`,
