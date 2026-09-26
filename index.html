@@ -943,8 +943,12 @@ var CADemo = (function () {
   };
 
   // What the agent says after checkout — derived ONLY from the real `requires` manifest.
+  // Only an absolute https URL may become a link, a QR code, or an order-status origin.
+  api.isHttpsUrl = function (u) { return typeof u === 'string' && /^https:\/\/[^\s\/?#]+[^\s]*$/i.test(u); };
+
   api.summarizeCheckout = function (result) {
     var body = api.toolText(result) || {};
+    var url = api.isHttpsUrl(body.checkoutUrl) ? body.checkoutUrl : null;
     var requires = (Array.isArray(body.requires) ? body.requires : []).filter(function (r) { return r && typeof r === 'object'; });
     var label = function (r) { return r.label || r.credential; };
     var required = requires.filter(function (r) { return r.required; });
@@ -956,9 +960,9 @@ var CADemo = (function () {
     else lines.push('Nothing to prove for this order.');
     if (optional.length) lines.push('Optional: ' + optional.map(label).join(' · ') + '.');
     return {
-      ok: !!body.checkoutUrl,
+      ok: !!url,
       orderId: body.orderId || null,
-      checkoutUrl: body.checkoutUrl || null,
+      checkoutUrl: url,
       gated: !!age,
       chip: required.length ? '→ 🔒 ' + required.map(label).join(' · ') : '→ no requirements',
       lines: lines
@@ -1469,6 +1473,7 @@ var CADemo = (function () {
 
   function handOff(token, state, url){
     if (state.handedOff) return;
+    if (!D.isHttpsUrl(url)) return;
     state.handedOff = true;
     var card = el('div', 'd-card');
     var showQr = window.matchMedia && window.matchMedia('(pointer: fine)').matches;

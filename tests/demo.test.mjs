@@ -342,3 +342,13 @@ test('qrSvg renders a quiet-zoned, sized SVG', () => {
   assert.ok(svg.startsWith('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29 29" width="264" height="264"'));
   assert.ok(svg.includes('<path d="M4 4h1v1h-1z'));                 // top-left finder corner, after the 4-module quiet zone
 });
+
+test('summarizeCheckout only trusts an absolute https checkoutUrl', () => {
+  const mk = (url) => plain(D.summarizeCheckout({ content: [{ type: 'text', text: JSON.stringify({ orderId: 'O', checkoutUrl: url, requires: [] }) }] }));
+  assert.equal(mk('https://demo.example/checkout?order=O').ok, true);
+  for (const bad of ['javascript:alert(1)', '/checkout?order=O', 'http://demo.example/c', 'https://', 'not a url']) {
+    const s = mk(bad);
+    assert.equal(s.ok, false, bad);
+    assert.equal(s.checkoutUrl, null, bad);
+  }
+});
