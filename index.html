@@ -834,6 +834,76 @@ var CADemo = (function () {
     };
   };
 
+  // Product names match the storefront catalog exactly (verified via browse-products).
+  api.SCENARIOS = {
+    whiskey:    { key: 'whiskey',    prompt: 'Buy the Oak Reserve whiskey.', product: 'Oak Reserve Whiskey Collection' },
+    headphones: { key: 'headphones', prompt: 'Buy the Aurora headphones.',   product: 'Aurora Wireless Headphones' }
+  };
+  api.tapLine = function (s) { return 'Tap + on the ' + s.product + ', then Checkout.'; };
+
+  api.isDemoOrigin = function (hostname) {
+    return ['credentagent.ai', 'www.credentagent.ai', 'localhost', '127.0.0.1'].indexOf(hostname) !== -1;
+  };
+
+  // The widget URI lives on the tool DEFINITION (tools/list), not on the call result.
+  api.pickWidget = function (toolsListResult, toolName) {
+    var tools = (toolsListResult && toolsListResult.tools) || [];
+    for (var i = 0; i < tools.length; i++) {
+      if (tools[i].name !== toolName) continue;
+      var meta = tools[i]._meta || {};
+      var uri = (meta.ui && meta.ui.resourceUri) || meta['ui/resourceUri'];
+      return uri ? { tool: tools[i], uri: uri } : null;
+    }
+    return null;
+  };
+
+  api.formatArgs = function (args) {
+    var s = JSON.stringify(args || {});
+    if (s === '{}') return '';
+    return s.length > 60 ? s.slice(0, 57) + '…' : s;
+  };
+
+  api.toolText = function (result) {
+    var c = result && result.content && result.content[0];
+    if (!c || c.type !== 'text') return null;
+    try { return JSON.parse(c.text); } catch (e) { return null; }
+  };
+
+  api.fmtMoney = function (amount, currency) {
+    if (typeof amount !== 'number') return '';
+    var cur = (currency || 'USD').toUpperCase();
+    return cur === 'USD' ? '$' + amount.toFixed(2) : amount.toFixed(2) + ' ' + cur;
+  };
+
+  // What the agent says after checkout — derived ONLY from the real `requires` manifest.
+  api.summarizeCheckout = function (result) {
+    var body = api.toolText(result) || {};
+    var requires = Array.isArray(body.requires) ? body.requires : [];
+    var label = function (r) { return r.label || r.credential; };
+    var required = requires.filter(function (r) { return r.required; });
+    var optional = requires.filter(function (r) { return !r.required; });
+    var age = required.filter(function (r) { return r.credential === 'age'; })[0] || null;
+    var lines = [];
+    if (age) lines.push('🔒 ' + label(age) + ' required. I can’t complete this for you — you have to prove it yourself.');
+    else if (required.length) lines.push('No age check needed. This order needs: ' + required.map(label).join(' · ') + '.');
+    else lines.push('Nothing to prove for this order.');
+    if (optional.length) lines.push('Optional: ' + optional.map(label).join(' · ') + '.');
+    return {
+      ok: !!body.checkoutUrl,
+      orderId: body.orderId || null,
+      checkoutUrl: body.checkoutUrl || null,
+      gated: !!age,
+      chip: required.length ? '→ 🔒 ' + required.map(label).join(' · ') : '→ no requirements',
+      lines: lines
+    };
+  };
+
+  // Built from the SETTLED order (order-status), never the cart — a member discount changes the amount.
+  api.completionLine = function (order) {
+    var money = order ? api.fmtMoney(order.amount, order.currency) : '';
+    return '✓ Order placed' + (money ? ' — ' + money : '') + '.';
+  };
+
   return api;
 })();
 /* ca-demo-core:end */

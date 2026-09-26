@@ -78,3 +78,83 @@ test('mcp.call never throws synchronously and always yields a typed error', asyn
   const mcp2 = D.createMcpClient({ endpoint: '/x', fetch: () => reply('{}') });
   await assert.rejects(mcp2.call('tools/call', circular), (e) => typeof e.kind === 'string');
 });
+
+// ---- scenarios & wording ----
+const WHISKEY_CHECKOUT = {
+  content: [{ type: 'text', text: JSON.stringify({
+    orderId: 'ORD-1', checkoutUrl: 'https://demo.example/checkout?order=ORD-1',
+    requires: [
+      { credential: 'age', required: true, label: 'Age 21+' },
+      { credential: 'membership', required: false, label: '10% member discount' },
+      { credential: 'payment', required: true, label: 'Pay (USD)' },
+    ] }) }],
+};
+const HEADPHONES_CHECKOUT = {
+  content: [{ type: 'text', text: JSON.stringify({
+    orderId: 'ORD-2', checkoutUrl: 'https://demo.example/checkout?order=ORD-2',
+    requires: [
+      { credential: 'membership', required: false, label: '10% member discount' },
+      { credential: 'payment', required: true, label: 'Pay (USD)' },
+    ] }) }],
+};
+
+test('summarizeCheckout: whiskey stops at the age gate', () => {
+  const s = plain(D.summarizeCheckout(WHISKEY_CHECKOUT));
+  assert.equal(s.ok, true);
+  assert.equal(s.gated, true);
+  assert.equal(s.orderId, 'ORD-1');
+  assert.equal(s.checkoutUrl, 'https://demo.example/checkout?order=ORD-1');
+  assert.equal(s.chip, '→ 🔒 Age 21+ · Pay (USD)');
+  assert.equal(s.lines[0], '🔒 Age 21+ required. I can’t complete this for you — you have to prove it yourself.');
+  assert.equal(s.lines[1], 'Optional: 10% member discount.');
+});
+
+test('summarizeCheckout: headphones have no age gate', () => {
+  const s = plain(D.summarizeCheckout(HEADPHONES_CHECKOUT));
+  assert.equal(s.gated, false);
+  assert.equal(s.lines[0], 'No age check needed. This order needs: Pay (USD).');
+});
+
+test('summarizeCheckout never invents requirements', () => {
+  const custom = plain(D.summarizeCheckout({ content: [{ type: 'text', text: '{"checkoutUrl":"https://x/c","orderId":"O","requires":[{"credential":"license","required":true}]}' }] }));
+  assert.equal(custom.chip, '→ 🔒 license');
+  assert.equal(custom.lines[0], 'No age check needed. This order needs: license.');
+  const junk = plain(D.summarizeCheckout({ content: [{ type: 'text', text: 'not json' }] }));
+  assert.equal(junk.ok, false);
+  assert.equal(junk.lines[0], 'Nothing to prove for this order.');
+});
+
+test('pickWidget reads the widget URI from the tool definition', () => {
+  const list = { tools: [
+    { name: 'get-cart', _meta: {} },
+    { name: 'browse-products', _meta: { ui: { resourceUri: 'ui://product-picker/mcp-app-abc.html' } } },
+  ] };
+  assert.equal(D.pickWidget(list, 'browse-products').uri, 'ui://product-picker/mcp-app-abc.html');
+  assert.equal(D.pickWidget(list, 'browse-products').tool.name, 'browse-products');
+  assert.equal(D.pickWidget({ tools: [{ name: 'browse-products', _meta: { 'ui/resourceUri': 'ui://legacy.html' } }] }, 'browse-products').uri, 'ui://legacy.html');
+  assert.equal(D.pickWidget(list, 'get-cart'), null);
+  assert.equal(D.pickWidget(null, 'browse-products'), null);
+});
+
+test('formatArgs keeps chips short', () => {
+  assert.equal(D.formatArgs({}), '');
+  assert.equal(D.formatArgs(undefined), '');
+  assert.equal(D.formatArgs({ productId: 'oak-whiskey', quantity: 1 }), '{"productId":"oak-whiskey","quantity":1}');
+  assert.equal(D.formatArgs({ uri: 'x'.repeat(100) }).length, 58);
+});
+
+test('completionLine uses the real settled order', () => {
+  assert.equal(D.completionLine({ orderId: 'ORD-1', amount: 111.6, currency: 'USD' }), '✓ Order placed — $111.60.');
+  assert.equal(D.completionLine({ amount: 20, currency: 'EUR' }), '✓ Order placed — 20.00 EUR.');
+  assert.equal(D.completionLine(null), '✓ Order placed.');
+});
+
+test('isDemoOrigin only allows credentagent.ai and local dev', () => {
+  for (const h of ['credentagent.ai', 'www.credentagent.ai', 'localhost', '127.0.0.1']) assert.equal(D.isDemoOrigin(h), true, h);
+  for (const h of ['openmobilehub.github.io', 'openmobilehub.org', '', 'credentagent.ai.evil.com']) assert.equal(D.isDemoOrigin(h), false, h);
+});
+
+test('scenarios name the exact product to tap', () => {
+  assert.equal(D.tapLine(D.SCENARIOS.whiskey), 'Tap + on the Oak Reserve Whiskey Collection, then Checkout.');
+  assert.equal(D.tapLine(D.SCENARIOS.headphones), 'Tap + on the Aurora Wireless Headphones, then Checkout.');
+});
