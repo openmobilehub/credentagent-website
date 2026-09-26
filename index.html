@@ -796,6 +796,41 @@ var CADemo = (function () {
     return found;
   };
 
+  function mcpError(kind, message, status) {
+    var e = new Error(message); e.kind = kind; e.status = status; return e;
+  }
+
+  // Stateless MCP client: one JSON-RPC POST per call (the storefront needs no initialize/session).
+  // Errors carry .kind: http | rpc | protocol | timeout | network.
+  api.createMcpClient = function (opts) {
+    var endpoint = opts.endpoint, doFetch = opts.fetch, timeoutMs = opts.timeoutMs || 15000;
+    var nextId = 0;
+    return {
+      call: function (method, params) {
+        var controller = new AbortController();
+        var timer = setTimeout(function () { controller.abort(); }, timeoutMs);
+        return doFetch(endpoint, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', 'accept': 'application/json, text/event-stream' },
+          body: JSON.stringify({ jsonrpc: '2.0', id: ++nextId, method: method, params: params || {} }),
+          signal: controller.signal
+        }).then(function (res) {
+          if (!res.ok) throw mcpError('http', 'HTTP ' + res.status, res.status);
+          return res.text();
+        }).then(function (body) {
+          var parsed = api.parseRpcReply(body);
+          if (!parsed) throw mcpError('protocol', 'Unreadable reply from the MCP server');
+          if (parsed.error) throw mcpError('rpc', parsed.error.message || 'MCP error');
+          return parsed.result;
+        }, function (err) {
+          if (err && err.kind) throw err;
+          if (err && err.name === 'AbortError') throw mcpError('timeout', 'No reply within ' + Math.round(timeoutMs / 1000) + ' s');
+          throw mcpError('network', (err && err.message) || 'Network error');
+        }).finally(function () { clearTimeout(timer); });
+      }
+    };
+  };
+
   return api;
 })();
 /* ca-demo-core:end */
