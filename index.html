@@ -904,18 +904,25 @@ var CADemo = (function () {
     return '✓ Order placed' + (money ? ' — ' + money : '') + '.';
   };
 
+  // Only plain https origins (optionally *.subdomain / :port) and data: may enter the policy.
+  var CSP_SOURCE = /^(https:\/\/(\*\.)?[a-z0-9-]+(\.[a-z0-9-]+)*(:\d{1,5})?|data:)$/i;
+  function cspSources(list) {
+    var ok = (Array.isArray(list) ? list : []).filter(function (s) { return typeof s === 'string' && CSP_SOURCE.test(s); });
+    return ok.length ? ok.join(' ') : "'none'";
+  }
+
   // Enforce the widget's own declared CSP (_meta.ui.csp) inside the sandboxed frame.
   api.buildSrcdoc = function (html, csp) {
     csp = csp || {};
-    var res = (csp.resourceDomains || []).join(' ') || "'none'";
-    var conn = (csp.connectDomains || []).join(' ') || "'none'";
+    var res = cspSources(csp.resourceDomains);
+    var conn = cspSources(csp.connectDomains);
     var policy = [
       "default-src 'none'", "script-src 'unsafe-inline'", "style-src 'unsafe-inline'",
       'img-src ' + res, 'font-src ' + res, 'media-src ' + res, 'connect-src ' + conn
     ].join('; ');
     var meta = '<meta http-equiv="Content-Security-Policy" content="' + policy.replace(/"/g, '&quot;') + '">';
-    return /<head[^>]*>/i.test(html)
-      ? html.replace(/<head[^>]*>/i, function (m) { return m + meta; })
+    return /<head(\s[^>]*)?>/i.test(html)
+      ? html.replace(/<head(\s[^>]*)?>/i, function (m) { return m + meta; })
       : meta + html;
   };
 

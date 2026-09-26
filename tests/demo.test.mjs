@@ -195,6 +195,22 @@ test('buildSrcdoc locks everything down when no CSP is declared', () => {
   assert.ok(out.endsWith('<p>hi</p>'));
 });
 
+test('buildSrcdoc drops CSP sources that are not plain https origins or data:', () => {
+  const out = D.buildSrcdoc('<head></head>', {
+    resourceDomains: ['https://x.com; worker-src *', 'https://ok.example', 'javascript:', 'data:'],
+    connectDomains: ['https://api.example:8443', 'https://evil.example/path', '*'],
+  });
+  assert.ok(!out.includes('worker-src'));
+  assert.ok(out.includes('img-src https://ok.example data:;'));
+  assert.ok(out.includes('connect-src https://api.example:8443"'));
+});
+
+test('buildSrcdoc injects into <head>, not <header>', () => {
+  const out = D.buildSrcdoc('<header>x</header>', {});
+  assert.ok(out.startsWith('<meta http-equiv="Content-Security-Policy"'));
+  assert.ok(out.endsWith('<header>x</header>'));
+});
+
 test('run guard: only the latest run is current', () => {
   const g = D.createRunGuard();
   const a = g.next(), b = g.next();
