@@ -771,5 +771,34 @@ host.<span class="c-fn">publish</span>(app);                           <span cla
   });
 })();
 </script>
+<script>
+/* ca-demo-core:begin */
+// Pure logic for the in-browser agent demo — no DOM access at load time.
+// Unit-tested by tests/demo.test.mjs, which loads exactly this block.
+var CADemo = (function () {
+  'use strict';
+  var api = {};
+
+  // Parse an MCP Streamable-HTTP reply: plain JSON, or SSE ("event: message" / "data: {...}").
+  api.parseRpcReply = function (body) {
+    var text = String(body || '').trim();
+    if (text.charAt(0) === '{') {
+      try { return JSON.parse(text); } catch (e) { return null; }
+    }
+    var found = null;
+    text.split(/\r?\n/).forEach(function (line) {
+      if (line.indexOf('data:') !== 0) return;
+      try {
+        var obj = JSON.parse(line.slice(5).trim());
+        if (obj && (obj.result !== undefined || obj.error !== undefined)) found = obj;
+      } catch (e) { /* not a JSON-RPC response line */ }
+    });
+    return found;
+  };
+
+  return api;
+})();
+/* ca-demo-core:end */
+</script>
 </body>
 </html>
