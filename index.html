@@ -809,11 +809,13 @@ var CADemo = (function () {
       call: function (method, params) {
         var controller = new AbortController();
         var timer = setTimeout(function () { controller.abort(); }, timeoutMs);
-        return doFetch(endpoint, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json', 'accept': 'application/json, text/event-stream' },
-          body: JSON.stringify({ jsonrpc: '2.0', id: ++nextId, method: method, params: params || {} }),
-          signal: controller.signal
+        return Promise.resolve().then(function () {
+          return doFetch(endpoint, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json', 'accept': 'application/json, text/event-stream' },
+            body: JSON.stringify({ jsonrpc: '2.0', id: ++nextId, method: method, params: params || {} }),
+            signal: controller.signal
+          });
         }).then(function (res) {
           if (!res.ok) throw mcpError('http', 'HTTP ' + res.status, res.status);
           return res.text();
@@ -822,7 +824,8 @@ var CADemo = (function () {
           if (!parsed) throw mcpError('protocol', 'Unreadable reply from the MCP server');
           if (parsed.error) throw mcpError('rpc', parsed.error.message || 'MCP error');
           return parsed.result;
-        }, function (err) {
+        }).catch(function (err) {
+          // One normalizer for every failure: already-typed errors pass through unchanged.
           if (err && err.kind) throw err;
           if (err && err.name === 'AbortError') throw mcpError('timeout', 'No reply within ' + Math.round(timeoutMs / 1000) + ' s');
           throw mcpError('network', (err && err.message) || 'Network error');

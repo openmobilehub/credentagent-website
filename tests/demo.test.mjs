@@ -68,3 +68,13 @@ test('mcp.call maps fetch failures to kind "network"', async () => {
   const mcp = D.createMcpClient({ endpoint: '/x', fetch: () => Promise.reject(new TypeError('Failed to fetch')) });
   await assert.rejects(mcp.call('tools/list'), (e) => e.kind === 'network' && e.message === 'Failed to fetch');
 });
+
+test('mcp.call never throws synchronously and always yields a typed error', async () => {
+  const mcp = D.createMcpClient({ endpoint: '/x', fetch: () => { throw new TypeError('fetch exploded'); } });
+  let p;
+  assert.doesNotThrow(() => { p = mcp.call('tools/list'); });
+  await assert.rejects(p, (e) => e.kind === 'network' && e.message === 'fetch exploded');
+  const circular = {}; circular.self = circular;
+  const mcp2 = D.createMcpClient({ endpoint: '/x', fetch: () => reply('{}') });
+  await assert.rejects(mcp2.call('tools/call', circular), (e) => typeof e.kind === 'string');
+});
