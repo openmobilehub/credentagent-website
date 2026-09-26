@@ -1,6 +1,6 @@
 # In-browser agent demo — design
 
-**Date:** 2026-09-25 · **Status:** approved design, not yet implemented · **Site:** credentagent.ai
+**Date:** 2026-09-25 · **Status:** implemented on `feat/in-browser-agent` · **Site:** credentagent.ai
 
 ## Goal
 
@@ -27,9 +27,9 @@ a connector in Claude / ChatGPT / Goose / Gemini. The visitor sees an agent conv
   Cross-origin preflight to the endpoint returns 405 (no CORS), so the GitHub Pages copy cannot run the demo.
 - The endpoint is **stateless**: `tools/call` works with no `initialize` and no `mcp-session-id`.
   Replies are `text/event-stream` (`event: message` / `data: {json}`).
-- `browse-products` returns the catalog and `_meta.ui.resourceUri`
-  (`ui://product-picker/mcp-app-<hash>.html`). **The hash differs between dev and prod and changes per
-  deploy**, so it must be read at runtime, never hard-coded.
+- `browse-products` returns the catalog (`_meta["product-picker/catalog"]`); its tool **definition**
+  in `tools/list` carries `_meta.ui.resourceUri` (`ui://product-picker/mcp-app-<hash>.html`). **The hash
+  differs between dev and prod and changes per deploy**, so it must be read at runtime, never hard-coded.
 - `resources/read` on that URI returns `text/html;profile=mcp-app` (~560 KB) with
   `_meta.ui.csp` (`resourceDomains`: picsum + data:, `connectDomains`: the demo-dev origin).
 - The widget is built on `@modelcontextprotocol/ext-apps` (`App`, protocol `2026-01-26`). It:
