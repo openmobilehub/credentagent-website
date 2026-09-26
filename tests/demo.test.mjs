@@ -319,3 +319,26 @@ test('bridge never posts an undefined tool result', async () => {
   await tick();
   assert.deepEqual(posted[0], { jsonrpc: '2.0', id: 12, result: { content: [] } });
 });
+
+// ---- QR encoder ----
+test('Reed–Solomon matches the HELLO WORLD 1-M reference vector', () => {
+  const data = [32, 91, 11, 120, 209, 114, 220, 77, 67, 64, 236, 17, 236, 17, 236, 17];
+  assert.deepEqual(plain(D.qrRsRemainder(data, 10)), [196, 35, 39, 119, 235, 215, 231, 226, 93, 23]);
+});
+
+test('qrMatrix picks the smallest version and draws finder patterns', () => {
+  const small = D.qrMatrix('HELLO WORLD');
+  assert.equal(small.length, 21);                                   // version 1
+  assert.deepEqual(plain(small[0].slice(0, 7)), [true, true, true, true, true, true, true]);
+  assert.equal(small[1][1], false);
+  assert.equal(small[3][3], true);
+  const url = 'https://credentagent-demo-dev.vercel.app/checkout?order=ORD-o01nne&cart=' + 'A'.repeat(488);
+  assert.equal(url.length, 560);
+  assert.equal(D.qrMatrix(url).length, 81);                         // version 16 at ECC L
+});
+
+test('qrSvg renders a quiet-zoned, sized SVG', () => {
+  const svg = D.qrSvg('HELLO WORLD', 264);
+  assert.ok(svg.startsWith('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29 29" width="264" height="264"'));
+  assert.ok(svg.includes('<path d="M4 4h1v1h-1z'));                 // top-left finder corner, after the 4-module quiet zone
+});
