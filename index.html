@@ -8,6 +8,8 @@
 <meta property="og:title" content="CredentAgent — the consent layer for AI agents">
 <meta property="og:description" content="Make AI agents ask first: prove a verifiable credential before a consequential action completes.">
 <meta property="og:type" content="website">
+<meta property="og:url" content="https://credentagent.ai/">
+<link rel="canonical" href="https://credentagent.ai/">
 <meta name="twitter:card" content="summary">
 <style>
   :root{
@@ -211,8 +213,8 @@
   .card{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:1.3rem}
   .card .n{color:var(--teal);font-weight:800;font-size:.8rem}.card h3{margin:.4rem 0 .4rem;font-size:1.05rem}.card p{color:var(--mut);font-size:.9rem;margin:0}
   .rails{display:grid;grid-template-columns:1.3fr .9fr;gap:.5rem 1.4rem;margin-top:1.4rem;font-size:.92rem}
-  .rails .r{padding:.7rem 0;border-bottom:1px solid var(--line);color:var(--mut)}.rails .r b{color:var(--ink)}
-  .real{color:var(--green)}.demo{color:#fbbf24}
+  .rails .r{padding:.7rem 0;border-bottom:1px solid var(--line);color:var(--mut)}.rails .r b{color:var(--ink)}.rails .r code{font-family:ui-monospace,Menlo,monospace;font-size:.85em;color:var(--teal)}
+  .real,.rails .r.real{color:var(--green)}.demo,.rails .r.demo{color:#fbbf24}
   .logos{display:flex;gap:2rem;flex-wrap:wrap;color:var(--mut);margin-top:1.2rem;font-weight:600}
   .cta{display:flex;gap:.8rem;margin-top:1.6rem;flex-wrap:wrap;align-items:center}
   .btn{background:var(--teal2);color:#031425;font-weight:700;padding:.55rem 1rem;border-radius:8px;font-size:.85rem;text-decoration:none}
@@ -262,6 +264,21 @@
   .yt-label{font-size:.6rem;letter-spacing:.18em;font-weight:800;text-transform:uppercase;color:var(--purple)}
   .yt-title{font-size:.85rem;font-weight:600;color:var(--ink);line-height:1.35}
 
+  /* ---------- what's new (tabbed code) ---------- */
+  .ver-tag{display:inline-block;font-size:.62rem;letter-spacing:.08em;font-weight:800;color:var(--green);border:1px solid rgba(52,211,153,.4);border-radius:999px;padding:.12rem .5rem;margin-left:.5rem;vertical-align:.15rem}
+  .tabs{margin-top:1.6rem;background:var(--code);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .tablist{display:flex;gap:.2rem;padding:.45rem .45rem 0;border-bottom:1px solid var(--line);overflow-x:auto;background:var(--bg)}
+  .tab{font:inherit;font-size:.84rem;font-weight:600;color:var(--mut);background:transparent;border:1px solid transparent;border-bottom:none;border-radius:8px 8px 0 0;padding:.55rem .95rem;cursor:pointer;white-space:nowrap;transition:color .2s}
+  .tab:hover{color:var(--ink)}
+  .tab[aria-selected="true"]{color:var(--teal);background:var(--code);border-color:var(--line);margin-bottom:-1px}
+  .tab:focus-visible{outline:2px solid var(--teal);outline-offset:-2px}
+  .tabpanel{padding:1.1rem 1.4rem 1.3rem}
+  .tabpanel .lede{color:var(--mut);font-size:.95rem;line-height:1.55;margin-bottom:.9rem;max-width:46rem}
+  .tabpanel .lede b{color:var(--ink)}
+  .tabpanel .code{border:none;padding:0;background:transparent;border-radius:0}
+  .mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;margin-top:1.2rem}
+  .mini-grid .card code{font-family:ui-monospace,Menlo,monospace;color:var(--teal);font-size:.85em}
+
   /* ---------- reduced motion: static success state ---------- */
   @media (prefers-reduced-motion: reduce){
     .bubble,.gate,.wallet{opacity:1!important;transform:none!important;animation:none!important}
@@ -278,6 +295,8 @@
     h1{font-size:38px}
     .nav-links{display:none}
     .grid3{grid-template-columns:1fr}
+    .mini-grid{grid-template-columns:1fr}
+    .tabpanel{padding:1rem}
     .try-cols{grid-template-columns:1fr}
   }
   @media (max-width:520px){
@@ -293,11 +312,12 @@
   <nav>
     <div class="nav-left">
       <span class="wordmark">CREDENTAGENT</span>
-      <span class="pill">v0.2 · OPENWALLET FOUNDATION · AAIF FOUNDATION</span>
+      <span class="pill">v0.4 · OPENWALLET FOUNDATION · AAIF FOUNDATION</span>
     </div>
     <div class="nav-right">
       <div class="nav-links">
         <a href="#how">How it works</a>
+        <a href="#new">What's new</a>
         <a href="https://github.com/openmobilehub/credentagent/tree/main/docs/reference">Docs</a>
         <a href="https://github.com/openmobilehub/credentagent">GitHub</a>
       </div>
@@ -404,7 +424,8 @@
             <div class="try-step-body"><b>Age gate fires</b> — the <code style="color:var(--mut);font-family:ui-monospace,Menlo,monospace">checkout</code> tool returns an <code style="color:var(--teal);font-family:ui-monospace,Menlo,monospace">age_over_21</code> requirement. Prove it on your device; order completes.</div>
           </div>
         </div>
-        <p class="try-dev-note">Want to customize it? Run locally: <code>node examples/storefront.mjs</code> — inject your catalog, own the code.</p>
+        <p class="try-dev-note">Want to customize it? Run locally: <code>node examples/storefront.mjs</code> — inject your catalog, own the code.<br>
+        Tracking <code>main</code>? <code>https://credentagent.ai/marketplace-dev/mcp</code> runs the unreleased build.</p>
       </div>
 
       <div>
@@ -478,6 +499,84 @@ store.<span class="c-fn">gate</span>((order) =&gt; credentagent.<span class="c-f
 ]));</div>
   </div></section>
 
+  <!-- WHAT'S NEW (v0.3 – v0.4) -->
+  <section id="new"><div class="wrap">
+    <div class="seclabel">What's new<span class="ver-tag">v0.4.0</span></div>
+    <h2>Beyond the storefront: your checkout, your server, and an agent that shops while you're away.</h2>
+    <p class="sub">The gate no longer needs the bundled storefront. Drive a checkout from any Express app, wire it into your own MCP server, let a human approve a spending limit once, and tell other services when an order settles.</p>
+
+    <div class="tabs">
+      <div class="tablist" role="tablist" aria-label="New in v0.4">
+        <button class="tab" role="tab" id="t-orders" aria-controls="p-orders" aria-selected="true">Orders</button>
+        <button class="tab" role="tab" id="t-grants" aria-controls="p-grants" aria-selected="false" tabindex="-1">Spending grants</button>
+        <button class="tab" role="tab" id="t-host" aria-controls="p-host" aria-selected="false" tabindex="-1">Your own host</button>
+        <button class="tab" role="tab" id="t-hooks" aria-controls="p-hooks" aria-selected="false" tabindex="-1">Webhooks</button>
+      </div>
+
+      <div class="tabpanel" role="tabpanel" id="p-orders" aria-labelledby="t-orders" tabindex="0">
+        <p class="lede"><b>A checkout without a storefront.</b> <code style="color:var(--teal)">orders.serve(app)</code> wires the whole human-present checkout onto your app; <code style="color:var(--teal)">orders.create()</code> mints an approve link per purchase. Amount and age threshold are re-derived server-side — never trusted from the link.</p>
+        <div class="code"><span class="c-key">const</span> credentagent = <span class="c-key">new</span> <span class="c-fn">CredentAgent</span>({ walletOrigin: <span class="c-str">"https://shop.example"</span> });
+
+<span class="c-cm">// once, at startup</span>
+credentagent.orders.<span class="c-fn">serve</span>(app);   <span class="c-cm">// wire the whole checkout onto your app</span>
+credentagent.<span class="c-fn">on</span>(<span class="c-str">"order.settled"</span>, ({ id }) =&gt; <span class="c-fn">fulfill</span>(id));
+
+<span class="c-cm">// per purchase — hand approveUrl to the human</span>
+<span class="c-key">const</span> { id, approveUrl } = <span class="c-key">await</span> credentagent.orders.<span class="c-fn">create</span>({
+  order,
+  policy: [<span class="c-fn">required</span>(<span class="c-fn">age</span>.over(<span class="c-num">21</span>)), <span class="c-fn">required</span>(<span class="c-fn">payment</span>.in(<span class="c-str">"usd"</span>))],
+});</div>
+      </div>
+
+      <div class="tabpanel" role="tabpanel" id="p-grants" aria-labelledby="t-grants" tabindex="0" hidden>
+        <p class="lede"><b>Approve once, the agent spends while you're away.</b> The human approves a bounded budget — how much, per purchase, and <i>what</i> — and the agent buys against it unattended, every rule re-checked server-side on every spend. <b>Age is non-delegable:</b> a 21+ item always steps up to a live human.</p>
+        <div class="code">credentagent.grants.<span class="c-fn">serve</span>(app);                <span class="c-cm">// serves each grant's approve / deny page</span>
+
+<span class="c-key">const</span> grant = <span class="c-key">await</span> credentagent.grants.<span class="c-fn">create</span>({
+  merchant: <span class="c-str">"utopia"</span>, budget: <span class="c-num">100</span>, perSpend: <span class="c-num">30</span>,
+  allow: { categories: [<span class="c-str">"Beverages"</span>] },       <span class="c-cm">// bound WHAT may be bought, not just how much</span>
+});
+<span class="c-fn">sendToUser</span>(grant.approveUrl);                  <span class="c-cm">// the human approves ONCE</span>
+
+<span class="c-cm">// later, human away</span>
+<span class="c-key">const</span> g = <span class="c-key">await</span> credentagent.grants.<span class="c-fn">retrieve</span>(grant.id);
+<span class="c-key">const</span> s = <span class="c-key">await</span> g.<span class="c-fn">spend</span>({ idempotencyKey: <span class="c-str">"order-1"</span>, items: [{ sku: <span class="c-str">"coffee"</span> }] });
+<span class="c-cm">// → { ok: true, amount: 18, remaining: 82 }  or  { ok: false, code: "budget-exceeded" | "step-up" | … }</span>
+<span class="c-key">await</span> g.<span class="c-fn">revoke</span>();                            <span class="c-cm">// kill-switch — the very next spend refuses</span></div>
+      </div>
+
+      <div class="tabpanel" role="tabpanel" id="p-host" aria-labelledby="t-host" tabindex="0" hidden>
+        <p class="lede"><b>Bring your own host.</b> Already have an Express + MCP server, a catalog, and an order store? <code style="color:var(--teal)">defineHost()</code> takes those three things and builds the rest — one completion choke point your own tools call, fail-closed on an incomplete setup.</p>
+        <div class="code"><span class="c-key">const</span> host = <span class="c-fn">defineHost</span>({
+  catalog:    { <span class="c-fn">createOrder</span>: (items, id) =&gt; <span class="c-fn">priceFromMyCatalog</span>(items, id) }, <span class="c-cm">// amount source of truth</span>
+  orderStore: { <span class="c-fn">read</span>: (id) =&gt; myOrders.<span class="c-fn">get</span>(id) ?? <span class="c-key">null</span> },
+  records:    { <span class="c-fn">read</span>: (id) =&gt; myCompleted.<span class="c-fn">get</span>(id), <span class="c-fn">write</span>: (rec) =&gt; myCompleted.<span class="c-fn">set</span>(rec.orderId, rec) },
+  signingKey: process.env.GATE_SECRET,
+});
+
+host.<span class="c-fn">publish</span>(app);                           <span class="c-cm">// publish the seams onto your app</span>
+<span class="c-key">new</span> <span class="c-fn">CredentAgent</span>({ walletOrigin }).<span class="c-fn">mount</span>(app); <span class="c-cm">// serve the proof pages over them</span>
+<span class="c-cm">// your own place-order tool calls host.complete(…) → { completed, reason? }</span></div>
+      </div>
+
+      <div class="tabpanel" role="tabpanel" id="p-hooks" aria-labelledby="t-hooks" tabindex="0" hidden>
+        <p class="lede"><b>Tell a different service when an order settles.</b> A signed <code style="color:var(--teal)">order.settled</code> POST — HMAC-SHA256, replay-protected, retried at-least-once — verified on the other side with the familiar <code style="color:var(--teal)">constructEvent</code> idiom.</p>
+        <div class="code"><span class="c-cm">// sending — configure once</span>
+<span class="c-key">new</span> <span class="c-fn">CredentAgent</span>({ webhooks: { endpoints: [{ url: <span class="c-str">"https://fulfillment.example/hooks"</span>, secret: process.env.WHSEC }] } });
+
+<span class="c-cm">// receiving — a different service; verify the RAW body</span>
+<span class="c-key">const</span> event = <span class="c-fn">constructEvent</span>(req.body, req.<span class="c-fn">get</span>(<span class="c-str">"CredentAgent-Signature"</span>), process.env.WHSEC);
+<span class="c-key">if</span> (event.type === <span class="c-str">"order.settled"</span>) <span class="c-fn">fulfill</span>(event.data.object.orderId); <span class="c-cm">// dedupe on event.id</span></div>
+      </div>
+    </div>
+
+    <div class="mini-grid">
+      <div class="card"><h3>Preflight in one call</h3><p><code>credentagent.doctor()</code> checks your deployment — gate secret, public origin, shared stores — and returns each finding with its fix. Never throws, never touches the network.</p></div>
+      <div class="card"><h3>Your brand on the consent pages</h3><p><code>new CredentAgent({ branding })</code> — wordmark, accent, logo. It restyles the chrome only; the honesty footer can't be removed.</p></div>
+      <div class="card"><h3>Payment credentials on iPhone</h3><p>The gate presents a stable reader identity on the ISO-mdoc path, which iOS wallets require to show a consistent requester.</p></div>
+    </div>
+  </div></section>
+
   <!-- GATE ANY CREDENTIAL -->
   <section><div class="wrap">
     <div class="seclabel">Gate any credential</div><h2>Age, membership, a prescription, payment — all just credentials in one policy.</h2>
@@ -489,11 +588,14 @@ store.<span class="c-fn">gate</span>((order) =&gt; credentagent.<span class="c-f
     <div class="seclabel">Honest by design</div><h2>What binds cryptographically today — and what's on the roadmap.</h2>
     <div class="rails">
       <div class="r"><b>passkey</b> — real WebAuthn, origin/RP-ID-bound, replay-protected</div><div class="r real">✓ real crypto</div>
-      <div class="r"><b>credential / dc-payment</b> — OpenID4VP JWE + nonce + HPKE + mdoc parse</div><div class="r demo">presence-only-demo</div>
-      <div class="r"><b>additional credentials</b> — residency, license, eligibility: any issuer credential, completable end-to-end</div><div class="r" style="color:var(--dim)">roadmap</div>
-      <div class="r"><b>issuer-verified trust</b> — mdoc issuer/device signatures (Multipaz)</div><div class="r" style="color:var(--dim)">v0.2 — roadmap</div>
+      <div class="r"><b>webhooks</b> — HMAC-SHA256-signed <code>order.settled</code>, replay-protected</div><div class="r real">✓ real crypto</div>
+      <div class="r"><b>credential</b> — age, membership, any <code>defineCredential()</code>: OpenID4VP JWE + nonce + HPKE + mdoc parse, explicit positive claim</div><div class="r demo">presence-only-demo</div>
+      <div class="r"><b>dc-payment</b> — the same, plus the wallet's device-signed hash re-checked against this exact amount &amp; payee</div><div class="r demo">presence-only-demo</div>
+      <div class="r"><b>spending grants</b> — signed draws, bounds re-checked server-side on every spend; no trust anchor yet, so fenced as a demo</div><div class="r demo">presence-only-demo</div>
+      <div class="r"><b>external verifier</b> — the gate can relay an issuer-verified verdict from a real verifier, while re-checking amount &amp; policy itself. No real adapter ships yet.</div><div class="r" style="color:var(--dim)">interface only</div>
+      <div class="r"><b>issuer-verified trust, built in</b> — mdoc issuer/device signatures (Multipaz) + a key-bound AP2 mandate</div><div class="r" style="color:var(--dim)">roadmap — next milestone</div>
     </div>
-    <p class="sub" style="margin-top:1.4rem;font-size:1rem">The wire crypto is real; the issuer trust anchor is not yet. <b style="color:var(--ink)">A presence-only gate is never sold as a real safety control.</b></p>
+    <p class="sub" style="margin-top:1.4rem;font-size:1rem">The wire crypto is real; the issuer trust anchor is not yet — a self-crafted credential would still pass. <b style="color:var(--ink)">A presence-only gate is never sold as a real safety control.</b> Branding can restyle the consent pages, but never the honesty footer.</p>
   </div></section>
 
   <!-- BUILT ON / PARTNERS -->
@@ -505,7 +607,9 @@ store.<span class="c-fn">gate</span>((order) =&gt; credentagent.<span class="c-f
   <!-- FOR DEVELOPERS -->
   <section style="background:var(--bg2)"><div class="wrap">
     <div class="seclabel">For developers</div><h2>Two packages. Apache-2.0. Ships its own types.</h2>
-    <div class="cta"><span class="btn">@openmobilehub/credentagent-gate</span><span class="btn-ghost">@openmobilehub/credentagent-storefront</span><span style="color:var(--mut)">· Docs · Examples · Reference demo →</span></div>
+    <p class="sub">Both packages version in lockstep — install them as a pair:</p>
+    <div class="code" style="max-width:48rem;margin-top:.8rem">npm i @openmobilehub/credentagent-gate@0.4.0 @openmobilehub/credentagent-storefront@0.4.0</div>
+    <div class="cta"><a class="btn" href="https://www.npmjs.com/package/@openmobilehub/credentagent-gate">@openmobilehub/credentagent-gate</a><a class="btn-ghost" href="https://www.npmjs.com/package/@openmobilehub/credentagent-storefront">@openmobilehub/credentagent-storefront</a><span style="color:var(--mut)">· <a href="https://github.com/openmobilehub/credentagent/tree/main/docs/reference">Docs</a> · <a href="https://github.com/openmobilehub/credentagent/tree/main/examples">Examples</a> · <a href="https://github.com/openmobilehub/credentagent/releases/tag/v0.4.0">v0.4.0 release notes →</a></span></div>
   </div></section>
 
   <footer><div class="wrap">Apache-2.0 · GitHub · npm · An Open Mobile Hub project (Linux Foundation / OpenWallet Foundation) · heading to GDC</div></footer>
@@ -639,6 +743,31 @@ store.<span class="c-fn">gate</span>((order) =&gt; credentagent.<span class="c-f
   run();
   window.addEventListener('resize', function(){
     if(beam.style.display==='block') positionBeam();
+  });
+})();
+</script>
+<script>
+// "What's new" tabs — ARIA tabs pattern (click + arrow keys / Home / End)
+(function(){
+  var tabs = [].slice.call(document.querySelectorAll('.tablist [role="tab"]'));
+  function select(t){
+    tabs.forEach(function(x){
+      var on = x === t;
+      x.setAttribute('aria-selected', on ? 'true' : 'false');
+      x.tabIndex = on ? 0 : -1;
+      document.getElementById(x.getAttribute('aria-controls')).hidden = !on;
+    });
+  }
+  tabs.forEach(function(t, i){
+    t.addEventListener('click', function(){ select(t); });
+    t.addEventListener('keydown', function(e){
+      var j = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 :
+              e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : null;
+      if (j === null) return;
+      e.preventDefault();
+      var n = tabs[(j + tabs.length) % tabs.length];
+      select(n); n.focus();
+    });
   });
 })();
 </script>
