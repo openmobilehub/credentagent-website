@@ -34,8 +34,9 @@ co-presented with Multipaz. Two npm packages, versioned in lockstep, both live a
   pauses → a 🔒 gate pulses → a 📱 wallet proves two credentials (age_over_21, then payment · usd) →
   the action completes → loops (~9s). It **honors `prefers-reduced-motion`** (renders the final state
   statically, no motion).
-- **Sections (top→bottom):** sticky nav → animated hero → problem band → try-it-live (YouTube demo +
-  hosted connector) → how-it-works (3 cards) → quickstart (gate policy ladder with imports) →
+- **Sections (top→bottom):** sticky nav → animated hero → problem band → try-it-live (tabs: **▶ Right
+  here** — the in-browser agent demo — and **In Claude / ChatGPT / Goose** — YouTube demo + hosted
+  connector) → how-it-works (3 cards) → quickstart (gate policy ladder with imports) →
   **what's new** (tabbed code: orders / grants / defineHost / webhooks + doctor/branding/iPhone cards) →
   gate-any-credential → **Honest by design** (the trust table) → built-on-open-standards →
   for-developers → footer.
@@ -49,7 +50,9 @@ co-presented with Multipaz. Two npm packages, versioned in lockstep, both live a
   ```bash
   grep -ioE '<script[^>]+src=|<link[^>]+rel="stylesheet"|<img[^>]+src=|url\(\s*https?:' index.html | grep -i http | wc -l   # must be 0
   ```
-  Note: the YouTube `<iframe>` embed is intentional and exempt from this check.
+  Note: the YouTube `<iframe>` embed is intentional and exempt from this check. So is the in-browser
+  demo's **same-origin** `fetch` to `/marketplace-dev/mcp` (the credentagent.ai router proxies it; the
+  `ENDPOINT` constant in the demo script switches to `/marketplace/mcp` for the published 0.4.0 build).
 - **No framework / bundler / build step.** A single hand-authored page is the right size — YAGNI on tooling.
 - **Accessibility:** keep the `@media (prefers-reduced-motion: reduce)` guard and the responsive
   breakpoints (`@media (max-width:880px)` and `…520px`).
@@ -63,9 +66,31 @@ co-presented with Multipaz. Two npm packages, versioned in lockstep, both live a
   SDK, never the reverse.** Presence-only rails are labeled presence-only and are never presented as a
   real safety control.
 
+## In-browser agent demo — test & run
+
+- Spec: `docs/superpowers/specs/2026-09-25-in-browser-agent-design.md`; plan:
+  `docs/superpowers/plans/2026-09-25-in-browser-agent.md`. Logic lives in the pure `ca-demo-core` script
+  (between `/* ca-demo-core:begin */` and `/* ca-demo-core:end */`); the DOM script after it wires it up.
+- Unit tests (zero deps): `node --test "tests/*.test.mjs"`
+- Live contract vs. the endpoint: `node tests/contract.mjs` — run it in any library PR that changes the
+  storefront's tools, transport, or MCP Apps widget (e.g. the MCP 728 migration).
+- QR round trip (macOS): `node tests/qr-roundtrip.mjs`
+- Local same-origin run: `python3 tools/dev-server.py` → http://localhost:8787/#try (hard-reload after
+  edits — the stdlib server lets Chrome cache the page). If the proxy fails with
+  `SSLCertVerificationError`, your `python3` is the python.org build without CA certs: run its
+  `Install Certificates.command` once, or use Homebrew's `/opt/homebrew/bin/python3`.
+- The demo only runs on `credentagent.ai` (and localhost); the GitHub Pages copy links there instead.
+- **Known limitation (library, not this site):** the hosted storefronts run `statelessMcp`, so the
+  cart the product picker shows and edits is **one shared cart for every visitor** (`extra.sessionId`
+  is absent → shared key; see `statelessMcp` in `packages/credentagent-storefront/src/server.ts`).
+  Checkout itself is per-visitor (the widget sends its on-screen items), but concurrent visitors can
+  see each other's cart lines.
+
 ## Current state (2026-09-25)
 
-- The site reflects the published **0.4.0** packages (not unreleased `main`). Hosted connector:
+- The site reflects the published **0.4.0** packages (not unreleased `main`) — except the in-browser
+  demo, which deliberately targets `/marketplace-dev/mcp` (library `main`), so a library merge can change
+  or break it; `node tests/contract.mjs` catches that. Hosted connector:
   `https://credentagent.ai/marketplace/mcp` (dev twin running `main`: `/marketplace-dev/mcp`).
 - All repos and npm packages have been renamed: `openmobilehub/credentagent` (library),
   `openmobilehub/credentagent-website` (this repo), `@openmobilehub/credentagent-gate`,
@@ -73,12 +98,6 @@ co-presented with Multipaz. Two npm packages, versioned in lockstep, both live a
 - Open ideas for "continue updating the website" (not yet done): an OG/social image; a docs/blog;
   splitting `index.html` into `styles.css` + `app.js` if it grows. (Custom domain: done — `credentagent.ai`
   via the router, no `CNAME` needed here.)
-- **Idea — in-browser agent (2026-09-25, not started):** let visitors trigger the flow from the page itself,
-  with no connector registration in Claude/ChatGPT/Gemini: drive the hosted MCP store, render the MCP app /
-  product picker, fire the checkout, and hand the proof to the wallet — with a clear "install Multipaz
-  Wallet" prompt. Open questions: scripted (no LLM) vs. a real LLM (needs a backend for the API key — not
-  static); CORS on `credentagent.ai/marketplace/mcp`; this breaks the zero-network-calls convention, so it
-  needs an explicit carve-out like the YouTube embed.
 - **Idea — zero-install web wallet (2026-09-25, not started):** a browser-based wallet holding a generic
   demo credential, so a visitor can complete a proof without installing anything. Must stay labeled
   `presence-only-demo` per the honesty rule.

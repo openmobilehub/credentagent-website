@@ -20,6 +20,7 @@
   html,body{background:var(--bg);color:var(--ink);font-family:-apple-system,"Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
   body{min-height:100vh;display:flex;flex-direction:column}
   a{color:inherit;text-decoration:none}
+  [hidden]{display:none!important}  /* author display rules must never un-hide [hidden] (e.g. .demo-offsite is display:flex) */
 
   /* ---------- top nav ---------- */
   nav{
@@ -204,6 +205,7 @@
   .wrap{max-width:1040px;margin:0 auto;padding:0 1.5rem}
   .seclabel{font-size:.66rem;letter-spacing:.22em;font-weight:800;color:var(--purple);text-transform:uppercase}
   section{padding:4.5rem 0;border-bottom:1px solid var(--line)}
+  section[id]{scroll-margin-top:72px}
   section.hero{padding:44px 56px}
   h2{font-size:1.7rem;letter-spacing:-.02em;font-weight:700;margin:.6rem 0 1rem}
   .sub{color:var(--mut);font-size:1.15rem;max-width:40rem}
@@ -279,12 +281,49 @@
   .mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;margin-top:1.2rem}
   .mini-grid .card code{font-family:ui-monospace,Menlo,monospace;color:var(--teal);font-size:.85em}
 
+  /* ---------- in-browser demo (Try it live → Right here) ---------- */
+  .tabs-plain{background:transparent;border:none;border-radius:0;overflow:visible;margin-top:1.2rem}
+  .tabs-plain .tablist{background:transparent;padding:0}
+  .tabs-plain .tab[aria-selected="true"]{background:var(--bg2)}
+  .tabs-plain .tabpanel{padding:1.4rem 0 0}
+  .demo-box{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:1rem;margin:1rem 0}
+  .demo-bar{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+  .demo-scn{font:inherit;font-size:.95rem;font-weight:700;color:#031425;background:var(--teal);border:none;border-radius:10px;padding:.75rem 1.1rem;cursor:pointer;transition:background .2s,transform .1s}
+  .demo-scn:hover{background:var(--teal2);transform:translateY(-1px)}
+  .demo-scn[aria-pressed="true"]{box-shadow:0 0 0 2px var(--bg2),0 0 0 4px var(--teal)}
+  .demo-scn:disabled{opacity:.5;cursor:default;transform:none}
+  .demo-scn:focus-visible,.demo-reset:focus-visible,.d-link:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+  .demo-reset{font:inherit;font-size:.85rem;color:var(--mut);background:transparent;border:1px solid var(--line);border-radius:8px;padding:.5rem .8rem;cursor:pointer;margin-left:auto}
+  .demo-offsite{color:var(--mut);margin-top:.8rem;display:flex;gap:.8rem;align-items:center;flex-wrap:wrap}
+  .demo-log{display:flex;flex-direction:column;gap:.6rem;margin-top:1rem}
+  .demo-log:empty{display:none}
+  .d-row{display:flex}.d-row.user{justify-content:flex-end}
+  .d-bubble{max-width:80%;padding:.6rem .85rem;border-radius:12px;font-size:.9rem;line-height:1.45;color:var(--ink);background:#0b1038;border:1px solid var(--line)}
+  .d-row.user .d-bubble{background:#0e1440;border-bottom-right-radius:4px}
+  .d-row.agent .d-bubble{border-bottom-left-radius:4px}
+  .d-bubble.ok{border-color:rgba(52,211,153,.45);box-shadow:0 0 18px -6px rgba(52,211,153,.4)}
+  .d-bubble.err{border-color:rgba(248,113,113,.5)}
+  .d-chip{align-self:flex-start;font-family:ui-monospace,Menlo,monospace;font-size:.76rem;color:var(--mut);background:var(--code);border:1px solid var(--line);border-radius:7px;padding:.3rem .6rem;max-width:100%;overflow-wrap:anywhere}
+  .d-chip b{color:var(--teal);font-weight:600}
+  .d-chip .st{margin-left:.4rem}.d-chip.ok .st{color:var(--green)}.d-chip.err .st{color:#f87171}
+  .d-frame{width:100%;border:0;display:block;height:160px;border-radius:12px;background:transparent;color-scheme:dark}
+  .d-card{border:1px dashed rgba(56,189,248,.45);border-radius:12px;padding:.9rem 1rem;display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-start;background:var(--code)}
+  .d-card .qr{flex:none;background:#fff;border-radius:8px;padding:6px;line-height:0}
+  .d-card .qr svg{width:264px;height:264px;max-width:100%}
+  .d-card .body{flex:1;min-width:14rem;font-size:.88rem;color:var(--mut);line-height:1.6;display:flex;flex-direction:column;gap:.35rem;align-items:flex-start}
+  .d-card .body a:not(.btn){color:var(--teal);text-decoration:underline;text-underline-offset:2px}
+  .d-card .honest{font-size:.75rem;color:var(--dim)}
+  .d-actions{display:flex;gap:.5rem;flex-wrap:wrap}
+  .d-link{font:inherit;font-size:.82rem;color:var(--teal);background:none;border:1px solid rgba(56,189,248,.4);border-radius:8px;padding:.45rem .75rem;cursor:pointer}
+
   /* ---------- reduced motion: static success state ---------- */
   @media (prefers-reduced-motion: reduce){
     .bubble,.gate,.wallet{opacity:1!important;transform:none!important;animation:none!important}
     .caret{display:none}
     .gate.pulsing .gate-ring{animation:none;opacity:.4}
     .beam{display:none}
+    .demo-scn{transition:none}
+    .demo-scn:hover{transform:none}
   }
 
   /* ---------- responsive ---------- */
@@ -304,6 +343,8 @@
     .pill{display:none}
     h1{font-size:31px}
     .module-cards{grid-template-columns:1fr}
+    .d-bubble{max-width:92%}
+    .demo-reset{margin-left:0}
   }
 </style>
 </head>
@@ -333,6 +374,7 @@
       <div class="ctas">
         <a class="cta-primary" href="https://www.npmjs.com/package/@openmobilehub/credentagent-gate">npm i @openmobilehub/credentagent-gate</a>
         <a class="cta-ghost" href="https://github.com/openmobilehub/credentagent/tree/main/docs/reference">Read the docs →</a>
+        <a class="cta-ghost" href="#try">Try it in your browser ↓</a>
       </div>
     </div>
 
@@ -391,9 +433,33 @@
   </section>
 
   <!-- TRY IT LIVE -->
-  <section><div class="wrap">
+  <section id="try"><div class="wrap">
     <div class="seclabel">Try it live</div>
-    <h2>A complete MCP storefront — no setup required.</h2>
+    <h2>A complete MCP storefront — try it right here, or in your own agent.</h2>
+    <div class="tabs tabs-plain">
+      <div class="tablist" role="tablist" aria-label="Ways to try CredentAgent">
+        <button class="tab" role="tab" id="t-here" aria-controls="p-here" aria-selected="true">▶ Right here</button>
+        <button class="tab" role="tab" id="t-connector" aria-controls="p-connector" aria-selected="false" tabindex="-1">In Claude / ChatGPT / Goose</button>
+      </div>
+
+      <div class="tabpanel" role="tabpanel" id="p-here" aria-labelledby="t-here" tabindex="0">
+        <p class="sub">Pick a scenario. A scripted agent drives the <b style="color:var(--ink)">real</b> MCP storefront — every ⚙ chip is a live tool call — and you shop in the real product picker. Adult items stop at the gate until <b style="color:var(--ink)">you</b> prove it with your wallet.</p>
+        <div class="demo-box" id="demo">
+          <div class="demo-bar">
+            <button class="demo-scn" type="button" data-scenario="whiskey" aria-pressed="false">🥃 Buy the whiskey (21+)</button>
+            <button class="demo-scn" type="button" data-scenario="headphones" aria-pressed="false">🎧 Buy the headphones</button>
+            <button class="demo-reset" type="button" id="demo-reset" hidden>↺ Start over</button>
+          </div>
+          <div class="demo-offsite" id="demo-offsite" hidden>
+            <span>The in-browser demo runs on credentagent.ai.</span>
+            <a class="btn" href="https://credentagent.ai/#try">Try it on credentagent.ai ↗</a>
+          </div>
+          <div class="demo-log" id="demo-log" role="log" aria-live="polite" aria-label="Agent conversation"></div>
+        </div>
+        <p class="try-prereq">📱 To prove credentials on your device, install <a href="https://apps.multipaz.org" target="_blank" rel="noopener">Multipaz Wallet</a> (Android &amp; iOS).</p>
+      </div>
+
+      <div class="tabpanel" role="tabpanel" id="p-connector" aria-labelledby="t-connector" tabindex="0" hidden>
     <p class="sub">credentagent-storefront is a ready-to-run MCP server: nine shopping tools, a product widget, and a gated checkout. Add the hosted connector and order the whiskey — the age gate fires automatically.</p>
     <div class="try-cols">
 
@@ -469,6 +535,8 @@
         </div>
       </div>
 
+    </div>
+      </div>
     </div>
   </div></section>
 
@@ -747,28 +815,753 @@ host.<span class="c-fn">publish</span>(app);                           <span cla
 })();
 </script>
 <script>
-// "What's new" tabs — ARIA tabs pattern (click + arrow keys / Home / End)
+// Tabs — ARIA tabs pattern (click + arrow keys / Home / End), one independent group per .tablist
 (function(){
-  var tabs = [].slice.call(document.querySelectorAll('.tablist [role="tab"]'));
-  function select(t){
-    tabs.forEach(function(x){
-      var on = x === t;
-      x.setAttribute('aria-selected', on ? 'true' : 'false');
-      x.tabIndex = on ? 0 : -1;
-      document.getElementById(x.getAttribute('aria-controls')).hidden = !on;
-    });
-  }
-  tabs.forEach(function(t, i){
-    t.addEventListener('click', function(){ select(t); });
-    t.addEventListener('keydown', function(e){
-      var j = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 :
-              e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : null;
-      if (j === null) return;
-      e.preventDefault();
-      var n = tabs[(j + tabs.length) % tabs.length];
-      select(n); n.focus();
+  [].slice.call(document.querySelectorAll('.tablist')).forEach(function(list){
+    var tabs = [].slice.call(list.querySelectorAll('[role="tab"]'));
+    function select(t){
+      tabs.forEach(function(x){
+        var on = x === t;
+        x.setAttribute('aria-selected', on ? 'true' : 'false');
+        x.tabIndex = on ? 0 : -1;
+        document.getElementById(x.getAttribute('aria-controls')).hidden = !on;
+      });
+    }
+    tabs.forEach(function(t, i){
+      t.addEventListener('click', function(){ select(t); });
+      t.addEventListener('keydown', function(e){
+        var j = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 :
+                e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : null;
+        if (j === null) return;
+        e.preventDefault();
+        var n = tabs[(j + tabs.length) % tabs.length];
+        select(n); n.focus();
+      });
     });
   });
+})();
+</script>
+<script>
+/* ca-demo-core:begin */
+// Pure logic for the in-browser agent demo — no DOM access at load time.
+// Unit-tested by tests/demo.test.mjs, which loads exactly this block.
+var CADemo = (function () {
+  'use strict';
+  var api = {};
+
+  // Parse an MCP Streamable-HTTP reply: plain JSON, or SSE ("event: message" / "data: {...}").
+  api.parseRpcReply = function (body) {
+    var text = String(body || '').trim();
+    if (text.charAt(0) === '{') {
+      try { return JSON.parse(text); } catch (e) { return null; }
+    }
+    var found = null;
+    text.split(/\r?\n/).forEach(function (line) {
+      if (line.indexOf('data:') !== 0) return;
+      try {
+        var obj = JSON.parse(line.slice(5).trim());
+        if (obj && (obj.result !== undefined || obj.error !== undefined)) found = obj;
+      } catch (e) { /* not a JSON-RPC response line */ }
+    });
+    return found;
+  };
+
+  function mcpError(kind, message, status) {
+    var e = new Error(message); e.kind = kind; e.status = status; return e;
+  }
+
+  // Stateless MCP client: one JSON-RPC POST per call (the storefront needs no initialize/session).
+  // Errors carry .kind: http | rpc | protocol | timeout | network.
+  api.createMcpClient = function (opts) {
+    var endpoint = opts.endpoint, doFetch = opts.fetch, timeoutMs = opts.timeoutMs || 15000;
+    var nextId = 0;
+    return {
+      call: function (method, params) {
+        var controller = new AbortController();
+        var timer = setTimeout(function () { controller.abort(); }, timeoutMs);
+        return Promise.resolve().then(function () {
+          return doFetch(endpoint, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json', 'accept': 'application/json, text/event-stream' },
+            body: JSON.stringify({ jsonrpc: '2.0', id: ++nextId, method: method, params: params || {} }),
+            credentials: 'omit',
+            signal: controller.signal
+          });
+        }).then(function (res) {
+          if (!res.ok) throw mcpError('http', 'HTTP ' + res.status, res.status);
+          return res.text();
+        }).then(function (body) {
+          var parsed = api.parseRpcReply(body);
+          if (!parsed) throw mcpError('protocol', 'Unreadable reply from the MCP server');
+          if (parsed.error) throw mcpError('rpc', parsed.error.message || 'MCP error');
+          return parsed.result;
+        }).catch(function (err) {
+          // One normalizer for every failure: already-typed errors pass through unchanged.
+          if (err && err.kind) throw err;
+          if (err && err.name === 'AbortError') throw mcpError('timeout', 'No reply within ' + Math.round(timeoutMs / 1000) + ' s');
+          throw mcpError('network', (err && err.message) || 'Network error');
+        }).finally(function () { clearTimeout(timer); });
+      }
+    };
+  };
+
+  // Product names match the storefront catalog exactly (verified via browse-products).
+  api.SCENARIOS = {
+    whiskey:    { key: 'whiskey',    prompt: 'Buy the Oak Reserve whiskey.', product: 'Oak Reserve Whiskey Collection' },
+    headphones: { key: 'headphones', prompt: 'Buy the Aurora headphones.',   product: 'Aurora Wireless Headphones' }
+  };
+  api.tapLine = function (s) { return 'Tap + on the ' + s.product + ', then Checkout.'; };
+
+  api.isDemoOrigin = function (hostname) {
+    return ['credentagent.ai', 'www.credentagent.ai', 'localhost', '127.0.0.1'].indexOf(hostname) !== -1;
+  };
+
+  // The widget URI lives on the tool DEFINITION (tools/list), not on the call result.
+  api.pickWidget = function (toolsListResult, toolName) {
+    var tools = (toolsListResult && toolsListResult.tools) || [];
+    for (var i = 0; i < tools.length; i++) {
+      if (!tools[i] || tools[i].name !== toolName) continue;
+      var meta = tools[i]._meta || {};
+      var uri = (meta.ui && meta.ui.resourceUri) || meta['ui/resourceUri'];
+      return uri ? { tool: tools[i], uri: uri } : null;
+    }
+    return null;
+  };
+
+  api.formatArgs = function (args) {
+    var s = JSON.stringify(args || {});
+    if (s === '{}') return '';
+    return s.length > 60 ? s.slice(0, 57) + '…' : s;
+  };
+
+  api.toolText = function (result) {
+    var c = result && result.content && result.content[0];
+    if (!c || c.type !== 'text') return null;
+    try { return JSON.parse(c.text); } catch (e) { return null; }
+  };
+
+  api.fmtMoney = function (amount, currency) {
+    if (typeof amount !== 'number') return '';
+    var cur = (currency || 'USD').toUpperCase();
+    return cur === 'USD' ? '$' + amount.toFixed(2) : amount.toFixed(2) + ' ' + cur;
+  };
+
+  // What the agent says after checkout — derived ONLY from the real `requires` manifest.
+  // Only an absolute https URL may become a link, a QR code, or an order-status origin.
+  api.isHttpsUrl = function (u) { return typeof u === 'string' && /^https:\/\/[^\s\/?#]+[^\s]*$/i.test(u); };
+
+  api.summarizeCheckout = function (result) {
+    var body = api.toolText(result) || {};
+    var url = api.isHttpsUrl(body.checkoutUrl) ? body.checkoutUrl : null;
+    // An ABSENT manifest is not an empty one: only an explicit [] means "nothing to prove".
+    var reported = Array.isArray(body.requires);
+    var requires = (reported ? body.requires : []).filter(function (r) { return r && typeof r === 'object'; });
+    var label = function (r) { return r.label || r.credential || 'a credential'; };
+    var required = requires.filter(function (r) { return r.required; });
+    var optional = requires.filter(function (r) { return !r.required; });
+    var age = required.filter(function (r) { return r.credential === 'age'; })[0] || null;
+    var lines = [];
+    if (age) lines.push('🔒 ' + label(age) + ' required. I can’t complete this for you — you have to prove it yourself.');
+    else if (required.length) lines.push('No age check needed. This order needs: ' + required.map(label).join(' · ') + '.');
+    else if (reported) lines.push('Nothing to prove for this order.');
+    else lines.push('The checkout page will show what this order needs.');
+    if (optional.length) lines.push('Optional: ' + optional.map(label).join(' · ') + '.');
+    return {
+      ok: !!url && !!body.orderId,
+      orderId: body.orderId || null,
+      checkoutUrl: url,
+      gated: !!age,
+      chip: required.length ? '→ 🔒 ' + required.map(label).join(' · ') : (reported ? '→ no requirements' : '→ requirements not reported'),
+      lines: lines
+    };
+  };
+
+  // The widget's ui/open-link is honoured only for the checkout URL the page itself received.
+  api.isHandoffUrl = function (checkout, url) {
+    return !!(checkout && checkout.ok && typeof url === 'string' && url === checkout.checkoutUrl && api.isHttpsUrl(url));
+  };
+
+  // Built from the SETTLED order (order-status), never the cart — a member discount changes the amount.
+  api.completionLine = function (order) {
+    var money = order ? api.fmtMoney(order.amount, order.currency) : '';
+    return '✓ Order placed' + (money ? ' — ' + money : '') + '.';
+  };
+
+  // Only plain https origins (optionally *.subdomain / :port) and data: may enter the policy.
+  var CSP_SOURCE = /^(https:\/\/(\*\.)?[a-z0-9-]+(\.[a-z0-9-]+)*(:\d{1,5})?|data:)$/i;
+  function cspSources(list) {
+    var ok = (Array.isArray(list) ? list : []).filter(function (s) { return typeof s === 'string' && CSP_SOURCE.test(s); });
+    return ok.length ? ok.join(' ') : "'none'";
+  }
+
+  // Enforce the widget's own declared CSP (_meta.ui.csp) inside the sandboxed frame.
+  api.buildSrcdoc = function (html, csp) {
+    csp = csp || {};
+    var res = cspSources(csp.resourceDomains);
+    var conn = cspSources(csp.connectDomains);
+    var policy = [
+      "default-src 'none'", "script-src 'unsafe-inline'", "style-src 'unsafe-inline'",
+      'img-src ' + res, 'font-src ' + res, 'media-src ' + res, 'connect-src ' + conn,
+      "form-action 'none'", "base-uri 'none'"
+    ].join('; ');
+    var meta = '<meta http-equiv="Content-Security-Policy" content="' + policy.replace(/"/g, '&quot;') + '">';
+    return /<head(\s[^>]*)?>/i.test(html)
+      ? html.replace(/<head(\s[^>]*)?>/i, function (m) { return m + meta; })
+      : meta + html;
+  };
+
+  // Each run gets a token; late replies from an abandoned run are dropped.
+  api.createRunGuard = function () {
+    var current = 0;
+    return {
+      next: function () { return ++current; },
+      isCurrent: function (t) { return t === current; }
+    };
+  };
+
+  // Only messages whose source is OUR iframe reach the bridge.
+  api.acceptMessage = function (event, frameWindow) {
+    return frameWindow && event && event.source === frameWindow ? event.data : null;
+  };
+
+  // Minimal MCP Apps HOST side (the widget is @modelcontextprotocol/ext-apps, protocol 2026-01-26).
+  // h = { post(msg), callTool(name, args) → Promise, allowTools?: [names], context?, onReady?, onSize?, onOpenLink?, onModelContext? }
+  // With allowTools, the widget may only call those tools; without it, every tools/call is relayed.
+  api.HOST_PROTOCOL = '2026-01-26';
+  api.createHostBridge = function (h) {
+    var seq = 0;
+    function reply(id, result) { h.post({ jsonrpc: '2.0', id: id, result: result }); }
+    function fail(id, code, message) { h.post({ jsonrpc: '2.0', id: id, error: { code: code, message: message } }); }
+    function onRequest(msg) {
+      var p = msg.params || {};
+      switch (msg.method) {
+        case 'ui/initialize':
+          // h.context.toolInfo.tool must be the full MCP Tool from tools/list (name + inputSchema): the App zod-validates it.
+          reply(msg.id, {
+            protocolVersion: p.protocolVersion || api.HOST_PROTOCOL,
+            hostInfo: { name: 'credentagent.ai', version: '1.0.0' },
+            hostCapabilities: { openLinks: {}, serverTools: {}, updateModelContext: {} },
+            hostContext: Object.assign({ theme: 'dark', displayMode: 'inline', availableDisplayModes: ['inline'], platform: 'web' }, h.context || {})
+          });
+          return;
+        case 'tools/call':
+          if (Array.isArray(h.allowTools) && h.allowTools.indexOf(p.name) === -1) {
+            fail(msg.id, -32601, 'Tool not available to this app: ' + p.name);
+            return;
+          }
+          Promise.resolve()
+            .then(function () { return h.callTool(p.name, p.arguments || {}); })
+            .then(function (result) { reply(msg.id, result || { content: [] }); },
+                  function (err) { fail(msg.id, -32603, (err && err.message) || 'Tool call failed'); });
+          return;
+        case 'ui/open-link':
+          reply(msg.id, {});
+          if (h.onOpenLink) h.onOpenLink(p.url);
+          return;
+        case 'ui/update-model-context':
+          reply(msg.id, {});
+          if (h.onModelContext) h.onModelContext(p);
+          return;
+        case 'ui/message':
+          reply(msg.id, {});
+          return;
+        case 'ui/request-display-mode':
+          reply(msg.id, { mode: 'inline' });
+          return;
+        default:
+          fail(msg.id, -32601, 'Method not supported by this host: ' + msg.method);
+      }
+    }
+    return {
+      handle: function (msg) {
+        if (!msg || msg.jsonrpc !== '2.0' || typeof msg.method !== 'string') return; // responses & junk
+        if (msg.id !== undefined && msg.id !== null) { onRequest(msg); return; }
+        if (msg.method === 'ui/notifications/initialized' && h.onReady) h.onReady();
+        if (msg.method === 'ui/notifications/size-changed' && h.onSize && msg.params) h.onSize(msg.params.height);
+      },
+      notify: function (method, params) { h.post({ jsonrpc: '2.0', method: method, params: params || {} }); },
+      teardown: function () { h.post({ jsonrpc: '2.0', id: 'teardown-' + (++seq), method: 'ui/resource-teardown', params: {} }); }
+    };
+  };
+
+  // ---- QR Code: byte mode, ECC level L. Compact port of the Project Nayuki algorithm (MIT):
+  //      https://www.nayuki.io/page/qr-code-generator-library ----
+  var QR_ECC_L = [-1, 7, 10, 15, 20, 26, 18, 20, 24, 30, 18, 20, 24, 26, 30, 22, 24, 28, 30, 28, 28, 28, 28, 30, 30, 26, 28, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30];
+  var QR_BLOCKS_L = [-1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 4, 4, 4, 4, 4, 6, 6, 6, 6, 7, 8, 8, 9, 9, 10, 12, 12, 12, 13, 14, 15, 16, 17, 18, 19, 19, 20, 21, 22, 24, 25];
+
+  function qrGfMul(x, y) {
+    var z = 0;
+    for (var i = 7; i >= 0; i--) { z = (z << 1) ^ ((z >>> 7) * 0x11d); z ^= ((y >>> i) & 1) * x; }
+    return z & 0xff;
+  }
+  function qrRsDivisor(degree) {
+    var result = [];
+    for (var i = 0; i < degree - 1; i++) result.push(0);
+    result.push(1);
+    var root = 1;
+    for (var k = 0; k < degree; k++) {
+      for (var j = 0; j < result.length; j++) {
+        result[j] = qrGfMul(result[j], root);
+        if (j + 1 < result.length) result[j] ^= result[j + 1];
+      }
+      root = qrGfMul(root, 0x02);
+    }
+    return result;
+  }
+  function qrRsRemainder(data, divisor) {
+    var result = divisor.map(function () { return 0; });
+    data.forEach(function (b) {
+      var factor = b ^ result.shift();
+      result.push(0);
+      divisor.forEach(function (coef, i) { result[i] ^= qrGfMul(coef, factor); });
+    });
+    return result;
+  }
+  api.qrRsRemainder = function (data, degree) { return qrRsRemainder(data, qrRsDivisor(degree)); };
+
+  function qrRawModules(ver) {
+    var r = (16 * ver + 128) * ver + 64;
+    if (ver >= 2) {
+      var n = Math.floor(ver / 7) + 2;
+      r -= (25 * n - 10) * n - 55;
+      if (ver >= 7) r -= 36;
+    }
+    return r;
+  }
+  function qrDataCodewords(ver) { return Math.floor(qrRawModules(ver) / 8) - QR_ECC_L[ver] * QR_BLOCKS_L[ver]; }
+  function qrAlignPositions(ver, size) {
+    if (ver === 1) return [];
+    var n = Math.floor(ver / 7) + 2;
+    var step = ver === 32 ? 26 : Math.ceil((ver * 4 + 4) / (n * 2 - 2)) * 2;
+    var out = [6];
+    for (var pos = size - 7; out.length < n; pos -= step) out.splice(1, 0, pos);
+    return out;
+  }
+
+  api.qrMatrix = function (text) {
+    var utf8 = unescape(encodeURIComponent(text)), bytes = [];
+    for (var b = 0; b < utf8.length; b++) bytes.push(utf8.charCodeAt(b));
+
+    var ver, cap;
+    for (ver = 1; ver <= 40; ver++) {
+      cap = qrDataCodewords(ver) * 8;
+      if (4 + (ver <= 9 ? 8 : 16) + bytes.length * 8 <= cap) break;
+    }
+    if (ver > 40) throw new Error('Text too long for a QR code');
+
+    // Bit stream: byte mode, length, data, terminator, byte-align, pad bytes.
+    var bits = [];
+    function put(val, len) { for (var i = len - 1; i >= 0; i--) bits.push((val >>> i) & 1); }
+    put(4, 4);
+    put(bytes.length, ver <= 9 ? 8 : 16);
+    bytes.forEach(function (x) { put(x, 8); });
+    put(0, Math.min(4, cap - bits.length));
+    put(0, (8 - bits.length % 8) % 8);
+    for (var pad = 0xec; bits.length < cap; pad ^= 0xec ^ 0x11) put(pad, 8);
+    var data = [];
+    for (var i = 0; i < bits.length; i += 8) {
+      var v = 0;
+      for (var j = 0; j < 8; j++) v = (v << 1) | bits[i + j];
+      data.push(v);
+    }
+
+    // Split into blocks, append ECC, interleave.
+    var numBlocks = QR_BLOCKS_L[ver], eccLen = QR_ECC_L[ver];
+    var rawCodewords = Math.floor(qrRawModules(ver) / 8);
+    var numShort = numBlocks - rawCodewords % numBlocks;
+    var shortLen = Math.floor(rawCodewords / numBlocks);
+    var divisor = qrRsDivisor(eccLen), blocks = [];
+    for (var bi = 0, k = 0; bi < numBlocks; bi++) {
+      var dat = data.slice(k, k + shortLen - eccLen + (bi < numShort ? 0 : 1));
+      k += dat.length;
+      var ecc = qrRsRemainder(dat, divisor);
+      if (bi < numShort) dat.push(0);
+      blocks.push(dat.concat(ecc));
+    }
+    var codewords = [];
+    for (var ci = 0; ci < blocks[0].length; ci++) {
+      for (var bj = 0; bj < blocks.length; bj++) {
+        if (ci !== shortLen - eccLen || bj >= numShort) codewords.push(blocks[bj][ci]);
+      }
+    }
+
+    // Function patterns.
+    var size = ver * 4 + 17, mods = [], fn = [];
+    for (var r0 = 0; r0 < size; r0++) { mods.push(new Array(size).fill(false)); fn.push(new Array(size).fill(false)); }
+    function set(x, y, dark) { mods[y][x] = dark; fn[y][x] = true; }
+    for (var t = 0; t < size; t++) { set(6, t, t % 2 === 0); set(t, 6, t % 2 === 0); }
+    [[3, 3], [size - 4, 3], [3, size - 4]].forEach(function (c) {
+      for (var dy = -4; dy <= 4; dy++) {
+        for (var dx = -4; dx <= 4; dx++) {
+          var xx = c[0] + dx, yy = c[1] + dy;
+          if (xx >= 0 && xx < size && yy >= 0 && yy < size) {
+            var d = Math.max(Math.abs(dx), Math.abs(dy));
+            set(xx, yy, d !== 2 && d !== 4);
+          }
+        }
+      }
+    });
+    var al = qrAlignPositions(ver, size), last = al.length - 1;
+    al.forEach(function (ax, ia) {
+      al.forEach(function (ay, ja) {
+        if ((ia === 0 && ja === 0) || (ia === 0 && ja === last) || (ia === last && ja === 0)) return;
+        for (var dy = -2; dy <= 2; dy++) {
+          for (var dx = -2; dx <= 2; dx++) set(ax + dx, ay + dy, Math.max(Math.abs(dx), Math.abs(dy)) !== 1);
+        }
+      });
+    });
+    function drawFormat(mask) {
+      var data5 = (1 << 3) | mask;                               // ECC level L = 01
+      var rem = data5;
+      for (var i = 0; i < 10; i++) rem = (rem << 1) ^ ((rem >>> 9) * 0x537);
+      var fbits = ((data5 << 10) | rem) ^ 0x5412;
+      function bit(i) { return ((fbits >>> i) & 1) !== 0; }
+      for (var a = 0; a <= 5; a++) set(8, a, bit(a));
+      set(8, 7, bit(6)); set(8, 8, bit(7)); set(7, 8, bit(8));
+      for (var b2 = 9; b2 < 15; b2++) set(14 - b2, 8, bit(b2));
+      for (var c2 = 0; c2 < 8; c2++) set(size - 1 - c2, 8, bit(c2));
+      for (var d2 = 8; d2 < 15; d2++) set(8, size - 15 + d2, bit(d2));
+      set(8, size - 8, true);                                    // the always-dark module
+    }
+    drawFormat(0);                                               // reserve the format area
+    if (ver >= 7) {
+      var rv = ver;
+      for (var q = 0; q < 12; q++) rv = (rv << 1) ^ ((rv >>> 11) * 0x1f25);
+      var vbits = (ver << 12) | rv;
+      for (var vi = 0; vi < 18; vi++) {
+        var vb = ((vbits >>> vi) & 1) !== 0, va = size - 11 + vi % 3, vc = Math.floor(vi / 3);
+        set(va, vc, vb); set(vc, va, vb);
+      }
+    }
+
+    // Codewords, zig-zagging up and down in two-column strips.
+    var idx = 0;
+    for (var right = size - 1; right >= 1; right -= 2) {
+      if (right === 6) right = 5;
+      for (var vert = 0; vert < size; vert++) {
+        for (var jj = 0; jj < 2; jj++) {
+          var x = right - jj, upward = ((right + 1) & 2) === 0, y = upward ? size - 1 - vert : vert;
+          if (!fn[y][x] && idx < codewords.length * 8) {
+            mods[y][x] = ((codewords[idx >>> 3] >>> (7 - (idx & 7))) & 1) !== 0;
+            idx++;
+          }
+        }
+      }
+    }
+
+    // Mask: try all 8, keep the lowest penalty (N1 runs, N2 blocks, N4 balance).
+    function maskHit(m, x, y) {
+      switch (m) {
+        case 0: return (x + y) % 2 === 0;
+        case 1: return y % 2 === 0;
+        case 2: return x % 3 === 0;
+        case 3: return (x + y) % 3 === 0;
+        case 4: return (Math.floor(x / 3) + Math.floor(y / 2)) % 2 === 0;
+        case 5: return (x * y) % 2 + (x * y) % 3 === 0;
+        case 6: return ((x * y) % 2 + (x * y) % 3) % 2 === 0;
+        default: return ((x + y) % 2 + (x * y) % 3) % 2 === 0;
+      }
+    }
+    function applyMask(m) {
+      for (var y = 0; y < size; y++) {
+        for (var x = 0; x < size; x++) if (!fn[y][x] && maskHit(m, x, y)) mods[y][x] = !mods[y][x];
+      }
+    }
+    function penalty() {
+      var p = 0, dark = 0;
+      for (var y = 0; y < size; y++) {
+        var runH = 1, runV = 1;
+        for (var x = 0; x < size; x++) {
+          if (mods[y][x]) dark++;
+          if (x > 0) {
+            if (mods[y][x] === mods[y][x - 1]) { runH++; if (runH === 5) p += 3; else if (runH > 5) p++; } else runH = 1;
+            if (mods[x][y] === mods[x - 1][y]) { runV++; if (runV === 5) p += 3; else if (runV > 5) p++; } else runV = 1;
+          }
+          if (x > 0 && y > 0) {
+            var c = mods[y][x];
+            if (c === mods[y][x - 1] && c === mods[y - 1][x] && c === mods[y - 1][x - 1]) p += 3;
+          }
+        }
+      }
+      var total = size * size;
+      return p + Math.floor(Math.abs(dark * 20 - total * 10) / total) * 10;
+    }
+    var best = 0, bestScore = Infinity;
+    for (var m = 0; m < 8; m++) {
+      applyMask(m); drawFormat(m);
+      var score = penalty();
+      if (score < bestScore) { best = m; bestScore = score; }
+      applyMask(m);                                              // XOR again undoes it
+    }
+    applyMask(best);
+    drawFormat(best);
+    return mods;
+  };
+
+  api.qrSvg = function (text, px) {
+    var m = api.qrMatrix(text), n = m.length, quiet = 4, dim = n + quiet * 2, d = '';
+    for (var y = 0; y < n; y++) {
+      for (var x = 0; x < n; x++) if (m[y][x]) d += 'M' + (x + quiet) + ' ' + (y + quiet) + 'h1v1h-1z';
+    }
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + dim + ' ' + dim + '" width="' + px + '" height="' + px +
+      '" shape-rendering="crispEdges" role="img" aria-label="QR code for the checkout link">' +
+      '<rect width="100%" height="100%" fill="#fff"/><path d="' + d + '" fill="#000"/></svg>';
+  };
+
+  return api;
+})();
+/* ca-demo-core:end */
+</script>
+<script>
+// In-browser agent demo — see docs/superpowers/specs/2026-09-25-in-browser-agent-design.md
+(function(){
+  var root = document.getElementById('demo');
+  if (!root || !window.CADemo) return;
+  var D = window.CADemo;
+  var ENDPOINT = '/marketplace-dev/mcp';     // same-origin via the credentagent.ai router; '/marketplace/mcp' = published 0.4.0
+  var WIDGET_TOOL = 'browse-products';
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var log = document.getElementById('demo-log');
+  var resetBtn = document.getElementById('demo-reset');
+  var scnBtns = [].slice.call(root.querySelectorAll('.demo-scn'));
+
+  if (!D.isDemoOrigin(location.hostname)) {
+    document.getElementById('demo-offsite').hidden = false;
+    scnBtns.forEach(function(b){ b.disabled = true; });
+    return;
+  }
+
+  var mcp = D.createMcpClient({ endpoint: ENDPOINT, fetch: window.fetch.bind(window) });
+  var guard = D.createRunGuard();
+  var run = null;   // { token, frame, bridge, onMessage, readyTimer, ready }
+
+  function el(tag, cls, text){ var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+  function pause(ms){ return new Promise(function(r){ setTimeout(r, reduce ? 0 : ms); }); }
+  function add(node){ log.appendChild(node); return node; }
+  function say(who, text, cls){
+    var row = el('div', 'd-row ' + who);
+    row.appendChild(el('div', 'd-bubble' + (cls ? ' ' + cls : ''), text));
+    return add(row);
+  }
+  function chip(label, args){
+    var c = el('div', 'd-chip');
+    c.appendChild(document.createTextNode('⚙ '));
+    c.appendChild(el('b', null, label));
+    var a = D.formatArgs(args);
+    if (a) c.appendChild(document.createTextNode(' ' + a));
+    var st = el('span', 'st', '…');
+    c.appendChild(st);
+    add(c);
+    var t0 = performance.now();
+    return {
+      ok: function(extra){ c.classList.add('ok'); st.textContent = '✓ ' + Math.round(performance.now() - t0) + ' ms' + (extra ? ' ' + extra : ''); },
+      fail: function(msg){ c.classList.add('err'); st.textContent = '✗ ' + msg; }
+    };
+  }
+  // Every MCP call — the page's own and the widget's (via the bridge) — shows as one real chip.
+  function rpc(token, method, params, label, chipArgs, describe){
+    if (!guard.isCurrent(token)) {          // an abandoned run: no chip, no network
+      var stale = new Error('stale run'); stale.kind = 'stale';
+      return Promise.reject(stale);
+    }
+    var c = chip(label, chipArgs);
+    return mcp.call(method, params).then(function(result){
+      if (guard.isCurrent(token)) {
+        if (result && result.isError) c.fail('tool error');
+        else c.ok(describe ? describe(result) : '');
+      }
+      return result;
+    }, function(err){
+      if (guard.isCurrent(token)) c.fail(err.message);
+      throw err;
+    });
+  }
+  function tool(token, name, args, describe){
+    return rpc(token, 'tools/call', { name: name, arguments: args || {} }, name, args, describe);
+  }
+
+  function teardown(){
+    if (!run) return;
+    clearTimeout(run.readyTimer);
+    if (run.onMessage) window.removeEventListener('message', run.onMessage);
+    if (run.bridge) run.bridge.teardown();
+    if (run.frame && run.frame.parentNode) run.frame.parentNode.removeChild(run.frame);
+    run = null;
+  }
+  function reset(){
+    guard.next();
+    teardown();
+    log.textContent = '';
+    scnBtns.forEach(function(b){ b.setAttribute('aria-pressed', 'false'); });
+    resetBtn.hidden = true;
+  }
+  function retryRow(message, retry){
+    say('agent', message, 'err');
+    var actions = el('div', 'd-actions');
+    var again = el('button', 'd-link', 'Retry');
+    again.type = 'button';
+    again.addEventListener('click', retry);
+    var alt = el('button', 'd-link', 'Use it in Claude / ChatGPT / Goose instead');
+    alt.type = 'button';
+    alt.addEventListener('click', function(){ var t = document.getElementById('t-connector'); t.click(); t.focus(); });
+    actions.appendChild(again);
+    actions.appendChild(alt);
+    add(actions);
+  }
+
+  function start(key){
+    reset();
+    var s = D.SCENARIOS[key], token = guard.next();
+    var state = { browse: null, checkout: null, handedOff: false, card: null, checking: false, checkBtn: null, done: false };
+    run = { token: token };
+    scnBtns.forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-scenario') === key ? 'true' : 'false'); });
+    resetBtn.hidden = false;
+    var retry = function(){ start(key); };
+    var widget;
+
+    say('user', s.prompt);
+    pause(450).then(function(){
+      if (!guard.isCurrent(token)) return;
+      say('agent', 'Let me open the store.');
+      return rpc(token, 'tools/list', {}, 'tools/list').then(function(list){
+        if (!guard.isCurrent(token)) return;
+        widget = D.pickWidget(list, WIDGET_TOOL);
+        if (!widget) throw new Error('the store has no product picker');
+        return tool(token, WIDGET_TOOL, {});
+      }).then(function(browse){
+        if (!guard.isCurrent(token)) return;
+        state.browse = browse;
+        return rpc(token, 'resources/read', { uri: widget.uri }, 'resources/read', { uri: widget.uri });
+      }).then(function(read){
+        if (!guard.isCurrent(token)) return;
+        var content = read && read.contents && read.contents[0];
+        if (!content || !content.text) throw new Error('the product picker resource is empty');
+        mountWidget(token, s, widget, state, content, retry);
+      }).catch(function(err){
+        if (err && err.kind === 'stale') return;
+        if (guard.isCurrent(token)) retryRow('The demo store isn’t responding right now (' + err.message + ').', retry);
+      });
+    });
+  }
+
+  function mountWidget(token, s, widget, state, content, retry){
+    var r = run;
+    var frame = el('iframe', 'd-frame');
+    frame.setAttribute('sandbox', 'allow-scripts allow-forms');
+    frame.setAttribute('title', 'Product picker — the MCP app served by the CredentAgent storefront');
+    frame.srcdoc = D.buildSrcdoc(content.text, content._meta && content._meta.ui && content._meta.ui.csp);
+
+    var bridge = D.createHostBridge({
+      post: function(m){ if (frame.contentWindow) frame.contentWindow.postMessage(m, '*'); },
+      allowTools: ['browse-products', 'get-cart', 'set-quantity', 'add-to-cart', 'remove-from-cart', 'checkout'],
+      context: { toolInfo: { tool: widget.tool } },
+      callTool: function(name, args){
+        var describe = name === 'checkout' ? function(res){ return D.summarizeCheckout(res).chip; } : null;
+        return tool(token, name, args, describe).then(function(result){
+          if (guard.isCurrent(token) && name === 'checkout') onCheckout(token, state, result);
+          return result;
+        });
+      },
+      onReady: function(){
+        if (!guard.isCurrent(token)) return;
+        if (r.ready) return;                  // a repeated initialized must not replay the result
+        clearTimeout(r.readyTimer);
+        r.ready = true;
+        bridge.notify('ui/notifications/tool-input', { arguments: {} });
+        bridge.notify('ui/notifications/tool-result', state.browse);
+        pause(300).then(function(){ if (guard.isCurrent(token)) say('agent', D.tapLine(s)); });
+      },
+      onSize: function(h){ if (typeof h === 'number' && h > 0) frame.style.height = Math.min(h, 900) + 'px'; },
+      onOpenLink: function(url){ if (guard.isCurrent(token)) handOff(token, state, url); },
+      onModelContext: function(){ if (guard.isCurrent(token)) finish(token, state, false); }
+    });
+
+    var onMessage = function(e){
+      var msg = D.acceptMessage(e, frame.contentWindow);
+      if (msg && guard.isCurrent(token)) bridge.handle(msg);
+    };
+    window.addEventListener('message', onMessage);
+    r.frame = frame; r.bridge = bridge; r.onMessage = onMessage;
+    r.readyTimer = setTimeout(function(){
+      if (!guard.isCurrent(token) || r.ready) return;
+      teardown();
+      retryRow('The product picker didn’t load.', retry);
+    }, 10000);
+    add(frame);
+  }
+
+  function onCheckout(token, state, result){
+    var sum = D.summarizeCheckout(result);
+    if (!sum.ok) return;
+    if (state.card) {                          // a re-checkout replaces the old order's hand-off
+      if (state.card.parentNode) state.card.parentNode.removeChild(state.card);
+      state.card = null;
+      state.checkBtn = null;
+    }
+    state.handedOff = false;
+    state.done = false;
+    state.checkout = sum;
+    sum.lines.forEach(function(line){ say('agent', line); });
+  }
+
+  function handOff(token, state, url){
+    if (state.handedOff) return;
+    if (!D.isHandoffUrl(state.checkout, url)) return;   // only the checkout this page itself received
+    state.handedOff = true;
+    var card = el('div', 'd-card');
+    state.card = card;
+    var showQr = window.matchMedia && window.matchMedia('(pointer: fine)').matches;
+    if (showQr) {
+      try {
+        var qr = el('div', 'qr');
+        qr.innerHTML = D.qrSvg(url, 264);    // generated SVG: path data only, no URL text inside
+        card.appendChild(qr);
+      } catch (e) { showQr = false; }
+    }
+    var body = el('div', 'body');
+    var go = el('a', 'btn', 'Continue to checkout ↗');
+    go.href = url; go.target = '_blank'; go.rel = 'noopener';
+    body.appendChild(go);
+    function line(html){ var n = el('div'); n.innerHTML = html; body.appendChild(n); }   // static strings only
+    line('📱 Proving needs <a href="https://apps.multipaz.org" target="_blank" rel="noopener">Multipaz Wallet</a> · Chrome 141+ on Android or iOS 18+ — the checkout page uses the W3C Digital Credentials API.');
+    if (showQr) line('On a computer? Scan the QR code to open this checkout on your phone.');
+    line('No wallet or unsupported browser? The checkout page offers an <b>instant demo</b> button.');
+    var check = el('button', 'd-link', 'I’ve finished — check the order');
+    check.type = 'button';
+    check.addEventListener('click', function(){ finish(token, state, true); });
+    state.checkBtn = check;
+    body.appendChild(check);
+    body.appendChild(el('div', 'honest', '🔒 presence-only-demo · the wire crypto is real; the issuer trust anchor is not'));
+    card.appendChild(body);
+    add(card);
+    say('agent', 'I’ll wait here while you prove it.');
+  }
+
+  // Completion is read from the SETTLED order — never assumed.
+  function finish(token, state, manual){
+    if (state.done || state.checking || !state.checkout) return;
+    state.checking = true;
+    var co = state.checkout;                   // the reply must belong to the order we asked about
+    var origin = new URL(co.checkoutUrl).origin;
+    fetch(origin + '/checkout/order-status?orderId=' + encodeURIComponent(co.orderId))
+      .then(function(res){ return res.ok ? res.json() : null; })
+      .then(function(s){
+        state.checking = false;
+        if (!guard.isCurrent(token) || state.done || state.checkout !== co) return;
+        if (s && s.completed) {
+          state.done = true;
+          if (state.checkBtn) state.checkBtn.disabled = true;
+          say('agent', D.completionLine(s.order), 'ok');
+        }
+        else if (manual) say('agent', 'Not completed yet — finish the proof and payment on the checkout page, then check again.');
+      }, function(){
+        state.checking = false;
+        if (manual && guard.isCurrent(token) && state.checkout === co) say('agent', 'I couldn’t reach the order status just now — try again in a moment.', 'err');
+      });
+  }
+
+  scnBtns.forEach(function(b){ b.addEventListener('click', function(){ start(b.getAttribute('data-scenario')); }); });
+  resetBtn.addEventListener('click', reset);
 })();
 </script>
 </body>
