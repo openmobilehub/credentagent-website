@@ -279,6 +279,41 @@
   .mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;margin-top:1.2rem}
   .mini-grid .card code{font-family:ui-monospace,Menlo,monospace;color:var(--teal);font-size:.85em}
 
+  /* ---------- in-browser demo (Try it live → Right here) ---------- */
+  .tabs-plain{background:transparent;border:none;border-radius:0;overflow:visible;margin-top:1.2rem}
+  .tabs-plain .tablist{background:transparent;padding:0}
+  .tabs-plain .tab[aria-selected="true"]{background:var(--bg2)}
+  .tabs-plain .tabpanel{padding:1.4rem 0 0}
+  .demo{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:1rem;margin:1rem 0}
+  .demo-bar{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+  .demo-scn{font:inherit;font-size:.95rem;font-weight:700;color:#031425;background:var(--teal);border:none;border-radius:10px;padding:.75rem 1.1rem;cursor:pointer;transition:background .2s,transform .1s}
+  .demo-scn:hover{background:var(--teal2);transform:translateY(-1px)}
+  .demo-scn[aria-pressed="true"]{box-shadow:0 0 0 2px var(--bg2),0 0 0 4px var(--teal)}
+  .demo-scn:disabled{opacity:.5;cursor:default;transform:none}
+  .demo-scn:focus-visible,.demo-reset:focus-visible,.d-link:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+  .demo-reset{font:inherit;font-size:.85rem;color:var(--mut);background:transparent;border:1px solid var(--line);border-radius:8px;padding:.5rem .8rem;cursor:pointer;margin-left:auto}
+  .demo-offsite{color:var(--mut);margin-top:.8rem;display:flex;gap:.8rem;align-items:center;flex-wrap:wrap}
+  .demo-log{display:flex;flex-direction:column;gap:.6rem;margin-top:1rem}
+  .demo-log:empty{display:none}
+  .d-row{display:flex}.d-row.user{justify-content:flex-end}
+  .d-bubble{max-width:80%;padding:.6rem .85rem;border-radius:12px;font-size:.9rem;line-height:1.45;background:#0b1038;border:1px solid var(--line)}
+  .d-row.user .d-bubble{background:#0e1440;border-bottom-right-radius:4px}
+  .d-row.agent .d-bubble{border-bottom-left-radius:4px}
+  .d-bubble.ok{border-color:rgba(52,211,153,.45);box-shadow:0 0 18px -6px rgba(52,211,153,.4)}
+  .d-bubble.err{border-color:rgba(248,113,113,.5)}
+  .d-chip{align-self:flex-start;font-family:ui-monospace,Menlo,monospace;font-size:.76rem;color:var(--mut);background:var(--code);border:1px solid var(--line);border-radius:7px;padding:.3rem .6rem;max-width:100%;overflow-wrap:anywhere}
+  .d-chip b{color:var(--teal);font-weight:600}
+  .d-chip .st{margin-left:.4rem}.d-chip.ok .st{color:var(--green)}.d-chip.err .st{color:#f87171}
+  .d-frame{width:100%;border:0;display:block;height:160px;border-radius:12px;background:transparent;color-scheme:dark}
+  .d-card{border:1px dashed rgba(56,189,248,.45);border-radius:12px;padding:.9rem 1rem;display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-start;background:var(--code)}
+  .d-card .qr{flex:none;background:#fff;border-radius:8px;padding:6px;line-height:0}
+  .d-card .qr svg{width:264px;height:264px;max-width:100%}
+  .d-card .body{flex:1;min-width:14rem;font-size:.88rem;color:var(--mut);line-height:1.6;display:flex;flex-direction:column;gap:.35rem;align-items:flex-start}
+  .d-card .body a:not(.btn){color:var(--teal);text-decoration:underline;text-underline-offset:2px}
+  .d-card .honest{font-size:.75rem;color:var(--dim)}
+  .d-actions{display:flex;gap:.5rem;flex-wrap:wrap}
+  .d-link{font:inherit;font-size:.82rem;color:var(--teal);background:none;border:1px solid rgba(56,189,248,.4);border-radius:8px;padding:.45rem .75rem;cursor:pointer}
+
   /* ---------- reduced motion: static success state ---------- */
   @media (prefers-reduced-motion: reduce){
     .bubble,.gate,.wallet{opacity:1!important;transform:none!important;animation:none!important}
@@ -304,6 +339,8 @@
     .pill{display:none}
     h1{font-size:31px}
     .module-cards{grid-template-columns:1fr}
+    .d-bubble{max-width:92%}
+    .demo-reset{margin-left:0}
   }
 </style>
 </head>
@@ -333,6 +370,7 @@
       <div class="ctas">
         <a class="cta-primary" href="https://www.npmjs.com/package/@openmobilehub/credentagent-gate">npm i @openmobilehub/credentagent-gate</a>
         <a class="cta-ghost" href="https://github.com/openmobilehub/credentagent/tree/main/docs/reference">Read the docs →</a>
+        <a class="cta-ghost" href="#try">Try it in your browser ↓</a>
       </div>
     </div>
 
@@ -391,9 +429,33 @@
   </section>
 
   <!-- TRY IT LIVE -->
-  <section><div class="wrap">
+  <section id="try"><div class="wrap">
     <div class="seclabel">Try it live</div>
-    <h2>A complete MCP storefront — no setup required.</h2>
+    <h2>A complete MCP storefront — try it right here, or in your own agent.</h2>
+    <div class="tabs tabs-plain">
+      <div class="tablist" role="tablist" aria-label="Ways to try CredentAgent">
+        <button class="tab" role="tab" id="t-here" aria-controls="p-here" aria-selected="true">▶ Right here</button>
+        <button class="tab" role="tab" id="t-connector" aria-controls="p-connector" aria-selected="false" tabindex="-1">In Claude / ChatGPT / Goose</button>
+      </div>
+
+      <div class="tabpanel" role="tabpanel" id="p-here" aria-labelledby="t-here" tabindex="0">
+        <p class="sub">Pick a scenario. A scripted agent drives the <b style="color:var(--ink)">real</b> MCP storefront — every ⚙ chip is a live tool call — and you shop in the real product picker. Adult items stop at the gate until <b style="color:var(--ink)">you</b> prove it with your wallet.</p>
+        <div class="demo" id="demo">
+          <div class="demo-bar">
+            <button class="demo-scn" type="button" data-scenario="whiskey" aria-pressed="false">🥃 Buy the whiskey (21+)</button>
+            <button class="demo-scn" type="button" data-scenario="headphones" aria-pressed="false">🎧 Buy the headphones</button>
+            <button class="demo-reset" type="button" id="demo-reset" hidden>↺ Start over</button>
+          </div>
+          <div class="demo-offsite" id="demo-offsite" hidden>
+            <span>The in-browser demo runs on credentagent.ai.</span>
+            <a class="btn" href="https://credentagent.ai/#try">Try it on credentagent.ai ↗</a>
+          </div>
+          <div class="demo-log" id="demo-log" role="log" aria-live="polite" aria-label="Agent conversation"></div>
+        </div>
+        <p class="try-prereq">📱 To prove credentials on your device, install <a href="https://apps.multipaz.org" target="_blank" rel="noopener">Multipaz Wallet</a> (Android &amp; iOS).</p>
+      </div>
+
+      <div class="tabpanel" role="tabpanel" id="p-connector" aria-labelledby="t-connector" tabindex="0" hidden>
     <p class="sub">credentagent-storefront is a ready-to-run MCP server: nine shopping tools, a product widget, and a gated checkout. Add the hosted connector and order the whiskey — the age gate fires automatically.</p>
     <div class="try-cols">
 
@@ -469,6 +531,8 @@
         </div>
       </div>
 
+    </div>
+      </div>
     </div>
   </div></section>
 
@@ -747,26 +811,28 @@ host.<span class="c-fn">publish</span>(app);                           <span cla
 })();
 </script>
 <script>
-// "What's new" tabs — ARIA tabs pattern (click + arrow keys / Home / End)
+// Tabs — ARIA tabs pattern (click + arrow keys / Home / End), one independent group per .tablist
 (function(){
-  var tabs = [].slice.call(document.querySelectorAll('.tablist [role="tab"]'));
-  function select(t){
-    tabs.forEach(function(x){
-      var on = x === t;
-      x.setAttribute('aria-selected', on ? 'true' : 'false');
-      x.tabIndex = on ? 0 : -1;
-      document.getElementById(x.getAttribute('aria-controls')).hidden = !on;
-    });
-  }
-  tabs.forEach(function(t, i){
-    t.addEventListener('click', function(){ select(t); });
-    t.addEventListener('keydown', function(e){
-      var j = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 :
-              e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : null;
-      if (j === null) return;
-      e.preventDefault();
-      var n = tabs[(j + tabs.length) % tabs.length];
-      select(n); n.focus();
+  [].slice.call(document.querySelectorAll('.tablist')).forEach(function(list){
+    var tabs = [].slice.call(list.querySelectorAll('[role="tab"]'));
+    function select(t){
+      tabs.forEach(function(x){
+        var on = x === t;
+        x.setAttribute('aria-selected', on ? 'true' : 'false');
+        x.tabIndex = on ? 0 : -1;
+        document.getElementById(x.getAttribute('aria-controls')).hidden = !on;
+      });
+    }
+    tabs.forEach(function(t, i){
+      t.addEventListener('click', function(){ select(t); });
+      t.addEventListener('keydown', function(e){
+        var j = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 :
+                e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : null;
+        if (j === null) return;
+        e.preventDefault();
+        var n = tabs[(j + tabs.length) % tabs.length];
+        select(n); n.focus();
+      });
     });
   });
 })();
