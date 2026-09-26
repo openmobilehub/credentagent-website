@@ -205,6 +205,7 @@
   .wrap{max-width:1040px;margin:0 auto;padding:0 1.5rem}
   .seclabel{font-size:.66rem;letter-spacing:.22em;font-weight:800;color:var(--purple);text-transform:uppercase}
   section{padding:4.5rem 0;border-bottom:1px solid var(--line)}
+  section[id]{scroll-margin-top:72px}
   section.hero{padding:44px 56px}
   h2{font-size:1.7rem;letter-spacing:-.02em;font-weight:700;margin:.6rem 0 1rem}
   .sub{color:var(--mut);font-size:1.15rem;max-width:40rem}
@@ -285,7 +286,7 @@
   .tabs-plain .tablist{background:transparent;padding:0}
   .tabs-plain .tab[aria-selected="true"]{background:var(--bg2)}
   .tabs-plain .tabpanel{padding:1.4rem 0 0}
-  .demo{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:1rem;margin:1rem 0}
+  .demo-box{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:1rem;margin:1rem 0}
   .demo-bar{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
   .demo-scn{font:inherit;font-size:.95rem;font-weight:700;color:#031425;background:var(--teal);border:none;border-radius:10px;padding:.75rem 1.1rem;cursor:pointer;transition:background .2s,transform .1s}
   .demo-scn:hover{background:var(--teal2);transform:translateY(-1px)}
@@ -297,7 +298,7 @@
   .demo-log{display:flex;flex-direction:column;gap:.6rem;margin-top:1rem}
   .demo-log:empty{display:none}
   .d-row{display:flex}.d-row.user{justify-content:flex-end}
-  .d-bubble{max-width:80%;padding:.6rem .85rem;border-radius:12px;font-size:.9rem;line-height:1.45;background:#0b1038;border:1px solid var(--line)}
+  .d-bubble{max-width:80%;padding:.6rem .85rem;border-radius:12px;font-size:.9rem;line-height:1.45;color:var(--ink);background:#0b1038;border:1px solid var(--line)}
   .d-row.user .d-bubble{background:#0e1440;border-bottom-right-radius:4px}
   .d-row.agent .d-bubble{border-bottom-left-radius:4px}
   .d-bubble.ok{border-color:rgba(52,211,153,.45);box-shadow:0 0 18px -6px rgba(52,211,153,.4)}
@@ -441,7 +442,7 @@
 
       <div class="tabpanel" role="tabpanel" id="p-here" aria-labelledby="t-here" tabindex="0">
         <p class="sub">Pick a scenario. A scripted agent drives the <b style="color:var(--ink)">real</b> MCP storefront — every ⚙ chip is a live tool call — and you shop in the real product picker. Adult items stop at the gate until <b style="color:var(--ink)">you</b> prove it with your wallet.</p>
-        <div class="demo" id="demo">
+        <div class="demo-box" id="demo">
           <div class="demo-bar">
             <button class="demo-scn" type="button" data-scenario="whiskey" aria-pressed="false">🥃 Buy the whiskey (21+)</button>
             <button class="demo-scn" type="button" data-scenario="headphones" aria-pressed="false">🎧 Buy the headphones</button>
@@ -1466,9 +1467,7 @@ var CADemo = (function () {
     var sum = D.summarizeCheckout(result);
     if (!sum.ok) return;
     state.checkout = sum;
-    sum.lines.forEach(function(line, i){
-      pause(250 * (i + 1)).then(function(){ if (guard.isCurrent(token)) say('agent', line); });
-    });
+    sum.lines.forEach(function(line){ say('agent', line); });
   }
 
   function handOff(token, state, url){
