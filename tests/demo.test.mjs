@@ -39,6 +39,7 @@ test('mcp.call posts JSON-RPC and returns the result', async () => {
   assert.equal(seen.init.method, 'POST');
   assert.equal(seen.init.headers.accept, 'application/json, text/event-stream');
   assert.deepEqual(JSON.parse(seen.init.body), { jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'browse-products', arguments: {} } });
+  assert.equal(seen.init.credentials, 'omit');
 });
 
 test('mcp.call maps HTTP errors to kind "http"', async () => {
@@ -121,7 +122,45 @@ test('summarizeCheckout never invents requirements', () => {
   assert.equal(custom.lines[0], 'No age check needed. This order needs: license.');
   const junk = plain(D.summarizeCheckout({ content: [{ type: 'text', text: 'not json' }] }));
   assert.equal(junk.ok, false);
-  assert.equal(junk.lines[0], 'Nothing to prove for this order.');
+  assert.equal(junk.lines[0], 'The checkout page will show what this order needs.');
+});
+
+const mkCheckout = (body) => ({ content: [{ type: 'text', text: JSON.stringify(body) }] });
+
+test('summarizeCheckout: only an explicit empty requires means nothing to prove', () => {
+  const s = plain(D.summarizeCheckout(mkCheckout({ orderId: 'O', checkoutUrl: 'https://x/c', requires: [] })));
+  assert.equal(s.ok, true);
+  assert.equal(s.lines[0], 'Nothing to prove for this order.');
+  assert.equal(s.chip, '→ no requirements');
+});
+
+test('summarizeCheckout: missing requires is reported as not reported, not as nothing to prove', () => {
+  const s = plain(D.summarizeCheckout(mkCheckout({ orderId: 'O', checkoutUrl: 'https://x/c' })));
+  assert.equal(s.ok, true);
+  assert.equal(s.gated, false);
+  assert.equal(s.lines[0], 'The checkout page will show what this order needs.');
+  assert.equal(s.chip, '→ requirements not reported');
+});
+
+test('summarizeCheckout requires an orderId to be ok', () => {
+  const s = plain(D.summarizeCheckout(mkCheckout({ checkoutUrl: 'https://x/c', requires: [] })));
+  assert.equal(s.ok, false);
+});
+
+test('summarizeCheckout labels an entry with neither label nor credential as "a credential"', () => {
+  const s = plain(D.summarizeCheckout(mkCheckout({ orderId: 'O', checkoutUrl: 'https://x/c', requires: [{ required: true }] })));
+  assert.equal(s.chip, '→ 🔒 a credential');
+  assert.equal(s.lines[0], 'No age check needed. This order needs: a credential.');
+});
+
+test('isHandoffUrl only accepts the https checkoutUrl of the real checkout', () => {
+  const co = plain(D.summarizeCheckout(WHISKEY_CHECKOUT));
+  assert.equal(D.isHandoffUrl(co, 'https://demo.example/checkout?order=ORD-1'), true);
+  assert.equal(D.isHandoffUrl(co, 'https://evil.example/checkout?order=ORD-1'), false);
+  assert.equal(D.isHandoffUrl(co, undefined), false);
+  assert.equal(D.isHandoffUrl(null, 'https://demo.example/checkout?order=ORD-1'), false);
+  assert.equal(D.isHandoffUrl({ ok: false, checkoutUrl: 'https://demo.example/c' }, 'https://demo.example/c'), false);
+  assert.equal(D.isHandoffUrl({ ok: true, checkoutUrl: 'http://demo.example/c' }, 'http://demo.example/c'), false);
 });
 
 test('pickWidget reads the widget URI from the tool definition', () => {
@@ -184,7 +223,8 @@ test('buildSrcdoc enforces the widget’s declared CSP', () => {
   assert.ok(out.includes(
     '<head><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src \'unsafe-inline\'; ' +
     'style-src \'unsafe-inline\'; img-src https://picsum.photos data:; font-src https://picsum.photos data:; ' +
-    'media-src https://picsum.photos data:; connect-src https://credentagent-demo-dev.vercel.app"><title>'));
+    'media-src https://picsum.photos data:; connect-src https://credentagent-demo-dev.vercel.app; ' +
+    'form-action \'none\'; base-uri \'none\'"><title>'));
 });
 
 test('buildSrcdoc locks everything down when no CSP is declared', () => {
@@ -202,7 +242,7 @@ test('buildSrcdoc drops CSP sources that are not plain https origins or data:', 
   });
   assert.ok(!out.includes('worker-src'));
   assert.ok(out.includes('img-src https://ok.example data:;'));
-  assert.ok(out.includes('connect-src https://api.example:8443"'));
+  assert.ok(out.includes('connect-src https://api.example:8443;'));
 });
 
 test('buildSrcdoc injects into <head>, not <header>', () => {
@@ -318,6 +358,20 @@ test('bridge never posts an undefined tool result', async () => {
   bridge.handle({ jsonrpc: '2.0', id: 12, method: 'tools/call', params: { name: 'get-cart', arguments: {} } });
   await tick();
   assert.deepEqual(posted[0], { jsonrpc: '2.0', id: 12, result: { content: [] } });
+});
+
+test('bridge relays allow-listed tools and rejects others without calling them', async () => {
+  const seen = [];
+  const { bridge, posted } = makeBridge({
+    allowTools: ['get-cart', 'checkout'],
+    callTool: (name) => { seen.push(name); return Promise.resolve({ content: [] }); },
+  });
+  bridge.handle({ jsonrpc: '2.0', id: 20, method: 'tools/call', params: { name: 'get-cart', arguments: {} } });
+  bridge.handle({ jsonrpc: '2.0', id: 21, method: 'tools/call', params: { name: 'create-spending-grant', arguments: {} } });
+  await tick();
+  assert.deepEqual(seen, ['get-cart']);
+  assert.deepEqual(posted.find((m) => m.id === 21), { jsonrpc: '2.0', id: 21, error: { code: -32601, message: 'Tool not available to this app: create-spending-grant' } });
+  assert.deepEqual(posted.find((m) => m.id === 20), { jsonrpc: '2.0', id: 20, result: { content: [] } });
 });
 
 // ---- QR encoder ----

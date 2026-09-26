@@ -882,6 +882,7 @@ var CADemo = (function () {
             method: 'POST',
             headers: { 'content-type': 'application/json', 'accept': 'application/json, text/event-stream' },
             body: JSON.stringify({ jsonrpc: '2.0', id: ++nextId, method: method, params: params || {} }),
+            credentials: 'omit',
             signal: controller.signal
           });
         }).then(function (res) {
@@ -950,24 +951,32 @@ var CADemo = (function () {
   api.summarizeCheckout = function (result) {
     var body = api.toolText(result) || {};
     var url = api.isHttpsUrl(body.checkoutUrl) ? body.checkoutUrl : null;
-    var requires = (Array.isArray(body.requires) ? body.requires : []).filter(function (r) { return r && typeof r === 'object'; });
-    var label = function (r) { return r.label || r.credential; };
+    // An ABSENT manifest is not an empty one: only an explicit [] means "nothing to prove".
+    var reported = Array.isArray(body.requires);
+    var requires = (reported ? body.requires : []).filter(function (r) { return r && typeof r === 'object'; });
+    var label = function (r) { return r.label || r.credential || 'a credential'; };
     var required = requires.filter(function (r) { return r.required; });
     var optional = requires.filter(function (r) { return !r.required; });
     var age = required.filter(function (r) { return r.credential === 'age'; })[0] || null;
     var lines = [];
     if (age) lines.push('🔒 ' + label(age) + ' required. I can’t complete this for you — you have to prove it yourself.');
     else if (required.length) lines.push('No age check needed. This order needs: ' + required.map(label).join(' · ') + '.');
-    else lines.push('Nothing to prove for this order.');
+    else if (reported) lines.push('Nothing to prove for this order.');
+    else lines.push('The checkout page will show what this order needs.');
     if (optional.length) lines.push('Optional: ' + optional.map(label).join(' · ') + '.');
     return {
-      ok: !!url,
+      ok: !!url && !!body.orderId,
       orderId: body.orderId || null,
       checkoutUrl: url,
       gated: !!age,
-      chip: required.length ? '→ 🔒 ' + required.map(label).join(' · ') : '→ no requirements',
+      chip: required.length ? '→ 🔒 ' + required.map(label).join(' · ') : (reported ? '→ no requirements' : '→ requirements not reported'),
       lines: lines
     };
+  };
+
+  // The widget's ui/open-link is honoured only for the checkout URL the page itself received.
+  api.isHandoffUrl = function (checkout, url) {
+    return !!(checkout && checkout.ok && typeof url === 'string' && url === checkout.checkoutUrl && api.isHttpsUrl(url));
   };
 
   // Built from the SETTLED order (order-status), never the cart — a member discount changes the amount.
@@ -990,7 +999,8 @@ var CADemo = (function () {
     var conn = cspSources(csp.connectDomains);
     var policy = [
       "default-src 'none'", "script-src 'unsafe-inline'", "style-src 'unsafe-inline'",
-      'img-src ' + res, 'font-src ' + res, 'media-src ' + res, 'connect-src ' + conn
+      'img-src ' + res, 'font-src ' + res, 'media-src ' + res, 'connect-src ' + conn,
+      "form-action 'none'", "base-uri 'none'"
     ].join('; ');
     var meta = '<meta http-equiv="Content-Security-Policy" content="' + policy.replace(/"/g, '&quot;') + '">';
     return /<head(\s[^>]*)?>/i.test(html)
@@ -1013,7 +1023,8 @@ var CADemo = (function () {
   };
 
   // Minimal MCP Apps HOST side (the widget is @modelcontextprotocol/ext-apps, protocol 2026-01-26).
-  // h = { post(msg), callTool(name, args) → Promise, context?, onReady?, onSize?, onOpenLink?, onModelContext? }
+  // h = { post(msg), callTool(name, args) → Promise, allowTools?: [names], context?, onReady?, onSize?, onOpenLink?, onModelContext? }
+  // With allowTools, the widget may only call those tools; without it, every tools/call is relayed.
   api.HOST_PROTOCOL = '2026-01-26';
   api.createHostBridge = function (h) {
     var seq = 0;
@@ -1032,6 +1043,10 @@ var CADemo = (function () {
           });
           return;
         case 'tools/call':
+          if (Array.isArray(h.allowTools) && h.allowTools.indexOf(p.name) === -1) {
+            fail(msg.id, -32601, 'Tool not available to this app: ' + p.name);
+            return;
+          }
           Promise.resolve()
             .then(function () { return h.callTool(p.name, p.arguments || {}); })
             .then(function (result) { reply(msg.id, result || { content: [] }); },
