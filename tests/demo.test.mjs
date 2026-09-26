@@ -224,3 +224,84 @@ test('acceptMessage only accepts messages from our own frame', () => {
   assert.equal(D.acceptMessage({ source: other, data: { jsonrpc: '2.0' } }, frame), null);
   assert.equal(D.acceptMessage({ source: frame, data: { jsonrpc: '2.0' } }, null), null);
 });
+
+// ---- MCP Apps host bridge ----
+function makeBridge(overrides = {}) {
+  const posted = [];
+  const calls = {};
+  const bridge = D.createHostBridge({
+    post: (m) => posted.push(plain(m)),
+    context: { toolInfo: { tool: { name: 'browse-products' } } },
+    callTool: (name, args) => { calls.tool = { name, args }; return Promise.resolve({ content: [{ type: 'text', text: 'ok' }] }); },
+    onReady: () => { calls.ready = true; },
+    onSize: (h) => { calls.size = h; },
+    onOpenLink: (url) => { calls.link = url; },
+    onModelContext: (p) => { calls.context = p; },
+    ...overrides,
+  });
+  return { bridge, posted, calls };
+}
+const tick = () => new Promise((r) => setImmediate(r));
+
+test('bridge answers ui/initialize with host info, capabilities and context', () => {
+  const { bridge, posted } = makeBridge();
+  bridge.handle({ jsonrpc: '2.0', id: 1, method: 'ui/initialize', params: { protocolVersion: '2026-01-26', appInfo: { name: 'picker', version: '1' }, appCapabilities: {} } });
+  assert.deepEqual(posted[0], { jsonrpc: '2.0', id: 1, result: {
+    protocolVersion: '2026-01-26',
+    hostInfo: { name: 'credentagent.ai', version: '1.0.0' },
+    hostCapabilities: { openLinks: {}, serverTools: {}, updateModelContext: {} },
+    hostContext: { theme: 'dark', displayMode: 'inline', availableDisplayModes: ['inline'], platform: 'web', toolInfo: { tool: { name: 'browse-products' } } },
+  } });
+});
+
+test('bridge relays the widget’s tools/call and returns the result', async () => {
+  const { bridge, posted, calls } = makeBridge();
+  bridge.handle({ jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'set-quantity', arguments: { productId: 'oak-whiskey', quantity: 1 } } });
+  await tick();
+  assert.deepEqual(plain(calls.tool), { name: 'set-quantity', args: { productId: 'oak-whiskey', quantity: 1 } });
+  assert.deepEqual(posted[0], { jsonrpc: '2.0', id: 2, result: { content: [{ type: 'text', text: 'ok' }] } });
+});
+
+test('bridge turns a failed relay into a JSON-RPC error', async () => {
+  const { bridge, posted } = makeBridge({ callTool: () => Promise.reject(new Error('HTTP 503')) });
+  bridge.handle({ jsonrpc: '2.0', id: 3, method: 'tools/call', params: { name: 'checkout', arguments: {} } });
+  await tick();
+  assert.deepEqual(posted[0], { jsonrpc: '2.0', id: 3, error: { code: -32603, message: 'HTTP 503' } });
+});
+
+test('bridge surfaces open-link and model-context to the page, and acknowledges', () => {
+  const { bridge, posted, calls } = makeBridge();
+  bridge.handle({ jsonrpc: '2.0', id: 4, method: 'ui/open-link', params: { url: 'https://demo.example/checkout?order=1' } });
+  bridge.handle({ jsonrpc: '2.0', id: 5, method: 'ui/update-model-context', params: { content: [{ type: 'text', text: 'done' }] } });
+  assert.equal(calls.link, 'https://demo.example/checkout?order=1');
+  assert.deepEqual(plain(calls.context), { content: [{ type: 'text', text: 'done' }] });
+  assert.deepEqual(posted, [{ jsonrpc: '2.0', id: 4, result: {} }, { jsonrpc: '2.0', id: 5, result: {} }]);
+});
+
+test('bridge rejects methods it does not implement', () => {
+  const { bridge, posted } = makeBridge();
+  bridge.handle({ jsonrpc: '2.0', id: 6, method: 'sampling/createMessage', params: {} });
+  assert.deepEqual(posted[0], { jsonrpc: '2.0', id: 6, error: { code: -32601, message: 'Method not supported by this host: sampling/createMessage' } });
+});
+
+test('bridge handles notifications and ignores responses and junk', () => {
+  const { bridge, posted, calls } = makeBridge();
+  bridge.handle({ jsonrpc: '2.0', method: 'ui/notifications/initialized' });
+  bridge.handle({ jsonrpc: '2.0', method: 'ui/notifications/size-changed', params: { width: 600, height: 640 } });
+  bridge.handle({ jsonrpc: '2.0', id: 9, result: {} });
+  bridge.handle('not json-rpc');
+  bridge.handle(null);
+  assert.equal(calls.ready, true);
+  assert.equal(calls.size, 640);
+  assert.deepEqual(posted, []);
+});
+
+test('bridge.notify and bridge.teardown post the right shapes', () => {
+  const { bridge, posted } = makeBridge();
+  bridge.notify('ui/notifications/tool-input', { arguments: {} });
+  bridge.teardown();
+  assert.deepEqual(posted[0], { jsonrpc: '2.0', method: 'ui/notifications/tool-input', params: { arguments: {} } });
+  assert.equal(posted[1].jsonrpc, '2.0');
+  assert.equal(posted[1].method, 'ui/resource-teardown');
+  assert.equal(posted[1].id, 'teardown-1');
+});

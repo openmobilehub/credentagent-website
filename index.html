@@ -940,6 +940,60 @@ var CADemo = (function () {
     return frameWindow && event && event.source === frameWindow ? event.data : null;
   };
 
+  // Minimal MCP Apps HOST side (the widget is @modelcontextprotocol/ext-apps, protocol 2026-01-26).
+  // h = { post(msg), callTool(name, args) → Promise, context?, onReady?, onSize?, onOpenLink?, onModelContext? }
+  api.HOST_PROTOCOL = '2026-01-26';
+  api.createHostBridge = function (h) {
+    var seq = 0;
+    function reply(id, result) { h.post({ jsonrpc: '2.0', id: id, result: result }); }
+    function fail(id, code, message) { h.post({ jsonrpc: '2.0', id: id, error: { code: code, message: message } }); }
+    function onRequest(msg) {
+      var p = msg.params || {};
+      switch (msg.method) {
+        case 'ui/initialize':
+          reply(msg.id, {
+            protocolVersion: p.protocolVersion || api.HOST_PROTOCOL,
+            hostInfo: { name: 'credentagent.ai', version: '1.0.0' },
+            hostCapabilities: { openLinks: {}, serverTools: {}, updateModelContext: {} },
+            hostContext: Object.assign({ theme: 'dark', displayMode: 'inline', availableDisplayModes: ['inline'], platform: 'web' }, h.context || {})
+          });
+          return;
+        case 'tools/call':
+          Promise.resolve()
+            .then(function () { return h.callTool(p.name, p.arguments || {}); })
+            .then(function (result) { reply(msg.id, result); },
+                  function (err) { fail(msg.id, -32603, (err && err.message) || 'Tool call failed'); });
+          return;
+        case 'ui/open-link':
+          if (h.onOpenLink) h.onOpenLink(p.url);
+          reply(msg.id, {});
+          return;
+        case 'ui/update-model-context':
+          if (h.onModelContext) h.onModelContext(p);
+          reply(msg.id, {});
+          return;
+        case 'ui/message':
+          reply(msg.id, {});
+          return;
+        case 'ui/request-display-mode':
+          reply(msg.id, { mode: 'inline' });
+          return;
+        default:
+          fail(msg.id, -32601, 'Method not supported by this host: ' + msg.method);
+      }
+    }
+    return {
+      handle: function (msg) {
+        if (!msg || msg.jsonrpc !== '2.0' || typeof msg.method !== 'string') return; // responses & junk
+        if (msg.id !== undefined && msg.id !== null) { onRequest(msg); return; }
+        if (msg.method === 'ui/notifications/initialized' && h.onReady) h.onReady();
+        if (msg.method === 'ui/notifications/size-changed' && h.onSize && msg.params) h.onSize(msg.params.height);
+      },
+      notify: function (method, params) { h.post({ jsonrpc: '2.0', method: method, params: params || {} }); },
+      teardown: function () { h.post({ jsonrpc: '2.0', id: 'teardown-' + (++seq), method: 'ui/resource-teardown', params: {} }); }
+    };
+  };
+
   return api;
 })();
 /* ca-demo-core:end */
