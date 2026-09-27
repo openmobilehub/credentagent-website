@@ -45,7 +45,7 @@ co-presented with Multipaz. Two npm packages, versioned in lockstep, both live a
   the action completes → loops (~9s). It **honors `prefers-reduced-motion`** (renders the final state
   statically, no motion).
 - **Sections (top→bottom):** sticky nav → animated hero → problem band → try-it-live (tabs: **▶ Right
-  here** — the in-browser agent demo — and **In Claude / ChatGPT / Goose** — YouTube demo + hosted
+  here** — opens the in-browser agent demo in its chat-window dock — and **In Claude / ChatGPT / Goose** — YouTube demo + hosted
   connector) → how-it-works (3 cards) → quickstart (gate policy ladder with imports) →
   **what's new** (tabbed code: orders / grants / defineHost / webhooks + doctor/branding/iPhone cards) →
   gate-any-credential → **Honest by design** (the trust table) → built-on-open-standards →
@@ -82,6 +82,11 @@ co-presented with Multipaz. Two npm packages, versioned in lockstep, both live a
 - Spec: `docs/superpowers/specs/2026-09-25-in-browser-agent-design.md`; plan:
   `docs/superpowers/plans/2026-09-25-in-browser-agent.md`. Logic lives in the pure `ca-demo-core` script
   (between `/* ca-demo-core:begin */` and `/* ca-demo-core:end */`); the DOM script after it wires it up.
+- **Where it renders — the dock:** `#demo` lives in a chat-style panel (`#dock`, fixed bottom-right;
+  full-screen under 520px) opened by the floating `▶ Try it live` launcher, the hero CTA, the nav link and
+  the **▶ Right here** tab — anything with `data-open-demo`. It sits there from page load and is only
+  shown/hidden, **never moved** (moving an iframe reloads it and would drop the picker's cart). Esc closes
+  it and returns focus to the opener.
 - Unit tests (zero deps): `node --test "tests/*.test.mjs"`
 - Live contract vs. the endpoint: `node tests/contract.mjs` (defaults to the production store the demo
   uses); `node tests/contract.mjs https://credentagent.ai/marketplace-dev/mcp` checks library `main` — run
