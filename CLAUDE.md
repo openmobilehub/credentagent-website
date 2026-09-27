@@ -53,7 +53,8 @@ copy still describes `0.4.0` — see Current state):
   ```
   Note: the YouTube `<iframe>` embed is intentional and exempt from this check. So is the in-browser
   demo's **same-origin** `fetch` to `/marketplace-dev/mcp` (the credentagent.ai router proxies it; the
-  `ENDPOINT` constant in the demo script switches to `/marketplace/mcp` for the published 0.4.0 build).
+  `ENDPOINT` constant in the demo script switches to `/marketplace/mcp`, the latest published npm release
+  — `0.5.0` as of 2026-09-26; its storefront gives each conversation its own `cartId`).
 - **No framework / bundler / build step.** A single hand-authored page is the right size — YAGNI on tooling.
 - **Accessibility:** keep the `@media (prefers-reduced-motion: reduce)` guard and the responsive
   breakpoints (`@media (max-width:880px)` and `…520px`).
