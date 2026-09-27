@@ -21,7 +21,8 @@ directly from `file://`.
 CredentAgent: an AI agent proves a verifiable credential from the user's wallet **before** a consequential
 action completes. **Identity leads; payments is one application.** An OpenMobileHub / OpenWallet
 Foundation / AAIF Foundation project, heading to the Global Digital Collaboration Conference (Sept 1–2)
-co-presented with Multipaz. Two npm packages, versioned in lockstep, both live at `0.4.0`:
+co-presented with Multipaz. Two npm packages, versioned in lockstep, both live at `0.5.0` (the site's
+copy still describes `0.4.0` — see Current state):
 `@openmobilehub/credentagent-gate` (the Gate — `new CredentAgent()`, `credentagent.mount(app)`, policy of
 `required()`/`optional()` credentials, plus `orders`, `grants`, `webhooks`, `defineHost()`, `doctor()`,
 `branding`) and `@openmobilehub/credentagent-storefront`.
@@ -80,14 +81,18 @@ co-presented with Multipaz. Two npm packages, versioned in lockstep, both live a
   `SSLCertVerificationError`, your `python3` is the python.org build without CA certs: run its
   `Install Certificates.command` once, or use Homebrew's `/opt/homebrew/bin/python3`.
 - The demo only runs on `credentagent.ai` (and localhost); the GitHub Pages copy links there instead.
-- **Known limitation (library, not this site):** the hosted storefronts run `statelessMcp`, so the
-  cart the product picker shows and edits is **one shared cart for every visitor** (`extra.sessionId`
-  is absent → shared key; see `statelessMcp` in `packages/credentagent-storefront/src/server.ts`).
-  Checkout itself is per-visitor (the widget sends its on-screen items), but concurrent visitors can
-  see each other's cart lines.
+- **Carts are per conversation (library 0.5.0+):** the first cart-related call (the demo's
+  `browse-products`) issues a signed `cartId`; the picker widget sends it back on `set-quantity` /
+  `checkout`, so each visitor gets their own cart and an invented or edited id is refused. The page needs
+  no code for this — it forwards the `browse-products` result to the widget. (Before 0.5.0 the hosted
+  stores ran `statelessMcp` with one shared cart key for every visitor; verified fixed on both
+  `/marketplace-dev` and `/marketplace` on 2026-09-26.)
 
-## Current state (2026-09-25)
+## Current state (2026-09-26)
 
+- **0.5.0 released 2026-09-26** (claude.ai's MCP 2026-07-28 revision, wallet-signed spending grants, a cart
+  per conversation). The site's copy (version pill, What's new, install line, Honest-by-design table)
+  still describes **0.4.0** — updating it is pending; re-check the trust model before touching the table.
 - The site reflects the published **0.4.0** packages (not unreleased `main`) — except the in-browser
   demo, which deliberately targets `/marketplace-dev/mcp` (library `main`), so a library merge can change
   or break it; `node tests/contract.mjs` catches that. Hosted connector:
