@@ -216,7 +216,7 @@
   .card .n{color:var(--teal);font-weight:800;font-size:.8rem}.card h3{margin:.4rem 0 .4rem;font-size:1.05rem}.card p{color:var(--mut);font-size:.9rem;margin:0}
   .rails{display:grid;grid-template-columns:1.3fr .9fr;gap:.5rem 1.4rem;margin-top:1.4rem;font-size:.92rem}
   .rails .r{padding:.7rem 0;border-bottom:1px solid var(--line);color:var(--mut)}.rails .r b{color:var(--ink)}.rails .r code{font-family:ui-monospace,Menlo,monospace;font-size:.85em;color:var(--teal)}
-  .real,.rails .r.real{color:var(--green)}.demo,.rails .r.demo{color:#fbbf24}
+  .real,.rails .r.real{color:var(--green)}.rails .r.dsig{color:var(--purple)}.demo,.rails .r.demo{color:#fbbf24}
   .logos{display:flex;gap:2rem;flex-wrap:wrap;color:var(--mut);margin-top:1.2rem;font-weight:600}
   .cta{display:flex;gap:.8rem;margin-top:1.6rem;flex-wrap:wrap;align-items:center}
   .btn{background:var(--teal2);color:#031425;font-weight:700;padding:.55rem 1rem;border-radius:8px;font-size:.85rem;text-decoration:none}
@@ -353,7 +353,7 @@
   <nav>
     <div class="nav-left">
       <span class="wordmark">CREDENTAGENT</span>
-      <span class="pill">v0.4 · OPENWALLET FOUNDATION · AAIF FOUNDATION</span>
+      <span class="pill">v0.5 · OPENWALLET FOUNDATION · AAIF FOUNDATION</span>
     </div>
     <div class="nav-right">
       <div class="nav-links">
@@ -567,21 +567,21 @@ store.<span class="c-fn">gate</span>((order) =&gt; credentagent.<span class="c-f
 ]));</div>
   </div></section>
 
-  <!-- WHAT'S NEW (v0.3 – v0.4) -->
+  <!-- WHAT'S NEW (v0.5) -->
   <section id="new"><div class="wrap">
-    <div class="seclabel">What's new<span class="ver-tag">v0.4.0</span></div>
-    <h2>Beyond the storefront: your checkout, your server, and an agent that shops while you're away.</h2>
-    <p class="sub">The gate no longer needs the bundled storefront. Drive a checkout from any Express app, wire it into your own MCP server, let a human approve a spending limit once, and tell other services when an order settles.</p>
+    <div class="seclabel">What's new<span class="ver-tag">v0.5.0</span></div>
+    <h2>Grants your wallet signs — on the MCP version claude.ai now speaks.</h2>
+    <p class="sub">0.5.0 makes approving a spending grant a wallet signature by default, serves MCP's July 2026 revision next to the older one, and gives every conversation its own cart. The checkout, bring-your-own-host and webhooks APIs are unchanged.</p>
 
     <div class="tabs">
-      <div class="tablist" role="tablist" aria-label="New in v0.4">
-        <button class="tab" role="tab" id="t-orders" aria-controls="p-orders" aria-selected="true">Orders</button>
-        <button class="tab" role="tab" id="t-grants" aria-controls="p-grants" aria-selected="false" tabindex="-1">Spending grants</button>
+      <div class="tablist" role="tablist" aria-label="What's in v0.5">
+        <button class="tab" role="tab" id="t-grants" aria-controls="p-grants" aria-selected="true">Wallet-signed grants</button>
+        <button class="tab" role="tab" id="t-orders" aria-controls="p-orders" aria-selected="false" tabindex="-1">Orders</button>
         <button class="tab" role="tab" id="t-host" aria-controls="p-host" aria-selected="false" tabindex="-1">Your own host</button>
         <button class="tab" role="tab" id="t-hooks" aria-controls="p-hooks" aria-selected="false" tabindex="-1">Webhooks</button>
       </div>
 
-      <div class="tabpanel" role="tabpanel" id="p-orders" aria-labelledby="t-orders" tabindex="0">
+      <div class="tabpanel" role="tabpanel" id="p-orders" aria-labelledby="t-orders" tabindex="0" hidden>
         <p class="lede"><b>A checkout without a storefront.</b> <code style="color:var(--teal)">orders.serve(app)</code> wires the whole human-present checkout onto your app; <code style="color:var(--teal)">orders.create()</code> mints an approve link per purchase. Amount and age threshold are re-derived server-side — never trusted from the link.</p>
         <div class="code"><span class="c-key">const</span> credentagent = <span class="c-key">new</span> <span class="c-fn">CredentAgent</span>({ walletOrigin: <span class="c-str">"https://shop.example"</span> });
 
@@ -596,20 +596,21 @@ credentagent.<span class="c-fn">on</span>(<span class="c-str">"order.settled"</s
 });</div>
       </div>
 
-      <div class="tabpanel" role="tabpanel" id="p-grants" aria-labelledby="t-grants" tabindex="0" hidden>
-        <p class="lede"><b>Approve once, the agent spends while you're away.</b> The human approves a bounded budget — how much, per purchase, and <i>what</i> — and the agent buys against it unattended, every rule re-checked server-side on every spend. <b>Age is non-delegable:</b> a 21+ item always steps up to a live human.</p>
-        <div class="code">credentagent.grants.<span class="c-fn">serve</span>(app);                <span class="c-cm">// serves each grant's approve / deny page</span>
+      <div class="tabpanel" role="tabpanel" id="p-grants" aria-labelledby="t-grants" tabindex="0">
+        <p class="lede"><b>Approve once — with a signature.</b> The human sets a bounded budget (how much, per purchase, and <i>what</i>), and the grant only becomes spendable after their phone wallet <b>signs those exact limits</b>. The agent then buys against it unattended, every rule re-checked server-side on every spend. <b>Age is never delegated to the agent:</b> a 21+ item needs the human's own proof — from their wallet while approving the grant, or live at checkout. Without it, the spend refuses.</p>
+        <div class="code">credentagent.grants.<span class="c-fn">serve</span>(app);                <span class="c-cm">// serves each grant's signing page</span>
 
 <span class="c-key">const</span> grant = <span class="c-key">await</span> credentagent.grants.<span class="c-fn">create</span>({
-  merchant: <span class="c-str">"utopia"</span>, budget: <span class="c-num">100</span>, perSpend: <span class="c-num">30</span>,
+  merchant: <span class="c-str">"utopia"</span>, budget: <span class="c-num">200</span>, perSpend: <span class="c-num">130</span>,
   allow: { categories: [<span class="c-str">"Beverages"</span>] },       <span class="c-cm">// bound WHAT may be bought, not just how much</span>
-});
-<span class="c-fn">sendToUser</span>(grant.approveUrl);                  <span class="c-cm">// the human approves ONCE</span>
+});                                            <span class="c-cm">// signing defaults to "device"</span>
+<span class="c-fn">sendToUser</span>(grant.approveUrl);                  <span class="c-cm">// → the wallet signs the grant's exact bounds</span>
 
 <span class="c-cm">// later, human away</span>
 <span class="c-key">const</span> g = <span class="c-key">await</span> credentagent.grants.<span class="c-fn">retrieve</span>(grant.id);
+g.trustLevel;                                   <span class="c-cm">// "device-signed" — real signature, demo trust anchor</span>
 <span class="c-key">const</span> s = <span class="c-key">await</span> g.<span class="c-fn">spend</span>({ idempotencyKey: <span class="c-str">"order-1"</span>, items: [{ sku: <span class="c-str">"coffee"</span> }] });
-<span class="c-cm">// → { ok: true, amount: 18, remaining: 82 }  or  { ok: false, code: "budget-exceeded" | "step-up" | … }</span>
+<span class="c-cm">// → { ok: true, … }  or  { ok: false, code: "budget-exceeded" | "step-up" | … }</span>
 <span class="c-key">await</span> g.<span class="c-fn">revoke</span>();                            <span class="c-cm">// kill-switch — the very next spend refuses</span></div>
       </div>
 
@@ -639,10 +640,11 @@ host.<span class="c-fn">publish</span>(app);                           <span cla
     </div>
 
     <div class="mini-grid">
-      <div class="card"><h3>Preflight in one call</h3><p><code>credentagent.doctor()</code> checks your deployment — gate secret, public origin, shared stores — and returns each finding with its fix. Never throws, never touches the network.</p></div>
-      <div class="card"><h3>Your brand on the consent pages</h3><p><code>new CredentAgent({ branding })</code> — wordmark, accent, logo. It restyles the chrome only; the honesty footer can't be removed.</p></div>
-      <div class="card"><h3>Payment credentials on iPhone</h3><p>The gate presents a stable reader identity on the ISO-mdoc path, which iOS wallets require to show a consistent requester.</p></div>
+      <div class="card"><h3>Speaks MCP's July 2026 revision</h3><p>The store serves the <code>2026-07-28</code> protocol — the one claude.ai now uses — on the same <code>/mcp</code> endpoint, and apps on the older version keep working unchanged.</p></div>
+      <div class="card"><h3>A cart per conversation</h3><p>Session-less connections get a store-issued, signed <code>cartId</code>, so no shopper ever sees another's cart. An invented or edited id is refused.</p></div>
+      <div class="card"><h3>Grants pinned to one product</h3><p>Say what you want in your own words; the store asks follow-up questions until the product is exact, and the grant can buy that product and nothing else.</p></div>
     </div>
+    <p class="sub" style="margin-top:1.2rem;font-size:.95rem">Still here from 0.4: <code style="color:var(--teal)">doctor()</code> preflight, branded consent pages, and a stable reader identity for iPhone wallets.</p>
   </div></section>
 
   <!-- GATE ANY CREDENTIAL -->
@@ -659,11 +661,12 @@ host.<span class="c-fn">publish</span>(app);                           <span cla
       <div class="r"><b>webhooks</b> — HMAC-SHA256-signed <code>order.settled</code>, replay-protected</div><div class="r real">✓ real crypto</div>
       <div class="r"><b>credential</b> — age, membership, any <code>defineCredential()</code>: OpenID4VP JWE + nonce + HPKE + mdoc parse, explicit positive claim</div><div class="r demo">presence-only-demo</div>
       <div class="r"><b>dc-payment</b> — the same, plus the wallet's device-signed hash re-checked against this exact amount &amp; payee</div><div class="r demo">presence-only-demo</div>
-      <div class="r"><b>spending grants</b> — signed draws, bounds re-checked server-side on every spend; no trust anchor yet, so fenced as a demo</div><div class="r demo">presence-only-demo</div>
+      <div class="r"><b>wallet-signed spending grants</b> (default) — the gate verifies the wallet's device signature over the grant's exact limits; the key isn't anchored to a trusted issuer yet, so a self-made key would still pass</div><div class="r dsig">device-signed · demo</div>
+      <div class="r"><b>click-to-approve grants</b> (opt-in <code>signing: "page"</code>) — the server takes the approver's word for it; for demos and CI with no phone</div><div class="r demo">server-issued-demo</div>
       <div class="r"><b>external verifier</b> — the gate can relay an issuer-verified verdict from a real verifier, while re-checking amount &amp; policy itself. No real adapter ships yet.</div><div class="r" style="color:var(--dim)">interface only</div>
       <div class="r"><b>issuer-verified trust, built in</b> — mdoc issuer/device signatures (Multipaz) + a key-bound AP2 mandate</div><div class="r" style="color:var(--dim)">roadmap — next milestone</div>
     </div>
-    <p class="sub" style="margin-top:1.4rem;font-size:1rem">The wire crypto is real; the issuer trust anchor is not yet — a self-crafted credential would still pass. <b style="color:var(--ink)">A presence-only gate is never sold as a real safety control.</b> Branding can restyle the consent pages, but never the honesty footer.</p>
+    <p class="sub" style="margin-top:1.4rem;font-size:1rem">The wire crypto is real; the issuer trust anchor is not yet — a self-crafted credential would still pass. Wallet-signed grants go one step further (the signature is real), but without an anchor they are still a demo. <b style="color:var(--ink)">A presence-only gate is never sold as a real safety control.</b> Branding can restyle the consent pages, but never the honesty footer.</p>
   </div></section>
 
   <!-- BUILT ON / PARTNERS -->
@@ -676,8 +679,8 @@ host.<span class="c-fn">publish</span>(app);                           <span cla
   <section style="background:var(--bg2)"><div class="wrap">
     <div class="seclabel">For developers</div><h2>Two packages. Apache-2.0. Ships its own types.</h2>
     <p class="sub">Both packages version in lockstep — install them as a pair:</p>
-    <div class="code" style="max-width:48rem;margin-top:.8rem">npm i @openmobilehub/credentagent-gate@0.4.0 @openmobilehub/credentagent-storefront@0.4.0</div>
-    <div class="cta"><a class="btn" href="https://www.npmjs.com/package/@openmobilehub/credentagent-gate">@openmobilehub/credentagent-gate</a><a class="btn-ghost" href="https://www.npmjs.com/package/@openmobilehub/credentagent-storefront">@openmobilehub/credentagent-storefront</a><span style="color:var(--mut)">· <a href="https://github.com/openmobilehub/credentagent/tree/main/docs/reference">Docs</a> · <a href="https://github.com/openmobilehub/credentagent/tree/main/examples">Examples</a> · <a href="https://github.com/openmobilehub/credentagent/releases/tag/v0.4.0">v0.4.0 release notes →</a></span></div>
+    <div class="code" style="max-width:48rem;margin-top:.8rem">npm i @openmobilehub/credentagent-gate@0.5.0 @openmobilehub/credentagent-storefront@0.5.0</div>
+    <div class="cta"><a class="btn" href="https://www.npmjs.com/package/@openmobilehub/credentagent-gate">@openmobilehub/credentagent-gate</a><a class="btn-ghost" href="https://www.npmjs.com/package/@openmobilehub/credentagent-storefront">@openmobilehub/credentagent-storefront</a><span style="color:var(--mut)">· <a href="https://github.com/openmobilehub/credentagent/tree/main/docs/reference">Docs</a> · <a href="https://github.com/openmobilehub/credentagent/tree/main/examples">Examples</a> · <a href="https://github.com/openmobilehub/credentagent/releases/tag/v0.5.0">v0.5.0 release notes →</a></span></div>
   </div></section>
 
   <footer><div class="wrap">Apache-2.0 · GitHub · npm · An Open Mobile Hub project (Linux Foundation / OpenWallet Foundation) · heading to GDC</div></footer>
@@ -1318,7 +1321,7 @@ var CADemo = (function () {
   var root = document.getElementById('demo');
   if (!root || !window.CADemo) return;
   var D = window.CADemo;
-  var ENDPOINT = '/marketplace-dev/mcp';     // same-origin via the credentagent.ai router; '/marketplace/mcp' = published 0.4.0
+  var ENDPOINT = '/marketplace/mcp';         // same-origin via the credentagent.ai router: the latest published release (0.5.0); '/marketplace-dev/mcp' = library main
   var WIDGET_TOOL = 'browse-products';
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var log = document.getElementById('demo-log');

@@ -1,11 +1,12 @@
 // Contract smoke: what the in-browser demo assumes about the live MCP endpoint.
 // Usage: node tests/contract.mjs [endpoint]
-//   default: https://credentagent.ai/marketplace-dev/mcp (library main, redeployed on every merge)
+//   default: https://credentagent.ai/marketplace/mcp — the published release the live demo uses.
+//   Pass https://credentagent.ai/marketplace-dev/mcp to check library main before a release.
 // Note: each run creates two unpaid demo orders on that deployment.
 import { loadCore } from './load-core.mjs';
 
 const D = loadCore();
-const endpoint = process.argv[2] || 'https://credentagent.ai/marketplace-dev/mcp';
+const endpoint = process.argv[2] || 'https://credentagent.ai/marketplace/mcp';
 const mcp = D.createMcpClient({ endpoint, fetch, timeoutMs: 30000 });
 let failures = 0;
 const check = (ok, label, detail = '') => {

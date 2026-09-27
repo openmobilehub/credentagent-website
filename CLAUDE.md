@@ -21,8 +21,7 @@ directly from `file://`.
 CredentAgent: an AI agent proves a verifiable credential from the user's wallet **before** a consequential
 action completes. **Identity leads; payments is one application.** An OpenMobileHub / OpenWallet
 Foundation / AAIF Foundation project, heading to the Global Digital Collaboration Conference (Sept 1–2)
-co-presented with Multipaz. Two npm packages, versioned in lockstep, both live at `0.5.0` (the site's
-copy still describes `0.4.0` — see Current state):
+co-presented with Multipaz. Two npm packages, versioned in lockstep, both live at `0.5.0`:
 `@openmobilehub/credentagent-gate` (the Gate — `new CredentAgent()`, `credentagent.mount(app)`, policy of
 `required()`/`optional()` credentials, plus `orders`, `grants`, `webhooks`, `defineHost()`, `doctor()`,
 `branding`) and `@openmobilehub/credentagent-storefront`.
@@ -52,9 +51,9 @@ copy still describes `0.4.0` — see Current state):
   grep -ioE '<script[^>]+src=|<link[^>]+rel="stylesheet"|<img[^>]+src=|url\(\s*https?:' index.html | grep -i http | wc -l   # must be 0
   ```
   Note: the YouTube `<iframe>` embed is intentional and exempt from this check. So is the in-browser
-  demo's **same-origin** `fetch` to `/marketplace-dev/mcp` (the credentagent.ai router proxies it; the
-  `ENDPOINT` constant in the demo script switches to `/marketplace/mcp`, the latest published npm release
-  — `0.5.0` as of 2026-09-26; its storefront gives each conversation its own `cartId`).
+  demo's **same-origin** `fetch` to `/marketplace/mcp` — the latest published release, `0.5.0` as of
+  2026-09-26 (the credentagent.ai router proxies it). The `ENDPOINT` constant in the demo script can point
+  at `/marketplace-dev/mcp` (library `main`) to preview unreleased changes.
 - **No framework / bundler / build step.** A single hand-authored page is the right size — YAGNI on tooling.
 - **Accessibility:** keep the `@media (prefers-reduced-motion: reduce)` guard and the responsive
   breakpoints (`@media (max-width:880px)` and `…520px`).
@@ -74,8 +73,9 @@ copy still describes `0.4.0` — see Current state):
   `docs/superpowers/plans/2026-09-25-in-browser-agent.md`. Logic lives in the pure `ca-demo-core` script
   (between `/* ca-demo-core:begin */` and `/* ca-demo-core:end */`); the DOM script after it wires it up.
 - Unit tests (zero deps): `node --test "tests/*.test.mjs"`
-- Live contract vs. the endpoint: `node tests/contract.mjs` — run it in any library PR that changes the
-  storefront's tools, transport, or MCP Apps widget (e.g. the MCP 728 migration).
+- Live contract vs. the endpoint: `node tests/contract.mjs` (defaults to the production store the demo
+  uses); `node tests/contract.mjs https://credentagent.ai/marketplace-dev/mcp` checks library `main` — run
+  it in any library PR that changes the storefront's tools, transport, or MCP Apps widget, before a release.
 - QR round trip (macOS): `node tests/qr-roundtrip.mjs`
 - Local same-origin run: `python3 tools/dev-server.py` → http://localhost:8787/#try (hard-reload after
   edits — the stdlib server lets Chrome cache the page). If the proxy fails with
@@ -91,13 +91,15 @@ copy still describes `0.4.0` — see Current state):
 
 ## Current state (2026-09-26)
 
-- **0.5.0 released 2026-09-26** (claude.ai's MCP 2026-07-28 revision, wallet-signed spending grants, a cart
-  per conversation). The site's copy (version pill, What's new, install line, Honest-by-design table)
-  still describes **0.4.0** — updating it is pending; re-check the trust model before touching the table.
-- The site reflects the published **0.4.0** packages (not unreleased `main`) — except the in-browser
-  demo, which deliberately targets `/marketplace-dev/mcp` (library `main`), so a library merge can change
-  or break it; `node tests/contract.mjs` catches that. Hosted connector:
-  `https://credentagent.ai/marketplace/mcp` (dev twin running `main`: `/marketplace-dev/mcp`).
+- The site reflects the published **0.5.0** packages (released 2026-09-26: claude.ai's MCP 2026-07-28
+  revision, wallet-signed spending grants, a cart per conversation), including the in-browser demo, which
+  now uses the production store `/marketplace/mcp`. Hosted connector: `https://credentagent.ai/marketplace/mcp`
+  (dev twin running library `main`: `/marketplace-dev/mcp`).
+- **Trust levels (0.5.0):** `presence-only-demo` (age, membership, payment), `device-signed` (wallet-signed
+  grants: real device signature over the grant's limits, no issuer anchor — still a demo),
+  `server-issued-demo` (opt-in click-to-approve grants), `issuer-verified` (only via an external verifier;
+  none ships). The library's `docs/reference/trust-model.md` had not caught up with `device-signed` at
+  0.5.0 — the table follows the gate README's "Honest status" and `types.ts` until it does.
 - All repos and npm packages have been renamed: `openmobilehub/credentagent` (library),
   `openmobilehub/credentagent-website` (this repo), `@openmobilehub/credentagent-gate`,
   `@openmobilehub/credentagent-storefront`.
