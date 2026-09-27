@@ -106,7 +106,9 @@ co-presented with Multipaz. Two npm packages, versioned in lockstep, both live a
   `/marketplace-dev` and `/marketplace` on 2026-09-26.)
 - **Keep the dock minimal (less is more):** opened, it shows one sentence, **one** start button (🥃 whiskey,
   the gated path), and the Ask input pinned at the bottom — no intro paragraph, no second scenario, no
-  wallet box (the checkout card says which wallet, when it matters). ↺ Start over sits in the header and
+  wallet box (the checkout card says which wallet, when it matters). The agent does what the button
+  says: `browse-products` → **`add-to-cart`** (the scenario's `productId`, with the signed `cartId`) → the
+  picker opens on that result with the item already in the cart, so the visitor's one step is Checkout. ↺ Start over sits in the header and
   appears only once something happened. The checkout card has one help line and no "I've finished"
   button: `watchOrder` re-reads the settled order every 4 s and on tab return (bounded, stopped on reset).
 - **Ask AI (the input pinned at the bottom of the dock):** visitors ask about their order, cart or the products;

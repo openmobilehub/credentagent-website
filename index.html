@@ -1053,10 +1053,11 @@ var CADemo = (function () {
 
   // Product names match the storefront catalog exactly (verified via browse-products).
   api.SCENARIOS = {
-    whiskey:    { key: 'whiskey',    prompt: 'Buy the Oak Reserve whiskey.', product: 'Oak Reserve Whiskey Collection' },
-    headphones: { key: 'headphones', prompt: 'Buy the Aurora headphones.',   product: 'Aurora Wireless Headphones' }
+    whiskey:    { key: 'whiskey',    prompt: 'Buy the Oak Reserve whiskey.', product: 'Oak Reserve Whiskey Collection', productId: 'oak-whiskey' },
+    headphones: { key: 'headphones', prompt: 'Buy the Aurora headphones.',   product: 'Aurora Wireless Headphones', productId: 'aurora-headphones' }
   };
-  api.tapLine = function (s) { return 'Tap + on the ' + s.product + ', then Checkout.'; };
+  // The agent has already put the product in the cart (add-to-cart); the visitor's one step is Checkout.
+  api.tapLine = function (s) { return 'I added the ' + s.product + ' to your cart — tap Checkout.'; };
 
   api.isDemoOrigin = function (hostname) {
     return ['credentagent.ai', 'www.credentagent.ai', 'localhost', '127.0.0.1'].indexOf(hostname) !== -1;
@@ -1705,8 +1706,13 @@ var CADemo = (function () {
         return tool(token, WIDGET_TOOL, {});
       }).then(function(browse){
         if (!guard.isCurrent(token)) return;
-        state.browse = browse;
-        askCtx.cartId = D.cartIdFrom(browse) || askCtx.cartId;
+        state.addArgs = { items: [{ productId: s.productId, quantity: 1 }], cartId: D.cartIdFrom(browse) };
+        return tool(token, 'add-to-cart', state.addArgs);
+      }).then(function(added){
+        if (!guard.isCurrent(token)) return;
+        if (!added || added.isError) throw new Error('couldn’t add the ' + s.product + ' to the cart');
+        state.browse = added;                  // the picker opens on the cart that already holds it
+        askCtx.cartId = D.cartIdFrom(added) || askCtx.cartId;
         return rpc(token, 'resources/read', { uri: widget.uri }, 'resources/read', { uri: widget.uri });
       }).then(function(read){
         if (!guard.isCurrent(token)) return;
@@ -1744,7 +1750,7 @@ var CADemo = (function () {
         clearTimeout(r.readyTimer);
         r.ready = true;
         bridge.setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light');
-        bridge.notify('ui/notifications/tool-input', { arguments: {} });
+        bridge.notify('ui/notifications/tool-input', { arguments: state.addArgs || {} });
         bridge.notify('ui/notifications/tool-result', state.browse);
         pause(300).then(function(){ if (guard.isCurrent(token)) say('agent', D.tapLine(s)); });
       },
