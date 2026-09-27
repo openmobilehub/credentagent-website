@@ -28,8 +28,18 @@ co-presented with Multipaz. Two npm packages, versioned in lockstep, both live a
 
 ## Design
 
-- **Direction:** bold & dark — surf palette (electric blue, sea-green, violet) on deep indigo-ocean.
-  Palette tokens live in `index.html` `:root` (`--bg`, `--teal` (blue), `--green`, `--purple`, etc.).
+- **Direction:** the CredentAgent brand, **light by default** with a remembered **☾/☀ toggle** to dark.
+  Light: brand paper `#F2F4F0` + ink `#0E1220`, Precision-Hydration **purple** `#420A98` primary, **orange**
+  `#FF5100` for attention only (the gate). Dark: brand ink + **volt** `#C6F53C` primary. Spec:
+  `docs/superpowers/specs/2026-09-27-light-theme-design.md`.
+- **Tokens:** all colour is semantic tokens in `index.html` — `:root` (light) and `:root[data-theme="dark"]`.
+  No raw colour literal elsewhere; `--attention`/`--brand-mark` are never text; every text pair meets WCAG
+  AA — `tests/theme.test.mjs` enforces all three. The theme is applied pre-paint by the `ca-theme-boot`
+  script in `<head>` (key `localStorage["credentagent.theme"]`). Trust-table labels: `✓ real crypto`
+  (`--ok`), `device-signed · demo` (`--accent2`), and every `*-demo` level as a `⚠` dashed `--warn` badge.
+- **Logo:** mark + wordmark, where the wordmark is ONE element `<span class="wordmark">Credent<em>Agent</em></span>`
+  (CredentAgent is a single word — never a gap). Font: Space Grotesk 600 subset, inline, SIL OFL 1.1;
+  regenerate with `tools/build-wordmark-font.py`. Brand assets: the CredentAgent logo Drive folder (README palette).
 - **Hero:** the animated **"Watch the agent ask"** consent-handshake: a user prompt types out → an agent
   pauses → a 🔒 gate pulses → a 📱 wallet proves two credentials (age_over_21, then payment · usd) →
   the action completes → loops (~9s). It **honors `prefers-reduced-motion`** (renders the final state
