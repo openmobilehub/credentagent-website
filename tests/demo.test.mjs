@@ -406,3 +406,28 @@ test('summarizeCheckout only trusts an absolute https checkoutUrl', () => {
     assert.equal(s.checkoutUrl, null, bad);
   }
 });
+
+// ---- order-status check (Codex review on #11: a stalled fetch must not wedge the demo) ----
+test('checkOrderStatus reads a settled order', async () => {
+  let seen;
+  const check = D.createOrderStatus({ fetch: (url, init) => { seen = { url, init }; return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ completed: true, order: { amount: 124, currency: 'USD' } }) }); } });
+  const s = await check('https://demo.example', 'ORD 1');
+  assert.equal(seen.url, 'https://demo.example/checkout/order-status?orderId=ORD%201');
+  assert.ok(seen.init.signal, 'passes an abort signal');
+  assert.deepEqual(plain(s), { completed: true, order: { amount: 124, currency: 'USD' } });
+});
+
+test('checkOrderStatus times out a stalled request with kind "timeout"', async () => {
+  const hang = (url, init) => new Promise((_, reject) => init.signal.addEventListener('abort', () => {
+    const e = new Error('aborted'); e.name = 'AbortError'; reject(e);
+  }));
+  const check = D.createOrderStatus({ fetch: hang, timeoutMs: 20 });
+  await assert.rejects(check('https://demo.example', 'O'), (e) => e.kind === 'timeout');
+});
+
+test('checkOrderStatus maps HTTP and network failures', async () => {
+  const http = D.createOrderStatus({ fetch: () => Promise.resolve({ ok: false, status: 502, json: () => Promise.resolve({}) }) });
+  await assert.rejects(http('https://demo.example', 'O'), (e) => e.kind === 'http' && e.status === 502);
+  const net = D.createOrderStatus({ fetch: () => Promise.reject(new TypeError('Failed to fetch')) });
+  await assert.rejects(net('https://demo.example', 'O'), (e) => e.kind === 'network');
+});
