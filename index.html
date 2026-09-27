@@ -803,7 +803,7 @@ host.<span class="c-fn">publish</span>(app);                           <span cla
       <input class="ask-q" id="ask-q" name="q" type="text" maxlength="500" placeholder="Ask about your order or the products…" aria-label="Ask AI about your order or the products" enterkeyhint="send">
       <button class="ask-go" id="ask-go" type="submit" aria-label="Send">↑</button>
     </div>
-    <p class="ask-note">✦ AI answers · read-only · don’t share personal info</p>
+    <p class="ask-note">✦ AI answers · can edit your cart, never checks out · don’t share personal info</p>
   </form>
 </div>
 <button class="dock-launch" id="dock-launch" type="button" data-open-demo aria-controls="dock" aria-expanded="false"><span class="play" aria-hidden="true">▶</span>Try it live</button>
@@ -1476,7 +1476,7 @@ var CADemo = (function () {
       : { icon: '☾', text: 'Dark', aria: 'Switch to dark theme' };
   };
 
-  // ---- Ask AI: a read-only agent on the router (POST /api/ask) answers questions about the order ----
+  // ---- Ask AI: an agent on the router (POST /api/ask) reads the store and edits the cart — never checks out ----
   api.ASK_MAX = 500;
   var ASK_ID = /^[A-Za-z0-9_.:-]{1,300}$/;
   // The request body: a trimmed question, only id-shaped ids, and the last few turns of this chat.
@@ -1517,6 +1517,11 @@ var CADemo = (function () {
   };
   // The MCP App a reply carries when the AI called a tool that declares one ({ tool, resourceUri, result }), or null.
   // The page renders it like any MCP host; the ui:// resource itself is re-checked against the store's tools/list.
+  // The chip's status for the tools the AI ran: an edit to the visitor's cart is said plainly.
+  var CART_EDIT = ['add-to-cart', 'set-quantity', 'remove-from-cart'];
+  api.askChipStatus = function (tools) {
+    return (tools || []).some(function (t) { return CART_EDIT.indexOf(t) !== -1; }) ? 'edited your cart' : 'read-only';
+  };
   api.askApp = function (body) {
     var app = body && body.app;
     if (!app || typeof app.tool !== 'string' || typeof app.resourceUri !== 'string' || app.resourceUri.indexOf('ui://') !== 0) return null;
@@ -1793,7 +1798,10 @@ var CADemo = (function () {
   // the page reads the store's own tools/list and ui:// resource, and hands the app the AI's tool result.
   // What the visitor then does in the app goes page → store through the bridge, never through the AI.
   function showApp(app){
-    if (run && run.frame) { say('agent', 'The product picker is already open above.'); return; }   // one live app at a time
+    if (run && run.frame) {                  // one live app at a time: the open picker takes the new result
+      if (run.ready && run.bridge) run.bridge.notify('ui/notifications/tool-result', app.result);
+      return;
+    }
     teardown();
     var token = guard.next();
     var state = { browse: app.result, checkout: null, handedOff: false, card: null, checking: false, done: false };
@@ -1918,7 +1926,7 @@ var CADemo = (function () {
           var c = el('div', 'd-chip');
           c.appendChild(document.createTextNode('⚙ '));
           c.appendChild(el('b', null, line.tools.join(' → ')));
-          c.appendChild(el('span', 'st', '✓ read-only' + (line.model ? ' · ' + line.model : '')));
+          c.appendChild(el('span', 'st', '✓ ' + D.askChipStatus(line.tools) + (line.model ? ' · ' + line.model : '')));
           log.insertBefore(c, row);
         }
         if (!line.err) askHistory.push({ role: 'user', content: req.question }, { role: 'assistant', content: line.text });
