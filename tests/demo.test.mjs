@@ -193,9 +193,10 @@ test('isDemoOrigin only allows credentagent.ai and local dev', () => {
   for (const h of ['openmobilehub.github.io', 'openmobilehub.org', '', 'credentagent.ai.evil.com']) assert.equal(D.isDemoOrigin(h), false, h);
 });
 
-test('scenarios name the exact product to tap', () => {
-  assert.equal(D.tapLine(D.SCENARIOS.whiskey), 'Tap + on the Oak Reserve Whiskey Collection, then Checkout.');
-  assert.equal(D.tapLine(D.SCENARIOS.headphones), 'Tap + on the Aurora Wireless Headphones, then Checkout.');
+test('scenarios name the product the agent adds, and the one step left to the visitor', () => {
+  assert.equal(D.tapLine(D.SCENARIOS.whiskey), 'I added the Oak Reserve Whiskey Collection to your cart — tap Checkout.');
+  assert.equal(D.SCENARIOS.whiskey.productId, 'oak-whiskey');
+  assert.equal(D.SCENARIOS.headphones.productId, 'aurora-headphones');
 });
 
 test('summarizeCheckout and pickWidget skip malformed array entries instead of crashing', () => {
