@@ -63,7 +63,8 @@ co-presented with Multipaz. Two npm packages, versioned in lockstep, both live a
   Note: the YouTube `<iframe>` embed is intentional and exempt from this check. So is the in-browser
   demo's **same-origin** `fetch` to `/marketplace/mcp` — the latest published release, `0.5.0` as of
   2026-09-26 (the credentagent.ai router proxies it). The `ENDPOINT` constant in the demo script can point
-  at `/marketplace-dev/mcp` (library `main`) to preview unreleased changes.
+  at `/marketplace-dev/mcp` (library `main`) to preview unreleased changes. Also exempt: the **Ask AI**
+  box's same-origin `POST /api/ask` (see below).
 - **No framework / bundler / build step.** A single hand-authored page is the right size — YAGNI on tooling.
 - **Accessibility:** keep the `@media (prefers-reduced-motion: reduce)` guard and the responsive
   breakpoints (`@media (max-width:880px)` and `…520px`).
@@ -103,6 +104,15 @@ co-presented with Multipaz. Two npm packages, versioned in lockstep, both live a
   no code for this — it forwards the `browse-products` result to the widget. (Before 0.5.0 the hosted
   stores ran `statelessMcp` with one shared cart key for every visitor; verified fixed on both
   `/marketplace-dev` and `/marketplace` on 2026-09-26.)
+- **Ask AI (the box under the demo, in the dock):** visitors ask about their order, cart or the products;
+  the page POSTs `{ question, context: { cartId?, orderId? }, history }` to the same-origin `/api/ask`, a
+  Vercel function on the credentagent.ai router (library repo `deploy/router/api/ask.mjs`). It runs Z.ai's
+  **free** GLM models (`glm-4.5-flash`, then `glm-4.7-flash`) with only the store's **read-only** tools, so
+  it can't buy, change a cart or touch a grant; the `ZAI_API_KEY` lives on the `credentagent-router` Vercel
+  project. The page only builds the request and shows the reply (`askRequest` / `cartIdFrom` /
+  `askReplyLine` in `ca-demo-core`). Answers are labeled **✦ AI answer** with the tools used; keep that
+  label and the "can only read" note (honesty rule). Locally, `tools/dev-server.py` relays `/api/ask` to
+  credentagent.ai, or to `ASK_TARGET` (e.g. a local copy of the function).
 
 ## Current state (2026-09-26)
 
