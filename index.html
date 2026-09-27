@@ -367,11 +367,15 @@
   .d-card .honest{font-size:.75rem;color:var(--dim)}
   .d-card.settled{border-style:solid;border-color:var(--line);background:transparent;padding:.5rem .8rem}
   .d-card.settled .qr,.d-card.settled .btn,.d-card.settled .help{display:none}
-  .d-done{display:flex;align-items:center;gap:.9rem;padding:1rem 1.1rem;border-radius:14px;background:var(--surface);
+  .d-done{display:grid;grid-template-columns:auto 1fr;align-items:center;column-gap:.9rem;padding:1rem 1.1rem;border-radius:14px;background:var(--surface);
     border:2px solid var(--ok);box-shadow:0 12px 32px -14px color-mix(in srgb,var(--ok) 70%,transparent);animation:done-in .45s cubic-bezier(.2,1.4,.4,1)}
   .d-done .tick{flex:none;display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:var(--ok);color:var(--surface);font-size:26px;font-weight:800;animation:tick-pop .5s .15s cubic-bezier(.2,1.6,.4,1) both}
-  .d-done b{display:block;font-size:1.15rem;color:var(--ink)}
-  .d-done span{font-size:.92rem;color:var(--mut)}
+  .d-done .head b{display:block;font-size:1.15rem;color:var(--ink)}
+  .d-done .head span{font-size:.92rem;color:var(--mut)}
+  .d-done .rcpt{grid-column:1 / -1;display:grid;grid-template-columns:auto 1fr;gap:.3rem 1rem;margin-top:.85rem;padding-top:.75rem;border-top:1px solid var(--line);font-size:.85rem}
+  .d-done .rcpt dt{color:var(--dim)}
+  .d-done .rcpt dd{color:var(--ink);text-align:right;overflow-wrap:anywhere}
+  .d-done .rcpt a{color:var(--link);text-decoration:underline;text-underline-offset:2px}
   @keyframes done-in{from{opacity:0;transform:translateY(10px) scale(.96)}}
   @keyframes tick-pop{from{transform:scale(0)}}
   .confetti{position:absolute;inset:0;pointer-events:none;z-index:2}
@@ -1111,6 +1115,8 @@ var CADemo = (function () {
   // Only an absolute https URL may become a link, a QR code, or an order-status origin.
   api.isHttpsUrl = function (u) { return typeof u === 'string' && /^https:\/\/[^\s\/?#]+[^\s]*$/i.test(u); };
 
+  // The checkout's pre-discount cart total, from the text body or structuredContent (hosts differ in which carries it).
+  function cartTotal(o) { return o && o.cart && typeof o.cart.total === 'number' ? o.cart.total : null; }
   api.summarizeCheckout = function (result) {
     var body = api.toolText(result) || {};
     var url = api.isHttpsUrl(body.checkoutUrl) ? body.checkoutUrl : null;
@@ -1132,6 +1138,8 @@ var CADemo = (function () {
       orderId: body.orderId || null,
       checkoutUrl: url,
       gated: !!age,
+      ageLabel: age ? label(age) : null,
+      total: cartTotal(body) != null ? cartTotal(body) : cartTotal(result && result.structuredContent),
       chip: required.length ? '→ 🔒 ' + required.map(label).join(' · ') : (reported ? '→ no requirements' : '→ requirements not reported'),
       lines: lines
     };
@@ -1147,10 +1155,34 @@ var CADemo = (function () {
     var money = order ? api.fmtMoney(order.amount, order.currency) : '';
     return '✓ Order placed' + (money ? ' — ' + money : '') + '.';
   };
-  // The success card: read from the SETTLED order, like completionLine — never assumed.
-  api.doneSummary = function (order) {
-    var money = order ? api.fmtMoney(order.amount, order.currency) : '';
-    return { title: 'Order complete', detail: money ? money + ' paid' : 'Paid' };
+  // The success card's receipt. Every row is read from the SETTLED order record (order-status) or the
+  // checkout this page received — never assumed:
+  //   Age 21+ — shown only when the checkout required it: the gate refuses to complete an age-gated
+  //             order without the proof, so a completed one is a proven one.
+  //   Discount — the checkout total minus what was actually charged, when that's less.
+  //   Paid with / Transaction — the record's method and settlement (provider, network, txId, explorer).
+  var PAID_WITH = { passkey: 'Passkey', 'dc-payment': 'Wallet · payment credential', delegated: 'Spending grant', demo: 'Instant demo' };
+  function niceNetwork(n) { n = String(n).replace(/[-_]+/g, ' '); return n.charAt(0).toUpperCase() + n.slice(1); }
+  function shortTx(t) { t = String(t); return t.length > 22 ? t.slice(0, 12) + '…' + t.slice(-6) : t; }
+  api.doneSummary = function (order, checkout) {
+    order = order || {}; checkout = checkout || {};
+    var money = api.fmtMoney(order.amount, order.currency);
+    var rows = [];
+    var id = order.orderId || checkout.orderId;
+    if (id) rows.push({ k: 'Order', v: String(id) });
+    if (checkout.gated) rows.push({ k: checkout.ageLabel || 'Age', v: '✓ proven' });
+    if (typeof checkout.total === 'number' && typeof order.amount === 'number' && checkout.total - order.amount > 0.004) {
+      var off = checkout.total - order.amount;
+      rows.push({ k: 'Member discount', v: '−' + api.fmtMoney(off, order.currency) + ' (' + Math.round(off / checkout.total * 100) + '% off)' });
+    }
+    var st = order.settlement && typeof order.settlement === 'object' ? order.settlement : null;
+    if (order.method || st) {
+      var how = order.method ? (PAID_WITH[order.method] || String(order.method)) : '';
+      var rail = st && st.network ? (st.provider ? st.provider + ' on ' : '') + niceNetwork(st.network) : '';
+      rows.push({ k: 'Paid with', v: [how, rail].filter(Boolean).join(' · ') });
+    }
+    if (st && st.txId) rows.push({ k: 'Transaction', v: shortTx(st.txId), href: api.isHttpsUrl(st.hashscanUrl) ? st.hashscanUrl : null });
+    return { title: 'Order complete', detail: money ? money + ' paid' : 'Paid', rows: rows };
   };
   // Confetti for the order-complete moment: n pieces bursting up and out from (x, y) in a w-wide box.
   // Pure (inject rng) so it's testable; the page animates them with gravity on a canvas.
@@ -1966,14 +1998,25 @@ var CADemo = (function () {
   // place, and the dock script (ca-order-complete) throws confetti — or saves it for when the dock opens.
   function celebrate(state, order){
     if (state.card) state.card.classList.add('settled');
-    var sum = D.doneSummary(order);
+    var sum = D.doneSummary(order, state.checkout);
     var done = el('div', 'd-done');
     done.setAttribute('role', 'status');
     done.appendChild(el('div', 'tick', '✓'));
-    var txt = el('div');
+    var txt = el('div', 'head');
     txt.appendChild(el('b', null, sum.title));
     txt.appendChild(el('span', null, sum.detail));
     done.appendChild(txt);
+    if (sum.rows.length) {
+      var dl = el('dl', 'rcpt');
+      sum.rows.forEach(function(r){
+        dl.appendChild(el('dt', null, r.k));
+        var dd = el('dd');
+        if (r.href) { var a = el('a', null, r.v + ' ↗'); a.href = r.href; a.target = '_blank'; a.rel = 'noopener'; dd.appendChild(a); }
+        else dd.textContent = r.v;
+        dl.appendChild(dd);
+      });
+      done.appendChild(dl);
+    }
     add(done);
     document.dispatchEvent(new CustomEvent('ca-order-complete', { detail: { el: done } }));
   }
