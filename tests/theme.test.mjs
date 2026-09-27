@@ -82,3 +82,13 @@ test('every demo-level trust label carries a ⚠ dashed badge, never colour alon
   const labels = cells.map((c) => (c.match(/^<div class="r demo"><span class="warn-badge">⚠ ([a-z-]+-demo)<\/span><\/div>$/) || [])[1]);
   assert.deepEqual(labels, ['presence-only-demo', 'presence-only-demo', 'server-issued-demo']);
 });
+
+test('the wordmark font is an inline Space Grotesk 600 subset with its OFL notice', () => {
+  const face = style.match(/@font-face\{font-family:"CA Space Grotesk";[^}]*\}/);
+  assert.ok(face, '@font-face for "CA Space Grotesk" not found');
+  assert.match(face[0], /font-weight:600/);
+  const data = face[0].match(/url\(data:font\/woff2;base64,([A-Za-z0-9+/=]+)\)/);
+  assert.ok(data, 'the font must be an inline data: woff2');
+  assert.ok(data[1].length < 12000, 'subset should be tiny (letters C r e d n t A g only), got ' + data[1].length);
+  assert.match(style, /SIL Open Font License 1\.1/);
+});
