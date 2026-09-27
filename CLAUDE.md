@@ -61,9 +61,10 @@ co-presented with Multipaz. Two npm packages, versioned in lockstep, both live a
   grep -ioE '<script[^>]+src=|<link[^>]+rel="stylesheet"|<img[^>]+src=|url\(\s*https?:' index.html | grep -i http | wc -l   # must be 0
   ```
   Note: the YouTube `<iframe>` embed is intentional and exempt from this check. So is the in-browser
-  demo's **same-origin** `fetch` to `/marketplace/mcp` — the latest published release, `0.5.0` as of
-  2026-09-26 (the credentagent.ai router proxies it). The `ENDPOINT` constant in the demo script can point
-  at `/marketplace-dev/mcp` (library `main`) to preview unreleased changes. Also exempt: the **Ask AI**
+  demo's **same-origin** `fetch` to `/marketplace-dev/mcp` — the dev twin running library `main`, so
+  unreleased changes show on the site first (switched 2026-09-27; the credentagent.ai router proxies it).
+  Point the `ENDPOINT` constant in the demo script back at `/marketplace/mcp` to use the latest published
+  release instead. Also exempt: the **Ask AI**
   box's same-origin `POST /api/ask` (see below).
 - **No framework / bundler / build step.** A single hand-authored page is the right size — YAGNI on tooling.
 - **Accessibility:** keep the `@media (prefers-reduced-motion: reduce)` guard and the responsive
@@ -89,9 +90,9 @@ co-presented with Multipaz. Two npm packages, versioned in lockstep, both live a
   shown/hidden, **never moved** (moving an iframe reloads it and would drop the picker's cart). Esc closes
   it and returns focus to the opener.
 - Unit tests (zero deps): `node --test "tests/*.test.mjs"`
-- Live contract vs. the endpoint: `node tests/contract.mjs` (defaults to the production store the demo
-  uses); `node tests/contract.mjs https://credentagent.ai/marketplace-dev/mcp` checks library `main` — run
-  it in any library PR that changes the storefront's tools, transport, or MCP Apps widget, before a release.
+- Live contract vs. the endpoint: `node tests/contract.mjs` (defaults to the production store — the
+  hosted connector); `node tests/contract.mjs https://credentagent.ai/marketplace-dev/mcp` checks library
+  `main`, which the in-browser demo uses — run it in any library PR that changes the storefront's tools, transport, or MCP Apps widget, before a release.
 - QR round trip (macOS): `node tests/qr-roundtrip.mjs`
 - Local same-origin run: `python3 tools/dev-server.py` → http://localhost:8787/#try (hard-reload after
   edits — the stdlib server lets Chrome cache the page). If the proxy fails with
@@ -123,8 +124,8 @@ co-presented with Multipaz. Two npm packages, versioned in lockstep, both live a
 ## Current state (2026-09-26)
 
 - The site reflects the published **0.5.0** packages (released 2026-09-26: claude.ai's MCP 2026-07-28
-  revision, wallet-signed spending grants, a cart per conversation), including the in-browser demo, which
-  now uses the production store `/marketplace/mcp`. Hosted connector: `https://credentagent.ai/marketplace/mcp`
+  revision, wallet-signed spending grants, a cart per conversation). The in-browser demo uses the dev
+  store `/marketplace-dev/mcp` (library `main`, since 2026-09-27). Hosted connector: `https://credentagent.ai/marketplace/mcp`
   (dev twin running library `main`: `/marketplace-dev/mcp`).
 - **Trust levels (0.5.0):** `presence-only-demo` (age, membership, payment), `device-signed` (wallet-signed
   grants: real device signature over the grant's limits, no issuer anchor — still a demo),

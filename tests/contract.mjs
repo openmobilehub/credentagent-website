@@ -1,7 +1,7 @@
 // Contract smoke: what the in-browser demo assumes about the live MCP endpoint.
 // Usage: node tests/contract.mjs [endpoint]
-//   default: https://credentagent.ai/marketplace/mcp — the published release the live demo uses.
-//   Pass https://credentagent.ai/marketplace-dev/mcp to check library main before a release.
+//   default: https://credentagent.ai/marketplace/mcp — the published release (the hosted connector).
+//   Pass https://credentagent.ai/marketplace-dev/mcp to check library main — what the live demo uses.
 // Note: each run creates two unpaid demo orders on that deployment.
 import { loadCore } from './load-core.mjs';
 

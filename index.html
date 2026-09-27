@@ -1598,7 +1598,7 @@ var CADemo = (function () {
   var root = document.getElementById('demo');
   if (!root || !window.CADemo) return;
   var D = window.CADemo;
-  var ENDPOINT = '/marketplace/mcp';         // same-origin via the credentagent.ai router: the latest published release (0.5.0); '/marketplace-dev/mcp' = library main
+  var ENDPOINT = '/marketplace-dev/mcp';     // same-origin via the credentagent.ai router: library main (unreleased changes show here first); '/marketplace/mcp' = the latest published release
   var WIDGET_TOOL = 'browse-products';
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var log = document.getElementById('demo-log');
