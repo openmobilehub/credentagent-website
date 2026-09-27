@@ -182,6 +182,55 @@ test('formatArgs keeps chips short', () => {
   assert.equal(D.formatArgs({ uri: 'x'.repeat(100) }).length, 58);
 });
 
+test('doneSummary: the receipt reads the settled order + the checkout this page got — every row', () => {
+  const checkout = { orderId: 'ORD-1', gated: true, ageLabel: 'Age 21+', total: 124 };
+  const order = { orderId: 'ORD-1', amount: 111.6, currency: 'USD', method: 'passkey',
+    settlement: { network: 'hedera-testnet', provider: 'x402', txId: '0.0.123456@1790000000.000000000', hashscanUrl: 'https://hashscan.io/testnet/transaction/x' } };
+  assert.deepEqual(plain(D.doneSummary(order, checkout)), {
+    title: 'Order complete', detail: '$111.60 paid',
+    rows: [
+      { k: 'Order', v: 'ORD-1' },
+      { k: 'Age 21+', v: '✓ proven' },
+      { k: 'Member discount', v: '−$12.40 (10% off)' },
+      { k: 'Paid with', v: 'Passkey · x402 on Hedera testnet' },
+      { k: 'Transaction', v: '0.0.123456@1…000000', href: 'https://hashscan.io/testnet/transaction/x' },
+    ],
+  });
+});
+
+test('doneSummary never claims what it wasn’t told', () => {
+  // Full price charged → no discount row; no age requirement → no age row; no settlement → no transaction.
+  const s = plain(D.doneSummary({ orderId: 'O', amount: 124, currency: 'USD', method: 'dc-payment' }, { gated: false, total: 124 }));
+  assert.deepEqual(s.rows, [{ k: 'Order', v: 'O' }, { k: 'Paid with', v: 'Wallet · payment credential' }]);
+  // An explorer URL that isn't https never becomes a link.
+  const t = plain(D.doneSummary({ amount: 1, currency: 'USD', settlement: { network: 'x', txId: 'T', hashscanUrl: 'javascript:alert(1)' } }, {}));
+  assert.deepEqual(t.rows.find((r) => r.k === 'Transaction'), { k: 'Transaction', v: 'T', href: null });
+  assert.deepEqual(plain(D.doneSummary(null)), { title: 'Order complete', detail: 'Paid', rows: [] });
+});
+
+test('summarizeCheckout keeps the pre-discount total and the age label for the receipt', () => {
+  const s = plain(D.summarizeCheckout({ content: [{ type: 'text', text: JSON.stringify({ orderId: 'O', checkoutUrl: 'https://x/c',
+    cart: { total: 124 }, requires: [{ credential: 'age', required: true, label: 'Age 21+' }] }) }] }));
+  assert.equal(s.total, 124);
+  assert.equal(s.ageLabel, 'Age 21+');
+  // The live store puts the cart in structuredContent, not the text body — read it from there too.
+  const live = plain(D.summarizeCheckout({ content: [{ type: 'text', text: JSON.stringify({ orderId: 'O', checkoutUrl: 'https://x/c', requires: [] }) }],
+    structuredContent: { orderId: 'O', cart: { total: 99.5 } } }));
+  assert.equal(live.total, 99.5);
+});
+
+test('confetti: n pieces from the burst point, fired upwards, in the five brand colours', () => {
+  let seed = 7;
+  const rng = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const bits = D.confetti(60, 200, 300, rng);
+  assert.equal(bits.length, 60);
+  assert.ok(bits.every((b) => b.x === 200 && b.y === 300));
+  assert.ok(bits.every((b) => b.vy < 0), 'every piece starts moving up');
+  assert.ok(bits.every((b) => Number.isInteger(b.color) && b.color >= 0 && b.color < 5));
+  seed = 7;
+  assert.deepEqual(plain(D.confetti(60, 200, 300, rng)), plain(bits), 'same rng, same burst');
+});
+
 test('completionLine uses the real settled order', () => {
   assert.equal(D.completionLine({ orderId: 'ORD-1', amount: 111.6, currency: 'USD' }), '✓ Order placed — $111.60.');
   assert.equal(D.completionLine({ amount: 20, currency: 'EUR' }), '✓ Order placed — 20.00 EUR.');

@@ -365,6 +365,22 @@
   .d-card .body{flex:1;min-width:14rem;font-size:.88rem;color:var(--mut);line-height:1.6;display:flex;flex-direction:column;gap:.35rem;align-items:flex-start}
   .d-card .body a:not(.btn){color:var(--primary);text-decoration:underline;text-underline-offset:2px}
   .d-card .honest{font-size:.75rem;color:var(--dim)}
+  .d-card.settled{border-style:solid;border-color:var(--line);background:transparent;padding:.5rem .8rem}
+  .d-card.settled .qr,.d-card.settled .btn,.d-card.settled .help{display:none}
+  .d-done{display:grid;grid-template-columns:auto 1fr;align-items:center;column-gap:.9rem;padding:1rem 1.1rem;border-radius:14px;background:var(--surface);
+    border:2px solid var(--ok);box-shadow:0 12px 32px -14px color-mix(in srgb,var(--ok) 70%,transparent);animation:done-in .45s cubic-bezier(.2,1.4,.4,1)}
+  .d-done .tick{flex:none;display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:var(--ok);color:var(--surface);font-size:26px;font-weight:800;animation:tick-pop .5s .15s cubic-bezier(.2,1.6,.4,1) both}
+  .d-done .head b{display:block;font-size:1.15rem;color:var(--ink)}
+  .d-done .head span{font-size:.92rem;color:var(--mut)}
+  .d-done .rcpt{grid-column:1 / -1;display:grid;grid-template-columns:auto 1fr;gap:.3rem 1rem;margin-top:.85rem;padding-top:.75rem;border-top:1px solid var(--line);font-size:.85rem}
+  .d-done .rcpt dt{color:var(--dim)}
+  .d-done .rcpt dd{color:var(--ink);text-align:right;overflow-wrap:anywhere}
+  .d-done .rcpt a{color:var(--link);text-decoration:underline;text-underline-offset:2px}
+  @keyframes done-in{from{opacity:0;transform:translateY(10px) scale(.96)}}
+  @keyframes tick-pop{from{transform:scale(0)}}
+  .confetti{position:absolute;inset:0;pointer-events:none;z-index:2}
+  .dock-launch.done{background:var(--ok);color:var(--surface)}
+  .dock-launch.done .play{border-color:var(--surface)}
   .d-actions{display:flex;gap:.5rem;flex-wrap:wrap}
   .d-link{font:inherit;font-size:.82rem;color:var(--primary);background:none;border:1px solid color-mix(in srgb,var(--primary) 40%,transparent);border-radius:8px;padding:.45rem .75rem;cursor:pointer}
 
@@ -420,6 +436,7 @@
     .demo-scn{transition:none}
     .demo-scn:hover{transform:none}
     .dock{animation:none}
+    .d-done,.d-done .tick{animation:none}
     .dock-launch:hover{transform:none}
   }
 
@@ -1098,6 +1115,8 @@ var CADemo = (function () {
   // Only an absolute https URL may become a link, a QR code, or an order-status origin.
   api.isHttpsUrl = function (u) { return typeof u === 'string' && /^https:\/\/[^\s\/?#]+[^\s]*$/i.test(u); };
 
+  // The checkout's pre-discount cart total, from the text body or structuredContent (hosts differ in which carries it).
+  function cartTotal(o) { return o && o.cart && typeof o.cart.total === 'number' ? o.cart.total : null; }
   api.summarizeCheckout = function (result) {
     var body = api.toolText(result) || {};
     var url = api.isHttpsUrl(body.checkoutUrl) ? body.checkoutUrl : null;
@@ -1119,6 +1138,8 @@ var CADemo = (function () {
       orderId: body.orderId || null,
       checkoutUrl: url,
       gated: !!age,
+      ageLabel: age ? label(age) : null,
+      total: cartTotal(body) != null ? cartTotal(body) : cartTotal(result && result.structuredContent),
       chip: required.length ? '→ 🔒 ' + required.map(label).join(' · ') : (reported ? '→ no requirements' : '→ requirements not reported'),
       lines: lines
     };
@@ -1133,6 +1154,51 @@ var CADemo = (function () {
   api.completionLine = function (order) {
     var money = order ? api.fmtMoney(order.amount, order.currency) : '';
     return '✓ Order placed' + (money ? ' — ' + money : '') + '.';
+  };
+  // The success card's receipt. Every row is read from the SETTLED order record (order-status) or the
+  // checkout this page received — never assumed:
+  //   Age 21+ — shown only when the checkout required it: the gate refuses to complete an age-gated
+  //             order without the proof, so a completed one is a proven one.
+  //   Discount — the checkout total minus what was actually charged, when that's less.
+  //   Paid with / Transaction — the record's method and settlement (provider, network, txId, explorer).
+  var PAID_WITH = { passkey: 'Passkey', 'dc-payment': 'Wallet · payment credential', delegated: 'Spending grant', demo: 'Instant demo' };
+  function niceNetwork(n) { n = String(n).replace(/[-_]+/g, ' '); return n.charAt(0).toUpperCase() + n.slice(1); }
+  function shortTx(t) { t = String(t); return t.length > 22 ? t.slice(0, 12) + '…' + t.slice(-6) : t; }
+  api.doneSummary = function (order, checkout) {
+    order = order || {}; checkout = checkout || {};
+    var money = api.fmtMoney(order.amount, order.currency);
+    var rows = [];
+    var id = order.orderId || checkout.orderId;
+    if (id) rows.push({ k: 'Order', v: String(id) });
+    if (checkout.gated) rows.push({ k: checkout.ageLabel || 'Age', v: '✓ proven' });
+    if (typeof checkout.total === 'number' && typeof order.amount === 'number' && checkout.total - order.amount > 0.004) {
+      var off = checkout.total - order.amount;
+      rows.push({ k: 'Member discount', v: '−' + api.fmtMoney(off, order.currency) + ' (' + Math.round(off / checkout.total * 100) + '% off)' });
+    }
+    var st = order.settlement && typeof order.settlement === 'object' ? order.settlement : null;
+    if (order.method || st) {
+      var how = order.method ? (PAID_WITH[order.method] || String(order.method)) : '';
+      var rail = st && st.network ? (st.provider ? st.provider + ' on ' : '') + niceNetwork(st.network) : '';
+      rows.push({ k: 'Paid with', v: [how, rail].filter(Boolean).join(' · ') });
+    }
+    if (st && st.txId) rows.push({ k: 'Transaction', v: shortTx(st.txId), href: api.isHttpsUrl(st.hashscanUrl) ? st.hashscanUrl : null });
+    return { title: 'Order complete', detail: money ? money + ' paid' : 'Paid', rows: rows };
+  };
+  // Confetti for the order-complete moment: n pieces bursting up and out from (x, y) in a w-wide box.
+  // Pure (inject rng) so it's testable; the page animates them with gravity on a canvas.
+  api.confetti = function (n, x, y, rng) {
+    rng = rng || Math.random;
+    var out = [];
+    for (var i = 0; i < n; i++) {
+      var a = -Math.PI / 2 + (rng() - 0.5) * Math.PI * 0.9;   // mostly upwards, fanned ±81°
+      var speed = 6 + rng() * 9;
+      out.push({
+        x: x, y: y, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed,
+        w: 5 + rng() * 5, h: 8 + rng() * 6, rot: rng() * Math.PI, vr: (rng() - 0.5) * 0.4,
+        color: Math.floor(rng() * 5),   // index into the page's five brand tokens
+      });
+    }
+    return out;
   };
 
   // Only plain https origins (optionally *.subdomain / :port) and data: may enter the policy.
@@ -1571,11 +1637,19 @@ var CADemo = (function () {
   var dock = document.getElementById('dock'), body = document.getElementById('dock-body');
   var launch = document.getElementById('dock-launch'), closeBtn = document.getElementById('dock-close');
   var log = document.getElementById('demo-log');
-  var opener = null, stick = true;
+  var opener = null, stick = true, pendingParty = false;
+  var calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   function open(from){
     opener = from === launch ? null : from;
     dock.hidden = false; launch.hidden = true; launch.setAttribute('aria-expanded', 'true');
     (dock.querySelector('.demo-scn:not(:disabled)') || closeBtn).focus({ preventScroll: true });
+    if (pendingParty) {                      // the order completed while the dock was closed
+      pendingParty = false;
+      launch.classList.remove('done');
+      launch.innerHTML = '<span class="play" aria-hidden="true">▶</span>Try it live';
+      var last = dock.querySelector('.d-done:last-of-type');
+      setTimeout(function(){ confetti(last); }, 250);
+    }
   }
   function close(){
     dock.hidden = true; launch.hidden = false; launch.setAttribute('aria-expanded', 'false');
@@ -1586,6 +1660,44 @@ var CADemo = (function () {
   });
   closeBtn.addEventListener('click', close);
   dock.addEventListener('keydown', function(e){ if (e.key === 'Escape') close(); });
+  // Confetti in the brand colours, drawn on a throwaway canvas over the dock; ~2.5 s, then removed.
+  function confetti(from){
+    if (calm || dock.hidden || !window.CADemo) return;
+    var box = dock.getBoundingClientRect();
+    var at = from ? from.getBoundingClientRect() : { left: box.left + box.width / 2, top: box.top + box.height / 2, width: 0 };
+    var dpr = window.devicePixelRatio || 1;
+    var cv = document.createElement('canvas');
+    cv.className = 'confetti';
+    cv.width = box.width * dpr; cv.height = box.height * dpr;
+    dock.appendChild(cv);
+    var ctx = cv.getContext('2d');
+    ctx.scale(dpr, dpr);
+    var css = getComputedStyle(document.documentElement);
+    var colors = ['--attention', '--primary', '--accent2', '--brand-mark', '--ok'].map(function(v){ return css.getPropertyValue(v).trim(); });
+    var bits = window.CADemo.confetti(140, at.left - box.left + at.width / 2, at.top - box.top + 24);
+    var t0 = performance.now(), LIFE = 2600;
+    (function frame(now){
+      var t = now - t0;
+      ctx.clearRect(0, 0, box.width, box.height);
+      ctx.globalAlpha = t > LIFE - 600 ? Math.max(0, (LIFE - t) / 600) : 1;
+      bits.forEach(function(b){
+        b.vy += 0.32; b.vx *= 0.99; b.vy *= 0.99;      // gravity + air
+        b.x += b.vx; b.y += b.vy; b.rot += b.vr;
+        ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.rot);
+        ctx.fillStyle = colors[b.color];
+        ctx.fillRect(-b.w / 2, -b.h / 2, b.w, b.h * Math.abs(Math.cos(b.rot * 2)));   // flutter
+        ctx.restore();
+      });
+      if (t < LIFE) requestAnimationFrame(frame); else cv.remove();
+    })(t0);
+  }
+  document.addEventListener('ca-order-complete', function(e){
+    if (!dock.hidden) return confetti(e.detail && e.detail.el);
+    pendingParty = true;                     // closed: say so on the launcher, celebrate on open
+    launch.classList.add('done');
+    launch.innerHTML = '<span class="play" aria-hidden="true">✓</span>Order complete';
+  });
+
   // Chat-style scrolling: follow the conversation unless the visitor has scrolled up to read.
   body.addEventListener('scroll', function(){ stick = body.scrollHeight - body.scrollTop - body.clientHeight < 80; });
   function follow(){ if (stick) body.scrollTop = body.scrollHeight; }
@@ -1856,7 +1968,7 @@ var CADemo = (function () {
     var go = el('a', 'btn', 'Continue to checkout ↗');
     go.href = url; go.target = '_blank'; go.rel = 'noopener';
     body.appendChild(go);
-    var help = el('div');   // static string only
+    var help = el('div', 'help');   // static string only
     help.innerHTML = (showQr ? 'Scan with your phone, or continue here. ' : '') +
       'Prove it with <a href="https://apps.multipaz.org" target="_blank" rel="noopener">Multipaz Wallet</a> — or tap <b>instant demo</b> on the checkout page.';
     body.appendChild(help);
@@ -1882,6 +1994,33 @@ var CADemo = (function () {
     run.stopWatch = stop;
   }
 
+  // The order-complete moment: the checkout card collapses to its honesty badge, a success card takes its
+  // place, and the dock script (ca-order-complete) throws confetti — or saves it for when the dock opens.
+  function celebrate(state, order){
+    if (state.card) state.card.classList.add('settled');
+    var sum = D.doneSummary(order, state.checkout);
+    var done = el('div', 'd-done');
+    done.setAttribute('role', 'status');
+    done.appendChild(el('div', 'tick', '✓'));
+    var txt = el('div', 'head');
+    txt.appendChild(el('b', null, sum.title));
+    txt.appendChild(el('span', null, sum.detail));
+    done.appendChild(txt);
+    if (sum.rows.length) {
+      var dl = el('dl', 'rcpt');
+      sum.rows.forEach(function(r){
+        dl.appendChild(el('dt', null, r.k));
+        var dd = el('dd');
+        if (r.href) { var a = el('a', null, r.v + ' ↗'); a.href = r.href; a.target = '_blank'; a.rel = 'noopener'; dd.appendChild(a); }
+        else dd.textContent = r.v;
+        dl.appendChild(dd);
+      });
+      done.appendChild(dl);
+    }
+    add(done);
+    document.dispatchEvent(new CustomEvent('ca-order-complete', { detail: { el: done } }));
+  }
+
   // Completion is read from the SETTLED order — never assumed.
   function finish(token, state){
     if (state.done || state.checking || !state.checkout) return;
@@ -1896,7 +2035,7 @@ var CADemo = (function () {
         if (s && s.completed) {
           state.done = true;
           if (run && run.stopWatch) run.stopWatch();
-          say('agent', D.completionLine(s.order), 'ok');
+          celebrate(state, s.order);
         }
       }, function(){ state.checking = false; });   // watchOrder simply tries again
   }
