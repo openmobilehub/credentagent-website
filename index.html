@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<script>/* ca-theme-boot:begin */(function(){var t='light';try{if(localStorage.getItem('credentagent.theme')==='dark')t='dark';}catch(e){}document.documentElement.setAttribute('data-theme',t);document.documentElement.style.colorScheme=t;})();/* ca-theme-boot:end */</script>
 <title>CredentAgent — the consent layer for AI agents</title>
 <meta name="description" content="An AI agent proves a verifiable credential from the user's wallet before a consequential action completes. Identity leads; payments is one application. Open source, Apache-2.0.">
 <meta property="og:title" content="CredentAgent — the consent layer for AI agents">
@@ -75,6 +77,10 @@
     transition:background .2s;
   }
   .npm-btn:hover{background:var(--primary-hover)}
+  .theme-toggle{font:inherit;font-size:13px;font-weight:600;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+  .theme-toggle:hover{border-color:var(--primary)}
+  .theme-toggle:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+  html.theme-anim,html.theme-anim *{transition:background-color .15s ease,color .15s ease,border-color .15s ease!important}
 
   /* ---------- hero layout ---------- */
   .hero{
@@ -375,6 +381,7 @@
     .module-cards{grid-template-columns:1fr}
     .d-bubble{max-width:92%}
     .demo-reset{margin-left:0}
+    .tt-text{display:none}
   }
 </style>
 </head>
@@ -392,6 +399,7 @@
         <a href="https://github.com/openmobilehub/credentagent/tree/main/docs/reference">Docs</a>
         <a href="https://github.com/openmobilehub/credentagent">GitHub</a>
       </div>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to dark theme"><span class="tt-icon" aria-hidden="true">☾</span><span class="tt-text">Dark</span></button>
       <a class="npm-btn" href="https://www.npmjs.com/package/@openmobilehub/credentagent-gate">npm install</a>
     </div>
   </nav>
@@ -1387,6 +1395,37 @@ var CADemo = (function () {
 /* ca-demo-core:end */
 </script>
 <script>
+// Theme toggle: light by default; the choice is remembered per device (applied pre-paint by ca-theme-boot in <head>).
+(function(){
+  var D = window.CADemo, root = document.documentElement, btn = document.getElementById('theme-toggle');
+  if (!D || !btn) return;
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var store = null;
+  try { store = window.localStorage; } catch (e) { store = null; }
+  function current(){ return root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'; }
+  function paint(theme){
+    var l = D.toggleLabel(theme);
+    btn.querySelector('.tt-icon').textContent = l.icon;
+    btn.querySelector('.tt-text').textContent = l.text;
+    btn.setAttribute('aria-label', l.aria);
+    btn.setAttribute('aria-pressed', l.pressed);
+  }
+  function apply(theme){
+    if (!reduce) {
+      root.classList.add('theme-anim');
+      setTimeout(function(){ root.classList.remove('theme-anim'); }, 250);
+    }
+    root.setAttribute('data-theme', theme);
+    root.style.colorScheme = theme;
+    paint(theme);
+    D.writeTheme(store, theme);
+    document.dispatchEvent(new CustomEvent('ca-themechange', { detail: { theme: theme } }));
+  }
+  paint(current());
+  btn.addEventListener('click', function(){ apply(D.nextTheme(current())); });
+})();
+</script>
+<script>
 // In-browser agent demo — see docs/superpowers/specs/2026-09-25-in-browser-agent-design.md
 (function(){
   var root = document.getElementById('demo');
@@ -1409,6 +1448,9 @@ var CADemo = (function () {
   var orderStatus = D.createOrderStatus({ fetch: window.fetch.bind(window) });
   var guard = D.createRunGuard();
   var run = null;   // { token, frame, bridge, onMessage, readyTimer, ready }
+  document.addEventListener('ca-themechange', function(e){
+    if (run && run.bridge && run.ready) run.bridge.setTheme(e.detail && e.detail.theme);
+  });
 
   function el(tag, cls, text){ var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
   function pause(ms){ return new Promise(function(r){ setTimeout(r, reduce ? 0 : ms); }); }
@@ -1529,7 +1571,7 @@ var CADemo = (function () {
     var bridge = D.createHostBridge({
       post: function(m){ if (frame.contentWindow) frame.contentWindow.postMessage(m, '*'); },
       allowTools: ['browse-products', 'get-cart', 'set-quantity', 'add-to-cart', 'remove-from-cart', 'checkout'],
-      context: { toolInfo: { tool: widget.tool } },
+      context: { toolInfo: { tool: widget.tool }, theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light' },
       callTool: function(name, args){
         var describe = name === 'checkout' ? function(res){ return D.summarizeCheckout(res).chip; } : null;
         return tool(token, name, args, describe).then(function(result){

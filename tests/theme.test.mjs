@@ -2,6 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import vm from 'node:vm';
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const style = html.slice(html.indexOf('<style>'), html.indexOf('</style>'));
@@ -91,4 +92,27 @@ test('the wordmark font is an inline Space Grotesk 600 subset with its OFL notic
   assert.ok(data, 'the font must be an inline data: woff2');
   assert.ok(data[1].length < 12000, 'subset should be tiny (letters C r e d n t A g only), got ' + data[1].length);
   assert.match(style, /SIL Open Font License 1\.1/);
+});
+
+function boot(storage) {
+  const m = html.match(/\/\* ca-theme-boot:begin \*\/([\s\S]*?)\/\* ca-theme-boot:end \*\//);
+  assert.ok(m, 'ca-theme-boot script not found in <head>');
+  const attrs = {}, styleObj = {};
+  const documentElement = { setAttribute: (k, v) => { attrs[k] = v; }, style: styleObj };
+  vm.runInNewContext(m[1], { document: { documentElement }, localStorage: storage });
+  return { theme: attrs['data-theme'], scheme: styleObj.colorScheme };
+}
+
+test('boot script: light by default, before first paint (it sits in <head>, before <style>)', () => {
+  const head = html.slice(0, html.indexOf('</head>'));
+  assert.ok(head.indexOf('ca-theme-boot:begin') > -1 && head.indexOf('ca-theme-boot:begin') < head.indexOf('<style>'));
+  assert.deepEqual(boot({ getItem: () => null }), { theme: 'light', scheme: 'light' });
+});
+
+test('boot script: applies a saved dark choice', () => {
+  assert.deepEqual(boot({ getItem: (k) => (k === 'credentagent.theme' ? 'dark' : null) }), { theme: 'dark', scheme: 'dark' });
+});
+
+test('boot script: blocked storage falls back to light without throwing', () => {
+  assert.deepEqual(boot({ getItem() { throw new Error('blocked'); } }), { theme: 'light', scheme: 'light' });
 });
