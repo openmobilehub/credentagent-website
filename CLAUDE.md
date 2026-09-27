@@ -104,7 +104,12 @@ co-presented with Multipaz. Two npm packages, versioned in lockstep, both live a
   no code for this — it forwards the `browse-products` result to the widget. (Before 0.5.0 the hosted
   stores ran `statelessMcp` with one shared cart key for every visitor; verified fixed on both
   `/marketplace-dev` and `/marketplace` on 2026-09-26.)
-- **Ask AI (the box under the demo, in the dock):** visitors ask about their order, cart or the products;
+- **Keep the dock minimal (less is more):** opened, it shows one sentence, **one** start button (🥃 whiskey,
+  the gated path), and the Ask input pinned at the bottom — no intro paragraph, no second scenario, no
+  wallet box (the checkout card says which wallet, when it matters). ↺ Start over sits in the header and
+  appears only once something happened. The checkout card has one help line and no "I've finished"
+  button: `watchOrder` re-reads the settled order every 4 s and on tab return (bounded, stopped on reset).
+- **Ask AI (the input pinned at the bottom of the dock):** visitors ask about their order, cart or the products;
   the page POSTs `{ question, context: { cartId?, orderId? }, history }` to the same-origin `/api/ask`, a
   Vercel function on the credentagent.ai router (library repo `deploy/router/api/ask.mjs`). It runs Z.ai's
   **free** GLM models (`glm-4.5-flash`, then `glm-4.7-flash`) with only the store's **read-only** tools, so
