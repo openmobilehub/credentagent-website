@@ -290,7 +290,7 @@ test('bridge answers ui/initialize with host info, capabilities and context', ()
     protocolVersion: '2026-01-26',
     hostInfo: { name: 'credentagent.ai', version: '1.0.0' },
     hostCapabilities: { openLinks: {}, serverTools: {}, updateModelContext: {} },
-    hostContext: { theme: 'dark', displayMode: 'inline', availableDisplayModes: ['inline'], platform: 'web', toolInfo: { tool: { name: 'browse-products' } } },
+    hostContext: { theme: 'light', displayMode: 'inline', availableDisplayModes: ['inline'], platform: 'web', toolInfo: { tool: { name: 'browse-products' } } },
   } });
 });
 
@@ -430,4 +430,45 @@ test('checkOrderStatus maps HTTP and network failures', async () => {
   await assert.rejects(http('https://demo.example', 'O'), (e) => e.kind === 'http' && e.status === 502);
   const net = D.createOrderStatus({ fetch: () => Promise.reject(new TypeError('Failed to fetch')) });
   await assert.rejects(net('https://demo.example', 'O'), (e) => e.kind === 'network');
+});
+
+// ---- theme ----
+const memStore = (init = {}) => { const m = { ...init }; return { getItem: (k) => (k in m ? m[k] : null), setItem: (k, v) => { m[k] = String(v); }, m }; };
+const badStore = { getItem() { throw new Error('blocked'); }, setItem() { throw new Error('blocked'); } };
+
+test('readTheme: light by default, the saved choice otherwise, never throws', () => {
+  assert.equal(D.THEME_KEY, 'credentagent.theme');
+  assert.equal(D.readTheme(memStore()), 'light');
+  assert.equal(D.readTheme(memStore({ 'credentagent.theme': 'dark' })), 'dark');
+  assert.equal(D.readTheme(memStore({ 'credentagent.theme': 'purple' })), 'light');
+  assert.equal(D.readTheme(badStore), 'light');
+  assert.equal(D.readTheme(null), 'light');
+});
+
+test('writeTheme stores only light/dark and never throws', () => {
+  const s = memStore();
+  assert.equal(D.writeTheme(s, 'dark'), true);
+  assert.equal(s.m['credentagent.theme'], 'dark');
+  D.writeTheme(s, 'banana');
+  assert.equal(s.m['credentagent.theme'], 'light');
+  assert.equal(D.writeTheme(badStore, 'dark'), false);
+  assert.equal(D.writeTheme(null, 'dark'), false);
+});
+
+test('nextTheme and toggleLabel describe the switch the button offers', () => {
+  assert.equal(D.nextTheme('light'), 'dark');
+  assert.equal(D.nextTheme('dark'), 'light');
+  assert.equal(D.nextTheme(null), 'dark');
+  assert.deepEqual(plain(D.toggleLabel('light')), { icon: '☾', text: 'Dark', aria: 'Switch to dark theme', pressed: 'false' });
+  assert.deepEqual(plain(D.toggleLabel('dark')), { icon: '☀', text: 'Light', aria: 'Switch to light theme', pressed: 'true' });
+});
+
+test('bridge reports the current theme and can switch it live', () => {
+  const { bridge, posted } = makeBridge({ context: { theme: 'dark' } });
+  bridge.handle({ jsonrpc: '2.0', id: 1, method: 'ui/initialize', params: { protocolVersion: '2026-01-26' } });
+  assert.equal(posted[0].result.hostContext.theme, 'dark');
+  bridge.setTheme('light');
+  bridge.setTheme('nonsense');
+  assert.deepEqual(posted[1], { jsonrpc: '2.0', method: 'ui/notifications/host-context-changed', params: { theme: 'light' } });
+  assert.deepEqual(posted[2].params, { theme: 'light' });
 });

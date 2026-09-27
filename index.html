@@ -1095,7 +1095,7 @@ var CADemo = (function () {
             protocolVersion: p.protocolVersion || api.HOST_PROTOCOL,
             hostInfo: { name: 'credentagent.ai', version: '1.0.0' },
             hostCapabilities: { openLinks: {}, serverTools: {}, updateModelContext: {} },
-            hostContext: Object.assign({ theme: 'dark', displayMode: 'inline', availableDisplayModes: ['inline'], platform: 'web' }, h.context || {})
+            hostContext: Object.assign({ theme: 'light', displayMode: 'inline', availableDisplayModes: ['inline'], platform: 'web' }, h.context || {})
           });
           return;
         case 'tools/call':
@@ -1134,6 +1134,7 @@ var CADemo = (function () {
         if (msg.method === 'ui/notifications/size-changed' && h.onSize && msg.params) h.onSize(msg.params.height);
       },
       notify: function (method, params) { h.post({ jsonrpc: '2.0', method: method, params: params || {} }); },
+      setTheme: function (theme) { h.post({ jsonrpc: '2.0', method: 'ui/notifications/host-context-changed', params: { theme: theme === 'dark' ? 'dark' : 'light' } }); },
       teardown: function () { h.post({ jsonrpc: '2.0', id: 'teardown-' + (++seq), method: 'ui/resource-teardown', params: {} }); }
     };
   };
@@ -1360,6 +1361,25 @@ var CADemo = (function () {
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + dim + ' ' + dim + '" width="' + px + '" height="' + px +
       '" shape-rendering="crispEdges" role="img" aria-label="QR code for the checkout link">' +
       '<rect width="100%" height="100%" fill="#fff"/><path d="' + d + '" fill="#000"/></svg>';
+  };
+
+  // ---- Theme: light by default; the visitor's choice is remembered per device ----
+  api.THEME_KEY = 'credentagent.theme';
+  api.readTheme = function (storage) {
+    try { return storage && storage.getItem(api.THEME_KEY) === 'dark' ? 'dark' : 'light'; }
+    catch (e) { return 'light'; }
+  };
+  api.writeTheme = function (storage, theme) {
+    if (!storage) return false;
+    try { storage.setItem(api.THEME_KEY, theme === 'dark' ? 'dark' : 'light'); return true; }
+    catch (e) { return false; }
+  };
+  api.nextTheme = function (theme) { return theme === 'dark' ? 'light' : 'dark'; };
+  // What the toggle button offers: the theme you'd switch TO.
+  api.toggleLabel = function (theme) {
+    return theme === 'dark'
+      ? { icon: '☀', text: 'Light', aria: 'Switch to light theme', pressed: 'true' }
+      : { icon: '☾', text: 'Dark', aria: 'Switch to dark theme', pressed: 'false' };
   };
 
   return api;
