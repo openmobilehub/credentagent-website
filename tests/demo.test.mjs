@@ -509,6 +509,14 @@ test('askReplyLine: markdown the model slips in is shown as plain text', () => {
   assert.equal(D.askReplyLine(200, { answer: '2 * 3 = 6, snake_case_id' }).text, '2 * 3 = 6, snake_case_id');
 });
 
+test('askChipStatus: says so when the AI edited the cart, read-only otherwise', () => {
+  assert.equal(D.askChipStatus(['list-products', 'add-to-cart']), 'edited your cart');
+  assert.equal(D.askChipStatus(['set-quantity']), 'edited your cart');
+  assert.equal(D.askChipStatus(['remove-from-cart']), 'edited your cart');
+  assert.equal(D.askChipStatus(['browse-products', 'get-cart']), 'read-only');
+  assert.equal(D.askChipStatus([]), 'read-only');
+});
+
 test('askApp: accepts only a well-formed MCP App from /api/ask, else null', () => {
   const result = { structuredContent: { cartId: 'cart_1', products: [] } };
   assert.deepEqual(plain(D.askApp({ answer: 'x', app: { tool: 'browse-products', resourceUri: 'ui://product-picker/a.html', result } })),

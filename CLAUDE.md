@@ -115,18 +115,23 @@ co-presented with Multipaz. Two npm packages, versioned in lockstep, both live a
 - **Ask AI (the input pinned at the bottom of the dock):** visitors ask about their order, cart or the products;
   the page POSTs `{ question, context: { cartId?, orderId? }, history }` to the same-origin `/api/ask`, a
   Vercel function on the credentagent.ai router (library repo `deploy/router/api/ask.mjs`). It runs Z.ai's
-  **free** GLM models (`glm-4.5-flash`, then `glm-4.7-flash`) with only the store's **read-only** tools, so
-  it can't buy, change a cart or touch a grant; the `ZAI_API_KEY` lives on the `credentagent-router` Vercel
-  project. The page only builds the request and shows the reply (`askRequest` / `cartIdFrom` /
-  `askReplyLine` in `ca-demo-core`). Answers are labeled **✦ AI answer** with the tools used; keep that
-  label and the "can only read" note (honesty rule). Locally, `tools/dev-server.py` relays `/api/ask` to
+  `glm-5` → `glm-4.5-air` → free `glm-4.5-flash` (paid from a prepaid
+  Z.ai balance, ~$0.005 a question) with the store's read tools **plus the cart edits** (`add-to-cart`,
+  `set-quantity`, `remove-from-cart`, on the visitor's own signed cartId). It can **never check out, pay,
+  or touch a grant** — the visitor checks out in the picker, where 21+ items ask for the wallet proof. The
+  router also refuses to let an answer claim a cart change no tool made. The `ZAI_API_KEY` lives on the
+  `credentagent-router` Vercel project. The page only builds the request and shows the reply
+  (`askRequest` / `cartIdFrom` / `askReplyLine` / `askChipStatus` in `ca-demo-core`). Answers are labeled
+  **✦ AI answer** with the tools used (the chip says "edited your cart" when it did); keep that label and
+  the "can edit your cart, never checks out" note (honesty rule). Locally, `tools/dev-server.py` relays `/api/ask` to
   credentagent.ai, or to `ASK_TARGET` (e.g. a local copy of the function).
 - **Ask AI renders MCP Apps (library PR #216+):** when the AI calls a tool that declares a `ui://`
   resource (e.g. "show me the products" → `browse-products` → the product picker), `/api/ask` returns
   `app: { tool, resourceUri, result }`. The page (`askApp` + `showApp`) renders it as any MCP host would:
   its own `tools/list` must declare that same `ui://` for the tool, then `resources/read` and the usual
-  `mountWidget` bridge with the AI's tool result. One live app at a time; a later UI tool reply while it's
-  open just says it's open above. The AI still only reads — picker actions go page → store via the bridge.
+  `mountWidget` bridge with the AI's tool result. One live app at a time: a later UI tool reply while it's
+  open (e.g. the AI's `add-to-cart`) is pushed into the open picker as a new `tool-result`, so its cart
+  updates in place. Picker actions go page → store via the bridge, never through the AI.
 
 ## Current state (2026-09-26)
 
