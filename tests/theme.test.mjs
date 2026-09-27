@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
+import { loadCore } from './load-core.mjs';
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const style = html.slice(html.indexOf('<style>'), html.indexOf('</style>'));
@@ -115,4 +116,11 @@ test('boot script: applies a saved dark choice', () => {
 
 test('boot script: blocked storage falls back to light without throwing', () => {
   assert.deepEqual(boot({ getItem() { throw new Error('blocked'); } }), { theme: 'light', scheme: 'light' });
+});
+
+test('boot script and core agree on the storage key and the dark value', () => {
+  const D = loadCore();
+  const m = html.match(/\/\* ca-theme-boot:begin \*\/([\s\S]*?)\/\* ca-theme-boot:end \*\//);
+  assert.ok(m[1].includes("'" + D.THEME_KEY + "'"), 'boot script must read the same key as the core');
+  assert.ok(m[1].includes("==='dark'"), 'boot script must use the same dark value as the core');
 });

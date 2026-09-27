@@ -80,7 +80,7 @@
   .theme-toggle{font:inherit;font-size:13px;font-weight:600;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
   .theme-toggle:hover{border-color:var(--primary)}
   .theme-toggle:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
-  html.theme-anim,html.theme-anim *{transition:background-color .15s ease,color .15s ease,border-color .15s ease!important}
+  html.theme-anim,html.theme-anim *{transition:background-color .15s ease,color .15s ease,border-color .15s ease,fill .15s ease,stroke .15s ease!important}
 
   /* ---------- hero layout ---------- */
   .hero{
@@ -382,6 +382,8 @@
     .d-bubble{max-width:92%}
     .demo-reset{margin-left:0}
     .tt-text{display:none}
+    .nav-right{gap:10px}
+    .theme-toggle{padding:6px 9px}
   }
 </style>
 </head>
@@ -399,7 +401,7 @@
         <a href="https://github.com/openmobilehub/credentagent/tree/main/docs/reference">Docs</a>
         <a href="https://github.com/openmobilehub/credentagent">GitHub</a>
       </div>
-      <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to dark theme"><span class="tt-icon" aria-hidden="true">☾</span><span class="tt-text">Dark</span></button>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark theme"><span class="tt-icon" aria-hidden="true">☾</span><span class="tt-text">Dark</span></button>
       <a class="npm-btn" href="https://www.npmjs.com/package/@openmobilehub/credentagent-gate">npm install</a>
     </div>
   </nav>
@@ -1386,8 +1388,8 @@ var CADemo = (function () {
   // What the toggle button offers: the theme you'd switch TO.
   api.toggleLabel = function (theme) {
     return theme === 'dark'
-      ? { icon: '☀', text: 'Light', aria: 'Switch to light theme', pressed: 'true' }
-      : { icon: '☾', text: 'Dark', aria: 'Switch to dark theme', pressed: 'false' };
+      ? { icon: '☀', text: 'Light', aria: 'Switch to light theme' }
+      : { icon: '☾', text: 'Dark', aria: 'Switch to dark theme' };
   };
 
   return api;
@@ -1402,18 +1404,18 @@ var CADemo = (function () {
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var store = null;
   try { store = window.localStorage; } catch (e) { store = null; }
+  var animTimer = null;
   function current(){ return root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'; }
   function paint(theme){
     var l = D.toggleLabel(theme);
     btn.querySelector('.tt-icon').textContent = l.icon;
     btn.querySelector('.tt-text').textContent = l.text;
     btn.setAttribute('aria-label', l.aria);
-    btn.setAttribute('aria-pressed', l.pressed);
   }
   function apply(theme){
     if (!reduce) {
       root.classList.add('theme-anim');
-      setTimeout(function(){ root.classList.remove('theme-anim'); }, 250);
+      clearTimeout(animTimer); animTimer = setTimeout(function(){ root.classList.remove('theme-anim'); }, 250);
     }
     root.setAttribute('data-theme', theme);
     root.style.colorScheme = theme;
@@ -1584,6 +1586,7 @@ var CADemo = (function () {
         if (r.ready) return;                  // a repeated initialized must not replay the result
         clearTimeout(r.readyTimer);
         r.ready = true;
+        bridge.setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light');
         bridge.notify('ui/notifications/tool-input', { arguments: {} });
         bridge.notify('ui/notifications/tool-result', state.browse);
         pause(300).then(function(){ if (guard.isCurrent(token)) say('agent', D.tapLine(s)); });

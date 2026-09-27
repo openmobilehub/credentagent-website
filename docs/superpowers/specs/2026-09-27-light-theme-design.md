@@ -75,7 +75,7 @@ All colour is semantic tokens. `:root` = light (default); `:root[data-theme="dar
 ## Toggle, persistence, no-flash
 
 - **Button** in the sticky nav, before "npm install": shows the theme you'd switch **to** ("☾ Dark" / "☀ Light";
-  icon-only on phones, where nav links hide). Real `<button>`, `aria-pressed` (true = dark), `aria-label`
+  icon-only on phones, where nav links hide). Real `<button>` with an action label (`aria-label` "Switch to dark/light theme", matching the visible text; no `aria-pressed` — an action-named button must not also carry a pressed state)
   "Switch to dark/light theme", visible focus ring.
 - **Persistence:** `localStorage["credentagent.theme"]` = `"light" | "dark"`; absent/invalid → light. Storage
   failures (private mode, blocked) are caught: the toggle still works for the page view.

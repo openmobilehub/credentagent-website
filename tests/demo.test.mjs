@@ -459,8 +459,8 @@ test('nextTheme and toggleLabel describe the switch the button offers', () => {
   assert.equal(D.nextTheme('light'), 'dark');
   assert.equal(D.nextTheme('dark'), 'light');
   assert.equal(D.nextTheme(null), 'dark');
-  assert.deepEqual(plain(D.toggleLabel('light')), { icon: '☾', text: 'Dark', aria: 'Switch to dark theme', pressed: 'false' });
-  assert.deepEqual(plain(D.toggleLabel('dark')), { icon: '☀', text: 'Light', aria: 'Switch to light theme', pressed: 'true' });
+  assert.deepEqual(plain(D.toggleLabel('light')), { icon: '☾', text: 'Dark', aria: 'Switch to dark theme' });
+  assert.deepEqual(plain(D.toggleLabel('dark')), { icon: '☀', text: 'Light', aria: 'Switch to light theme' });
 });
 
 test('bridge reports the current theme and can switch it live', () => {
