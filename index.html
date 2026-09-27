@@ -111,6 +111,22 @@
     transition:border-color .2s,color .2s;
   }
   .cta-ghost:hover{border-color:var(--primary);color:var(--primary)}
+  /* The live demo is the page's most useful action: filled in the brand orange, first in the row. */
+  .cta-try{
+    display:inline-flex;align-items:center;gap:10px;
+    font-size:15px;font-weight:700;color:var(--on-attention);background:var(--attention);
+    border-radius:9px;padding:12px 20px 12px 14px;cursor:pointer;
+    box-shadow:0 8px 24px -10px color-mix(in srgb,var(--attention) 80%,transparent);
+    transition:transform .1s,box-shadow .2s;
+  }
+  .cta-try:hover{transform:translateY(-1px);box-shadow:0 12px 30px -10px var(--attention)}
+  .cta-try:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+  .cta-try .play{
+    display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;
+    border:2px solid var(--on-attention);font-size:10px;padding-left:2px;
+  }
+  .cta-try small{display:block;font-size:11.5px;font-weight:500;opacity:.8;margin-top:1px}
+  .nav-links a.nav-try{color:var(--ink);font-weight:700;border-bottom:2px solid var(--attention);padding-bottom:1px}
 
   /* ---------- chat surface ---------- */
   .col-right{display:flex;justify-content:center}
@@ -396,6 +412,7 @@
     </div>
     <div class="nav-right">
       <div class="nav-links">
+        <a class="nav-try" href="#try">Try it live</a>
         <a href="#how">How it works</a>
         <a href="#new">What's new</a>
         <a href="https://github.com/openmobilehub/credentagent/tree/main/docs/reference">Docs</a>
@@ -412,9 +429,9 @@
       <h1>AI agents are learning to act.<span class="ask">Make them ask first.</span></h1>
       <p class="subhead">An agent proves a verifiable credential from the user's wallet before a consequential action completes. <b style="color:var(--ink)">Identity leads; payments is one application.</b></p>
       <div class="ctas">
+        <a class="cta-try" href="#try"><span class="play" aria-hidden="true">▶</span><span>Try it in your browser<small>Live agent demo · no install</small></span></a>
         <a class="cta-primary" href="https://www.npmjs.com/package/@openmobilehub/credentagent-gate">npm i @openmobilehub/credentagent-gate</a>
         <a class="cta-ghost" href="https://github.com/openmobilehub/credentagent/tree/main/docs/reference">Read the docs →</a>
-        <a class="cta-ghost" href="#try">Try it in your browser ↓</a>
       </div>
     </div>
 
