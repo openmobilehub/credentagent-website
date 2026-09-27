@@ -18,7 +18,7 @@ a connector in Claude / ChatGPT / Goose / Gemini. The visitor sees an agent conv
 | Wallet hand-off | **A hand-off card with a real "Continue to checkout ↗" link** that opens the gate's checkout page in a new top-level tab on the same device, where the gate calls the W3C Digital Credentials API. QR code of the checkout URL as the desktop fallback. |
 | Placement | **A tab in "Try it live" (P1):** `▶ Right here` (default) · `In Claude / ChatGPT / Goose` (today's content). A hero link "Try it in your browser ↓". |
 | Widget container | **The real widget in a seamless sandboxed iframe** (auto-sized, borderless: looks like a div). |
-| Endpoint | **`/marketplace-dev/mcp`** (same-origin on credentagent.ai via the router). One constant, so switching to `/marketplace/mcp` is one line. |
+| Endpoint | **`/marketplace/mcp`** since library 0.5.0 (same-origin on credentagent.ai via the router). Originally `/marketplace-dev/mcp`; switched once the published store gave each conversation its own cart. One constant either way. |
 
 ## Verified facts this design relies on (probed 2026-09-25)
 
@@ -59,7 +59,7 @@ Four small units:
 | `scenarios` | The two scripts. Each: user prompt → agent line → `browse-products` → narration ("Tap + on …, then Checkout") → then reacts to `host` events. | `host`, `chat` |
 
 **Other rules:**
-- `ENDPOINT = "/marketplace-dev/mcp"` (relative URL).
+- `ENDPOINT = "/marketplace/mcp"` (relative URL; was `/marketplace-dev/mcp` until library 0.5.0).
 - **Lazy loading:** nothing loads until a scenario button is clicked, including the widget.
 - **Origin guard:** if `location.hostname` isn't `credentagent.ai` or `www.credentagent.ai` (or localhost
   for the dev server), the "Right here" tab shows "Try it on credentagent.ai ↗" and makes no calls.
