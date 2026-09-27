@@ -40,16 +40,23 @@ co-presented with Multipaz. Two npm packages, versioned in lockstep, both live a
 - **Logo:** mark + wordmark, where the wordmark is ONE element `<span class="wordmark">Credent<em>Agent</em></span>`
   (CredentAgent is a single word — never a gap). Font: Space Grotesk 600 subset, inline, SIL OFL 1.1;
   regenerate with `tools/build-wordmark-font.py`. Brand assets: the CredentAgent logo Drive folder (README palette).
-- **Hero:** the animated **"Watch the agent ask"** consent-handshake: a user prompt types out → an agent
-  pauses → a 🔒 gate pulses → a 📱 wallet proves two credentials (age_over_21, then payment · usd) →
-  the action completes → loops (~9s). It **honors `prefers-reduced-motion`** (renders the final state
-  statically, no motion).
-- **Sections (top→bottom):** sticky nav → animated hero → problem band → try-it-live (tabs: **▶ Right
-  here** — opens the in-browser agent demo in its chat-window dock — and **In Claude / ChatGPT / Goose** — YouTube demo + hosted
-  connector) → how-it-works (3 cards) → quickstart (gate policy ladder with imports) →
-  **what's new** (tabbed code: orders / grants / defineHost / webhooks + doctor/branding/iPhone cards) →
-  gate-any-credential → **Honest by design** (the trust table) → built-on-open-standards →
-  for-developers → footer.
+- **Audience (2026-09-27 redesign):** MCP server developers who build for merchants. Goals: npm installs and
+  demo runs, with a visible path to production. Copy says what it is in the first screen ("an open-source Node
+  library for MCP servers"); one primary CTA (Get started) + one demo CTA; release news is a one-line strip.
+- **Hero:** headline + install line (copy button) on the left; on the right a policy code card above the
+  animated **"Watch the agent ask"** consent-handshake: a user prompt → an agent pauses → a 🔒 gate pulses →
+  a 📱 wallet proves two credentials (age_over_21, then payment · usd) → the action completes → loops (~9s).
+  The first loop opens mid-conversation so the first frame is never empty. It **honors
+  `prefers-reduced-motion`** (renders the final state statically, no motion). The heading's accent class is
+  `.h1-ask` — `.ask` belongs to the demo dock's Ask form.
+- **Sections (top→bottom):** sticky nav → hero → **how it works** (4-actor sequence diagram, an ordered
+  list ≤880px) → try-it-live (tabs: **▶ Right here** — opens the in-browser agent demo in its chat-window
+  dock — and **In Claude / ChatGPT / Goose** — YouTube demo + hosted connector) → **get started** (3 steps
+  on `orders.serve` / `orders.create` / `orders.retrieve`, prerequisites, go-live box, gate-vs-storefront
+  chooser) → use cases (policy line per tile) → go further (tabbed code: grants / defineHost / webhooks /
+  defineCredential) → **Status · honest by design** (real / demo-grade / before-production summary + the
+  full trust table in a `<details>`) → built-on-open-standards → footer. Every code sample must match the
+  published gate README — verify against the library's release tag before changing one.
 - **Full rationale:** `docs/2026-06-28-attesto-website-design.md` (a synced copy; the canonical version
   lives in the demo repo — see Links).
 
