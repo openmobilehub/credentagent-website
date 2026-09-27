@@ -875,6 +875,27 @@ var CADemo = (function () {
 
   // Stateless MCP client: one JSON-RPC POST per call (the storefront needs no initialize/session).
   // Errors carry .kind: http | rpc | protocol | timeout | network.
+  // One bounded read of <origin>/checkout/order-status → { completed, order, … }. The timeout matters:
+  // an unanswered request must never leave the page waiting forever (typed errors, like the MCP client).
+  api.createOrderStatus = function (opts) {
+    var doFetch = opts.fetch, timeoutMs = opts.timeoutMs || 10000;
+    return function (origin, orderId) {
+      var controller = new AbortController();
+      var timer = setTimeout(function () { controller.abort(); }, timeoutMs);
+      return Promise.resolve().then(function () {
+        return doFetch(origin + '/checkout/order-status?orderId=' + encodeURIComponent(orderId),
+          { credentials: 'omit', signal: controller.signal });
+      }).then(function (res) {
+        if (!res.ok) throw mcpError('http', 'HTTP ' + res.status, res.status);
+        return res.json();
+      }).catch(function (err) {
+        if (err && err.kind) throw err;
+        if (err && err.name === 'AbortError') throw mcpError('timeout', 'No reply within ' + Math.round(timeoutMs / 1000) + ' s');
+        throw mcpError('network', (err && err.message) || 'Network error');
+      }).finally(function () { clearTimeout(timer); });
+    };
+  };
+
   api.createMcpClient = function (opts) {
     var endpoint = opts.endpoint, doFetch = opts.fetch, timeoutMs = opts.timeoutMs || 15000;
     var nextId = 0;
@@ -1335,6 +1356,7 @@ var CADemo = (function () {
   }
 
   var mcp = D.createMcpClient({ endpoint: ENDPOINT, fetch: window.fetch.bind(window) });
+  var orderStatus = D.createOrderStatus({ fetch: window.fetch.bind(window) });
   var guard = D.createRunGuard();
   var run = null;   // { token, frame, bridge, onMessage, readyTimer, ready }
 
@@ -1546,8 +1568,8 @@ var CADemo = (function () {
     state.checking = true;
     var co = state.checkout;                   // the reply must belong to the order we asked about
     var origin = new URL(co.checkoutUrl).origin;
-    fetch(origin + '/checkout/order-status?orderId=' + encodeURIComponent(co.orderId))
-      .then(function(res){ return res.ok ? res.json() : null; })
+    // Bounded: a stalled request times out, so `checking` always clears and the next check can run.
+    orderStatus(origin, co.orderId)
       .then(function(s){
         state.checking = false;
         if (!guard.isCurrent(token) || state.done || state.checkout !== co) return;
