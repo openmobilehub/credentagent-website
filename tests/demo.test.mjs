@@ -182,6 +182,23 @@ test('formatArgs keeps chips short', () => {
   assert.equal(D.formatArgs({ uri: 'x'.repeat(100) }).length, 58);
 });
 
+test('doneSummary: the success card reads the settled order, and never invents an amount', () => {
+  assert.deepEqual(plain(D.doneSummary({ amount: 124, currency: 'USD' })), { title: 'Order complete', detail: '$124.00 paid' });
+  assert.deepEqual(plain(D.doneSummary(null)), { title: 'Order complete', detail: 'Paid' });
+});
+
+test('confetti: n pieces from the burst point, fired upwards, in the five brand colours', () => {
+  let seed = 7;
+  const rng = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const bits = D.confetti(60, 200, 300, rng);
+  assert.equal(bits.length, 60);
+  assert.ok(bits.every((b) => b.x === 200 && b.y === 300));
+  assert.ok(bits.every((b) => b.vy < 0), 'every piece starts moving up');
+  assert.ok(bits.every((b) => Number.isInteger(b.color) && b.color >= 0 && b.color < 5));
+  seed = 7;
+  assert.deepEqual(plain(D.confetti(60, 200, 300, rng)), plain(bits), 'same rng, same burst');
+});
+
 test('completionLine uses the real settled order', () => {
   assert.equal(D.completionLine({ orderId: 'ORD-1', amount: 111.6, currency: 'USD' }), '✓ Order placed — $111.60.');
   assert.equal(D.completionLine({ amount: 20, currency: 'EUR' }), '✓ Order placed — 20.00 EUR.');

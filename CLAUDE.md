@@ -112,6 +112,11 @@ co-presented with Multipaz. Two npm packages, versioned in lockstep, both live a
   picker opens on that result with the item already in the cart, so the visitor's one step is Checkout. ↺ Start over sits in the header and
   appears only once something happened. The checkout card has one help line and no "I've finished"
   button: `watchOrder` re-reads the settled order every 4 s and on tab return (bounded, stopped on reset).
+- **Order complete is a moment:** when the settled order comes back, `celebrate()` collapses the checkout
+  card to its honesty badge, adds a big **✓ Order complete · $X paid** card (`doneSummary`, from the settled
+  order — never assumed) and fires `ca-order-complete`; the dock script throws ~2.5 s of canvas confetti
+  in the brand tokens (`confetti()` in `ca-demo-core`). Dock closed at that moment → the launcher turns
+  green "✓ Order complete" and the confetti plays on open. `prefers-reduced-motion` → the card, no confetti.
 - **Ask AI (the input pinned at the bottom of the dock):** visitors ask about their order, cart or the products;
   the page POSTs `{ question, context: { cartId?, orderId? }, history }` to the same-origin `/api/ask`, a
   Vercel function on the credentagent.ai router (library repo `deploy/router/api/ask.mjs`). It runs Z.ai's
