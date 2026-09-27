@@ -113,6 +113,12 @@ co-presented with Multipaz. Two npm packages, versioned in lockstep, both live a
   `askReplyLine` in `ca-demo-core`). Answers are labeled **✦ AI answer** with the tools used; keep that
   label and the "can only read" note (honesty rule). Locally, `tools/dev-server.py` relays `/api/ask` to
   credentagent.ai, or to `ASK_TARGET` (e.g. a local copy of the function).
+- **Ask AI renders MCP Apps (library PR #216+):** when the AI calls a tool that declares a `ui://`
+  resource (e.g. "show me the products" → `browse-products` → the product picker), `/api/ask` returns
+  `app: { tool, resourceUri, result }`. The page (`askApp` + `showApp`) renders it as any MCP host would:
+  its own `tools/list` must declare that same `ui://` for the tool, then `resources/read` and the usual
+  `mountWidget` bridge with the AI's tool result. One live app at a time; a later UI tool reply while it's
+  open just says it's open above. The AI still only reads — picker actions go page → store via the bridge.
 
 ## Current state (2026-09-26)
 

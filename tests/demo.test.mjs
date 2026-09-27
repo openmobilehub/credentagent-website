@@ -501,3 +501,21 @@ test('askReplyLine: an answer is shown as-is; every failure becomes a plain, hon
   assert.match(D.askReplyLine(0, {}).text, /couldn’t reach/);
   assert.equal(D.askReplyLine(200, { answer: '   ' }).err, true);   // an empty answer is not an answer
 });
+
+test('askReplyLine: markdown the model slips in is shown as plain text', () => {
+  assert.equal(D.askReplyLine(200, { answer: '**Audio** - Aurora __Headphones__ - $199\n## Home\n* Lamp `x`' }).text,
+    'Audio - Aurora Headphones - $199\nHome\n• Lamp x');
+  assert.equal(D.askReplyLine(200, { answer: '2 * 3 = 6, snake_case_id' }).text, '2 * 3 = 6, snake_case_id');
+});
+
+test('askApp: accepts only a well-formed MCP App from /api/ask, else null', () => {
+  const result = { structuredContent: { cartId: 'cart_1', products: [] } };
+  assert.deepEqual(plain(D.askApp({ answer: 'x', app: { tool: 'browse-products', resourceUri: 'ui://product-picker/a.html', result } })),
+    { tool: 'browse-products', resourceUri: 'ui://product-picker/a.html', result });
+  assert.equal(D.askApp({ answer: 'x' }), null);
+  assert.equal(D.askApp(null), null);
+  assert.equal(D.askApp({ app: { tool: 'browse-products', resourceUri: 'https://evil.example/a.html', result } }), null);
+  assert.equal(D.askApp({ app: { tool: 'browse-products', resourceUri: 'ui://p/a.html', result: 'nope' } }), null);
+  assert.equal(D.askApp({ app: { tool: 7, resourceUri: 'ui://p/a.html', result } }), null);
+  assert.equal(D.askApp({ app: { tool: 'get-cart', resourceUri: 'ui://p/a.html', result: { isError: true } } }), null);
+});
