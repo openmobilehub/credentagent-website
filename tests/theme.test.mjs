@@ -37,7 +37,8 @@ const TEXT_PAIRS = [['ink', 'bg'], ['ink', 'surface'], ['ink', 'sunk'], ['mut', 
   ['on-primary', 'primary-hover'], ['link', 'bg'], ['link', 'surface'], ['accent2', 'bg'], ['accent2', 'surface'],
   ['ok', 'bg'], ['ok', 'surface'], ['warn', 'bg'], ['warn', 'surface'], ['err', 'surface'], ['on-attention', 'attention'],
   ['code-ink', 'code-bg'], ['c-key', 'code-bg'], ['c-fn', 'code-bg'], ['c-str', 'code-bg'], ['c-num', 'code-bg'],
-  ['c-cm', 'code-bg']];
+  ['c-cm', 'code-bg'],
+  ['dim', 'sunk'], ['primary', 'sunk'], ['accent2', 'sunk'], ['link', 'sunk'], ['warn', 'sunk'], ['ok', 'sunk']];
 
 test('both themes define every required token', () => {
   for (const [name, t] of [['light', LIGHT()], ['dark', DARK()]]) {
@@ -66,4 +67,18 @@ test('no raw colour literals outside the two token blocks', () => {
 test('--attention and --brand-mark are never used as a text colour (except the wordmark)', () => {
   const noWordmark = style.replace(/\.wordmark em\{[^}]*\}/, '');
   assert.equal(/[^-]color:var\(--(attention|brand-mark)\)/.test(noWordmark), false);
+});
+
+test('the wordmark is one element reading exactly "CredentAgent" (no gap), in nav and footer', () => {
+  const marks = html.match(/<span class="wordmark">[\s\S]*?<\/span>/g) || [];
+  assert.equal(marks.length, 2, 'expected a wordmark in the nav and the footer');
+  for (const m of marks) assert.equal(m, '<span class="wordmark">Credent<em>Agent</em></span>');
+  assert.equal(html.includes('>CREDENTAGENT<'), false, 'the old letter-spaced text wordmark must be gone');
+  assert.match(style, /\.logo\{[^}]*gap:/, 'the gap belongs on .logo (mark ↔ word), never inside the wordmark');
+});
+
+test('every demo-level trust label carries a ⚠ dashed badge, never colour alone', () => {
+  const cells = html.match(/<div class="r demo">[\s\S]*?<\/div>/g) || [];
+  const labels = cells.map((c) => (c.match(/^<div class="r demo"><span class="warn-badge">⚠ ([a-z-]+-demo)<\/span><\/div>$/) || [])[1]);
+  assert.deepEqual(labels, ['presence-only-demo', 'presence-only-demo', 'server-issued-demo']);
 });

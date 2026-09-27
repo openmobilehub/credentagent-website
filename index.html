@@ -10,6 +10,7 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://credentagent.ai/">
 <link rel="canonical" href="https://credentagent.ai/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 78 78' fill='none' stroke-linecap='square'%3E%3Crect width='78' height='78' fill='%230E1220'/%3E%3Cg transform='translate(-12,-8)'%3E%3Cpath d='M66 20H28a8 8 0 0 0-8 8v40a8 8 0 0 0 8 8h40a8 8 0 0 0 8-8V47' stroke='%23F2F4F0' stroke-width='9'/%3E%3Cpath d='M34 49l12 12 38-45' stroke='%23C6F53C' stroke-width='9'/%3E%3C/g%3E%3C/svg%3E">
 <meta name="twitter:card" content="summary">
 <style>
   :root{
@@ -44,11 +45,17 @@
   nav{
     display:flex;align-items:center;justify-content:space-between;
     padding:16px 28px;border-bottom:1px solid var(--line);
-    gap:16px;flex-wrap:wrap;position:sticky;top:0;z-index:5;
+    gap:16px;flex-wrap:wrap;position:sticky;top:0;z-index:5;border-top:4px solid transparent;
     background:var(--nav-bg);backdrop-filter:blur(8px);
   }
+  nav::before{content:"";position:absolute;left:0;right:0;top:-4px;height:4px;background:linear-gradient(90deg,var(--bar-1) 0 25%,var(--bar-2) 25% 50%,var(--bar-3) 50% 75%,var(--brand-mark) 75%)}
   .nav-left{display:flex;align-items:center;gap:12px}
-  .wordmark{font-weight:700;letter-spacing:.14em;font-size:14px}
+  .logo{display:flex;align-items:center;gap:8px;color:var(--ink)}
+  .logo-mark{flex:none}.logo-mark .frame{stroke:currentColor}.logo-mark .check{stroke:var(--brand-mark)}
+  .wordmark{font-family:"CA Space Grotesk",-apple-system,"Segoe UI",system-ui,sans-serif;font-weight:600;font-size:19px;letter-spacing:-.015em;white-space:nowrap}
+  .wordmark em{font-style:normal;color:var(--brand-mark)}
+  .logo-sm .wordmark{font-size:14px}
+  .foot{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
   .pill{
     font-size:10px;letter-spacing:.06em;color:var(--mut);
     border:1px solid var(--line);border-radius:999px;padding:4px 9px;
@@ -370,7 +377,7 @@
 
   <nav>
     <div class="nav-left">
-      <span class="wordmark">CREDENTAGENT</span>
+      <a class="logo" href="#" aria-label="CredentAgent home"><svg class="logo-mark" width="24" height="24" viewBox="12 8 78 78" fill="none" stroke-linecap="square" aria-hidden="true"><path class="frame" d="M66 20H28a8 8 0 0 0-8 8v40a8 8 0 0 0 8 8h40a8 8 0 0 0 8-8V47" stroke-width="9"/><path class="check" d="M34 49l12 12 38-45" stroke-width="9"/></svg><span class="wordmark">Credent<em>Agent</em></span></a>
       <span class="pill">v0.5 · OPENWALLET FOUNDATION · AAIF FOUNDATION</span>
     </div>
     <div class="nav-right">
@@ -677,10 +684,10 @@ host.<span class="c-fn">publish</span>(app);                           <span cla
     <div class="rails">
       <div class="r"><b>passkey</b> — real WebAuthn, origin/RP-ID-bound, replay-protected</div><div class="r real">✓ real crypto</div>
       <div class="r"><b>webhooks</b> — HMAC-SHA256-signed <code>order.settled</code>, replay-protected</div><div class="r real">✓ real crypto</div>
-      <div class="r"><b>credential</b> — age, membership, any <code>defineCredential()</code>: OpenID4VP JWE + nonce + HPKE + mdoc parse, explicit positive claim</div><div class="r demo">presence-only-demo</div>
-      <div class="r"><b>dc-payment</b> — the same, plus the wallet's device-signed hash re-checked against this exact amount &amp; payee</div><div class="r demo">presence-only-demo</div>
+      <div class="r"><b>credential</b> — age, membership, any <code>defineCredential()</code>: OpenID4VP JWE + nonce + HPKE + mdoc parse, explicit positive claim</div><div class="r demo"><span class="warn-badge">⚠ presence-only-demo</span></div>
+      <div class="r"><b>dc-payment</b> — the same, plus the wallet's device-signed hash re-checked against this exact amount &amp; payee</div><div class="r demo"><span class="warn-badge">⚠ presence-only-demo</span></div>
       <div class="r"><b>wallet-signed spending grants</b> (default) — the gate verifies the wallet's device signature over the grant's exact limits; the key isn't anchored to a trusted issuer yet, so a self-made key would still pass</div><div class="r dsig">device-signed · demo</div>
-      <div class="r"><b>click-to-approve grants</b> (opt-in <code>signing: "page"</code>) — the server takes the approver's word for it; for demos and CI with no phone</div><div class="r demo">server-issued-demo</div>
+      <div class="r"><b>click-to-approve grants</b> (opt-in <code>signing: "page"</code>) — the server takes the approver's word for it; for demos and CI with no phone</div><div class="r demo"><span class="warn-badge">⚠ server-issued-demo</span></div>
       <div class="r"><b>external verifier</b> — the gate can relay an issuer-verified verdict from a real verifier, while re-checking amount &amp; policy itself. No real adapter ships yet.</div><div class="r" style="color:var(--dim)">interface only</div>
       <div class="r"><b>issuer-verified trust, built in</b> — mdoc issuer/device signatures (Multipaz) + a key-bound AP2 mandate</div><div class="r" style="color:var(--dim)">roadmap — next milestone</div>
     </div>
@@ -701,7 +708,7 @@ host.<span class="c-fn">publish</span>(app);                           <span cla
     <div class="cta"><a class="btn" href="https://www.npmjs.com/package/@openmobilehub/credentagent-gate">@openmobilehub/credentagent-gate</a><a class="btn-ghost" href="https://www.npmjs.com/package/@openmobilehub/credentagent-storefront">@openmobilehub/credentagent-storefront</a><span style="color:var(--mut)">· <a href="https://github.com/openmobilehub/credentagent/tree/main/docs/reference">Docs</a> · <a href="https://github.com/openmobilehub/credentagent/tree/main/examples">Examples</a> · <a href="https://github.com/openmobilehub/credentagent/releases/tag/v0.5.0">v0.5.0 release notes →</a></span></div>
   </div></section>
 
-  <footer><div class="wrap">Apache-2.0 · GitHub · npm · An Open Mobile Hub project (Linux Foundation / OpenWallet Foundation) · heading to GDC</div></footer>
+  <footer><div class="wrap foot"><a class="logo logo-sm" href="#" aria-label="CredentAgent home"><svg class="logo-mark" width="18" height="18" viewBox="12 8 78 78" fill="none" stroke-linecap="square" aria-hidden="true"><path class="frame" d="M66 20H28a8 8 0 0 0-8 8v40a8 8 0 0 0 8 8h40a8 8 0 0 0 8-8V47" stroke-width="9"/><path class="check" d="M34 49l12 12 38-45" stroke-width="9"/></svg><span class="wordmark">Credent<em>Agent</em></span></a><span>Apache-2.0 · GitHub · npm · An Open Mobile Hub project (Linux Foundation / OpenWallet Foundation) · heading to GDC</span></div></footer>
 
 <script>
 (function(){
