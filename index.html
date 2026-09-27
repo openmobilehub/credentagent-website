@@ -397,6 +397,7 @@
   .ask-go:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
   .ask-go:disabled,.ask-q:disabled{opacity:.55;cursor:default}
   .ask-note{font-size:.72rem;color:var(--dim);margin-top:.4rem}
+  .d-bubble.ai{white-space:pre-line}
   .d-bubble.ai::before{content:"✦ AI answer";display:block;font-size:.68rem;font-weight:700;letter-spacing:.04em;color:var(--dim);margin-bottom:.2rem}
   .d-bubble.thinking{color:var(--dim);font-style:italic}
   .dock-launch{
@@ -1496,17 +1497,31 @@ var CADemo = (function () {
     var id = result && result.structuredContent && result.structuredContent.cartId;
     return typeof id === 'string' ? id : null;
   };
+  // The bubble is plain text, so markdown a model slips in (**bold**, ## headings, * bullets, `code`) is unwrapped.
+  function plainText(s) {
+    return s.replace(/\*\*(.+?)\*\*|__(.+?)__|`([^`\n]+)`/g, function (m, a, b, c) { return a || b || c; })
+      .replace(/^#{1,6}\s+/gm, '')
+      .replace(/^\s*[*-]\s+/gm, '• ');
+  }
   // What the chat shows for a reply from /api/ask: { text, err, tools, model }.
   api.askReplyLine = function (status, body) {
     body = body || {};
     if (status === 200 && typeof body.answer === 'string' && body.answer.trim()) {
-      return { text: body.answer.trim(), err: false, tools: Array.isArray(body.tools) ? body.tools : [], model: body.model || null };
+      return { text: plainText(body.answer.trim()), err: false, tools: Array.isArray(body.tools) ? body.tools : [], model: body.model || null };
     }
     var text = status === 429 ? 'Too many questions — wait a minute and try again.'
       : body.error === 'not_configured' ? 'Ask AI isn’t switched on here yet.'
       : status === 0 ? 'I couldn’t reach the AI just now — check your connection and try again.'
       : (typeof body.message === 'string' && body.message) || 'The AI couldn’t answer just now — try again in a moment.';
     return { text: text, err: true, tools: [], model: null };
+  };
+  // The MCP App a reply carries when the AI called a tool that declares one ({ tool, resourceUri, result }), or null.
+  // The page renders it like any MCP host; the ui:// resource itself is re-checked against the store's tools/list.
+  api.askApp = function (body) {
+    var app = body && body.app;
+    if (!app || typeof app.tool !== 'string' || typeof app.resourceUri !== 'string' || app.resourceUri.indexOf('ui://') !== 0) return null;
+    if (!app.result || typeof app.result !== 'object' || app.result.isError) return null;
+    return { tool: app.tool, resourceUri: app.resourceUri, result: app.result };
   };
 
   return api;
@@ -1579,7 +1594,7 @@ var CADemo = (function () {
   var root = document.getElementById('demo');
   if (!root || !window.CADemo) return;
   var D = window.CADemo;
-  var ENDPOINT = '/marketplace/mcp';         // same-origin via the credentagent.ai router: the latest published release (0.5.0); '/marketplace-dev/mcp' = library main
+  var ENDPOINT = '/marketplace-dev/mcp';     // same-origin via the credentagent.ai router: library main (unreleased changes show here first); '/marketplace/mcp' = the latest published release
   var WIDGET_TOOL = 'browse-products';
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var log = document.getElementById('demo-log');
@@ -1718,7 +1733,7 @@ var CADemo = (function () {
         if (!guard.isCurrent(token)) return;
         var content = read && read.contents && read.contents[0];
         if (!content || !content.text) throw new Error('the product picker resource is empty');
-        mountWidget(token, s, widget, state, content, retry);
+        mountWidget(token, widget, state, content, retry, function(){ say('agent', D.tapLine(s)); });
       }).catch(function(err){
         if (err && err.kind === 'stale') return;
         if (guard.isCurrent(token)) retryRow('The demo store isn’t responding right now (' + err.message + ').', retry);
@@ -1726,7 +1741,8 @@ var CADemo = (function () {
     });
   }
 
-  function mountWidget(token, s, widget, state, content, retry){
+  // onShown (optional) runs once the app has its tool result — the scenario's "tap + on …" line.
+  function mountWidget(token, widget, state, content, retry, onShown){
     var r = run;
     var frame = el('iframe', 'd-frame');
     frame.setAttribute('sandbox', 'allow-scripts allow-forms');
@@ -1752,7 +1768,7 @@ var CADemo = (function () {
         bridge.setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light');
         bridge.notify('ui/notifications/tool-input', { arguments: state.addArgs || {} });
         bridge.notify('ui/notifications/tool-result', state.browse);
-        pause(300).then(function(){ if (guard.isCurrent(token)) say('agent', D.tapLine(s)); });
+        if (onShown) pause(300).then(function(){ if (guard.isCurrent(token)) onShown(); });
       },
       onSize: function(h){ if (typeof h === 'number' && h > 0) frame.style.height = Math.min(h, 1400) + 'px'; },
       onOpenLink: function(url){ if (guard.isCurrent(token)) handOff(token, state, url); },
@@ -1771,6 +1787,33 @@ var CADemo = (function () {
       retryRow('The product picker didn’t load.', retry);
     }, 10000);
     add(frame);
+  }
+
+  // An MCP App that the Ask AI's tool call declared (see D.askApp): rendered like any MCP host renders one —
+  // the page reads the store's own tools/list and ui:// resource, and hands the app the AI's tool result.
+  // What the visitor then does in the app goes page → store through the bridge, never through the AI.
+  function showApp(app){
+    if (run && run.frame) { say('agent', 'The product picker is already open above.'); return; }   // one live app at a time
+    teardown();
+    var token = guard.next();
+    var state = { browse: app.result, checkout: null, handedOff: false, card: null, checking: false, done: false };
+    run = { token: token };
+    var retry = function(){ showApp(app); };
+    var widget;
+    rpc(token, 'tools/list', {}, 'tools/list').then(function(list){
+      if (!guard.isCurrent(token)) return;
+      widget = D.pickWidget(list, app.tool);
+      if (!widget || widget.uri !== app.resourceUri) throw new Error('the store doesn’t declare that app');
+      return rpc(token, 'resources/read', { uri: widget.uri }, 'resources/read', { uri: widget.uri });
+    }).then(function(read){
+      if (!guard.isCurrent(token) || !read) return;
+      var content = read.contents && read.contents[0];
+      if (!content || !content.text) throw new Error('the app resource is empty');
+      mountWidget(token, widget, state, content, retry);
+    }).catch(function(err){
+      if (err && err.kind === 'stale') return;
+      if (guard.isCurrent(token)) retryRow('The product picker didn’t load (' + err.message + ').', retry);
+    });
   }
 
   function onCheckout(token, state, result){
@@ -1879,6 +1922,11 @@ var CADemo = (function () {
           log.insertBefore(c, row);
         }
         if (!line.err) askHistory.push({ role: 'user', content: req.question }, { role: 'assistant', content: line.text });
+        var app = line.err ? null : D.askApp(res.body);
+        if (app && row.isConnected) {          // not after a reset or a new scenario cleared this chat
+          askCtx.cartId = D.cartIdFrom(app.result) || askCtx.cartId;
+          showApp(app);
+        }
       })
       .then(function(){ asking = false; askGo.disabled = false; askQ.focus({ preventScroll: true }); });
   });
