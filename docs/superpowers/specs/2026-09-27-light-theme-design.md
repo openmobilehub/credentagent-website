@@ -1,6 +1,6 @@
 # Light theme (default) + dark toggle, on the CredentAgent brand — design
 
-**Date:** 2026-09-27 · **Status:** approved design, not yet implemented · **Branch:** `feat/light-theme`
+**Date:** 2026-09-27 · **Status:** implemented on `feat/light-theme` · **Branch:** `feat/light-theme`
 
 ## Goal
 
@@ -75,8 +75,9 @@ All colour is semantic tokens. `:root` = light (default); `:root[data-theme="dar
 ## Toggle, persistence, no-flash
 
 - **Button** in the sticky nav, before "npm install": shows the theme you'd switch **to** ("☾ Dark" / "☀ Light";
-  icon-only on phones, where nav links hide). Real `<button>` with an action label (`aria-label` "Switch to dark/light theme", matching the visible text; no `aria-pressed` — an action-named button must not also carry a pressed state)
-  "Switch to dark/light theme", visible focus ring.
+  icon-only on phones, where nav links hide). Real `<button>` with an action label (`aria-label` "Switch to
+  dark/light theme", matching the visible text; no `aria-pressed` — an action-named button must not also carry a
+  pressed state) and a visible focus ring.
 - **Persistence:** `localStorage["credentagent.theme"]` = `"light" | "dark"`; absent/invalid → light. Storage
   failures (private mode, blocked) are caught: the toggle still works for the page view.
 - **No flash:** a tiny inline script at the top of `<head>` (before `<style>`) applies the saved theme before
@@ -115,7 +116,7 @@ All colour is semantic tokens. `:root` = light (default); `:root[data-theme="dar
     `ui/initialize` reports the given theme.
 - **Unchanged:** the 46 existing tests, the self-contained grep (0 — favicon/font are `data:` URIs), `tests/contract.mjs`.
 - **Browser:** headless screenshots of the whole page, both themes, 1280 px and 400 px; no-flash with a saved dark
-  choice; toggle by mouse and keyboard, `aria-pressed`, persistence across reload; demo scenario → toggle while
+  choice; toggle by mouse and keyboard, its action label, persistence across reload; demo scenario → toggle while
   the picker is open → `host-context-changed` observed, chips/card recolour; reduced motion.
 
 ## Docs
