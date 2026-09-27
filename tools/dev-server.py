@@ -2,8 +2,10 @@
 """Local stand-in for the credentagent.ai router (deploy/router/vercel.json in the library repo).
 
 Serves this repo at / and proxies /marketplace-dev/* and /marketplace/* to the demo deployments,
-so the in-browser demo runs same-origin locally exactly as it does on credentagent.ai.
+and /api/ask to the router's Ask AI function, so the in-browser demo runs same-origin locally exactly
+as it does on credentagent.ai.
 Usage: python3 tools/dev-server.py [port]   (default 8787)
+       ASK_TARGET=http://localhost:8788/api/ask python3 tools/dev-server.py   (a local /api/ask instead)
 """
 import http.server
 import os
@@ -15,8 +17,9 @@ ROUTES = {
     "/marketplace-dev/": "https://credentagent-demo-dev.vercel.app/",
     "/marketplace/": "https://credentagent-demo.vercel.app/",
 }
+ASK_TARGET = os.environ.get("ASK_TARGET", "https://credentagent.ai/api/ask")
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-FORWARD_REQUEST = ("content-type", "accept", "mcp-session-id", "mcp-protocol-version")
+FORWARD_REQUEST = ("content-type", "accept", "mcp-session-id", "mcp-protocol-version", "origin")  # /api/ask checks Origin
 FORWARD_RESPONSE = ("content-type", "mcp-session-id")
 
 
@@ -25,6 +28,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         super().__init__(*args, directory=ROOT, **kwargs)
 
     def _target(self):
+        if self.path == "/api/ask":
+            return ASK_TARGET
         for prefix, origin in ROUTES.items():
             if self.path.startswith(prefix):
                 return origin + self.path[len(prefix):]

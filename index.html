@@ -387,6 +387,19 @@
   .dock-intro b{color:var(--ink)}
   .dock .demo-box{margin:.8rem 0}
   .dock .try-prereq{margin-bottom:0}
+  .ask{margin-top:1rem;border-top:1px solid var(--line);padding-top:.9rem}
+  .ask-lbl{display:block;font-size:.82rem;font-weight:700;color:var(--ink);margin-bottom:.45rem}
+  .ask-row{display:flex;gap:.5rem}
+  .ask-q{flex:1;min-width:0;font:inherit;font-size:.9rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:.6rem .75rem}
+  .ask-q:focus-visible{outline:2px solid var(--primary);outline-offset:1px}
+  .ask-go{font:inherit;font-size:.9rem;font-weight:700;color:var(--on-primary);background:var(--primary);border:none;border-radius:9px;padding:.6rem 1rem;cursor:pointer}
+  .ask-go:hover{background:var(--primary-hover)}
+  .ask-go:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+  .ask-go:disabled,.ask-q:disabled{opacity:.55;cursor:default}
+  .ask-note{font-size:.74rem;color:var(--dim);line-height:1.45;margin-top:.45rem}
+  .ask-note b{color:var(--mut)}
+  .d-bubble.ai::before{content:"✦ AI answer";display:block;font-size:.68rem;font-weight:700;letter-spacing:.04em;color:var(--dim);margin-bottom:.2rem}
+  .d-bubble.thinking{color:var(--dim);font-style:italic}
   .dock-launch{
     position:fixed;right:20px;bottom:20px;z-index:19;display:inline-flex;align-items:center;gap:8px;
     font:inherit;font-size:14px;font-weight:700;color:var(--on-attention);background:var(--attention);
@@ -785,6 +798,14 @@ host.<span class="c-fn">publish</span>(app);                           <span cla
         <a class="btn" href="https://credentagent.ai/#try">Try it on credentagent.ai ↗</a>
       </div>
       <div class="demo-log" id="demo-log" role="log" aria-live="polite" aria-label="Agent conversation"></div>
+      <form class="ask" id="ask-form" autocomplete="off">
+        <label class="ask-lbl" for="ask-q">✦ Ask AI about your order, cart or the products</label>
+        <div class="ask-row">
+          <input class="ask-q" id="ask-q" name="q" type="text" maxlength="500" placeholder="e.g. What’s in my cart?" enterkeyhint="send">
+          <button class="ask-go" id="ask-go" type="submit">Ask</button>
+        </div>
+        <p class="ask-note">Answered by a free AI model (GLM, via Z.ai) that can only <b>read</b> the store: it can’t buy, change your cart or approve anything. Don’t share personal details.</p>
+      </form>
     </div>
     <p class="try-prereq">📱 To prove credentials on your device, install <a href="https://apps.multipaz.org" target="_blank" rel="noopener">Multipaz Wallet</a> (Android &amp; iOS).</p>
   </div>
@@ -1458,6 +1479,40 @@ var CADemo = (function () {
       : { icon: '☾', text: 'Dark', aria: 'Switch to dark theme' };
   };
 
+  // ---- Ask AI: a read-only agent on the router (POST /api/ask) answers questions about the order ----
+  api.ASK_MAX = 500;
+  var ASK_ID = /^[A-Za-z0-9_.:-]{1,300}$/;
+  // The request body: a trimmed question, only id-shaped ids, and the last few turns of this chat.
+  api.askRequest = function (question, ctx, history) {
+    var q = String(question == null ? '' : question).trim().slice(0, api.ASK_MAX);
+    var context = {};
+    ['cartId', 'orderId'].forEach(function (k) {
+      var v = ctx && ctx[k];
+      if (typeof v === 'string' && ASK_ID.test(v)) context[k] = v;
+    });
+    var turns = (Array.isArray(history) ? history : []).filter(function (m) {
+      return m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string';
+    }).slice(-6);
+    return { question: q, context: context, history: turns };
+  };
+  // The store-issued cartId from a cart-related tool result (browse-products carries one from 0.5.0).
+  api.cartIdFrom = function (result) {
+    var id = result && result.structuredContent && result.structuredContent.cartId;
+    return typeof id === 'string' ? id : null;
+  };
+  // What the chat shows for a reply from /api/ask: { text, err, tools, model }.
+  api.askReplyLine = function (status, body) {
+    body = body || {};
+    if (status === 200 && typeof body.answer === 'string' && body.answer.trim()) {
+      return { text: body.answer.trim(), err: false, tools: Array.isArray(body.tools) ? body.tools : [], model: body.model || null };
+    }
+    var text = status === 429 ? 'Too many questions — wait a minute and try again.'
+      : body.error === 'not_configured' ? 'Ask AI isn’t switched on here yet.'
+      : status === 0 ? 'I couldn’t reach the AI just now — check your connection and try again.'
+      : (typeof body.message === 'string' && body.message) || 'The AI couldn’t answer just now — try again in a moment.';
+    return { text: text, err: true, tools: [], model: null };
+  };
+
   return api;
 })();
 /* ca-demo-core:end */
@@ -1533,11 +1588,16 @@ var CADemo = (function () {
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var log = document.getElementById('demo-log');
   var resetBtn = document.getElementById('demo-reset');
+  var askForm = document.getElementById('ask-form'), askQ = document.getElementById('ask-q'), askGo = document.getElementById('ask-go');
+  var ASK_ENDPOINT = '/api/ask';              // the credentagent.ai router (library repo, deploy/router/api/ask.mjs)
+  var askCtx = { cartId: null, orderId: null }, askHistory = [], asking = false;
   var scnBtns = [].slice.call(root.querySelectorAll('.demo-scn'));
 
   if (!D.isDemoOrigin(location.hostname)) {
     document.getElementById('demo-offsite').hidden = false;
     scnBtns.forEach(function(b){ b.disabled = true; });
+    askQ.disabled = true; askGo.disabled = true;
+    askQ.placeholder = 'Ask AI runs on credentagent.ai';
     return;
   }
 
@@ -1608,6 +1668,8 @@ var CADemo = (function () {
     log.textContent = '';
     scnBtns.forEach(function(b){ b.setAttribute('aria-pressed', 'false'); });
     resetBtn.hidden = true;
+    askCtx = { cartId: null, orderId: null };
+    askHistory = [];
   }
   function retryRow(message, retry){
     say('agent', message, 'err');
@@ -1645,6 +1707,7 @@ var CADemo = (function () {
       }).then(function(browse){
         if (!guard.isCurrent(token)) return;
         state.browse = browse;
+        askCtx.cartId = D.cartIdFrom(browse) || askCtx.cartId;
         return rpc(token, 'resources/read', { uri: widget.uri }, 'resources/read', { uri: widget.uri });
       }).then(function(read){
         if (!guard.isCurrent(token)) return;
@@ -1716,6 +1779,7 @@ var CADemo = (function () {
     state.handedOff = false;
     state.done = false;
     state.checkout = sum;
+    askCtx.orderId = sum.orderId || askCtx.orderId;
     sum.lines.forEach(function(line){ say('agent', line); });
   }
 
@@ -1777,6 +1841,35 @@ var CADemo = (function () {
 
   scnBtns.forEach(function(b){ b.addEventListener('click', function(){ start(b.getAttribute('data-scenario')); }); });
   resetBtn.addEventListener('click', reset);
+
+  // Ask AI: the question and answer join this conversation; the page passes only the ids it holds.
+  askForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    var req = D.askRequest(askQ.value, askCtx, askHistory);
+    if (!req.question || asking) return;
+    asking = true; askQ.value = ''; askGo.disabled = true;
+    resetBtn.hidden = false;
+    say('user', req.question);
+    var row = say('agent', 'Looking that up…', 'thinking');
+    var bubble = row.firstChild;
+    fetch(ASK_ENDPOINT, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(req) })
+      .then(function(r){ return r.json().then(function(b){ return { status: r.status, body: b }; }, function(){ return { status: r.status, body: {} }; }); },
+            function(){ return { status: 0, body: {} }; })
+      .then(function(res){
+        var line = D.askReplyLine(res.status, res.body);
+        bubble.textContent = line.text;
+        bubble.className = 'd-bubble ' + (line.err ? 'err' : 'ai');
+        if (line.tools.length) {
+          var c = el('div', 'd-chip');
+          c.appendChild(document.createTextNode('⚙ '));
+          c.appendChild(el('b', null, line.tools.join(' → ')));
+          c.appendChild(el('span', 'st', '✓ read-only' + (line.model ? ' · ' + line.model : '')));
+          log.insertBefore(c, row);
+        }
+        if (!line.err) askHistory.push({ role: 'user', content: req.question }, { role: 'assistant', content: line.text });
+      })
+      .then(function(){ asking = false; askGo.disabled = false; askQ.focus({ preventScroll: true }); });
+  });
 })();
 </script>
 </body>
