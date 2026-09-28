@@ -1282,15 +1282,15 @@ var CADemo = (function () {
 
   // Stateless MCP client: one JSON-RPC POST per call (the storefront needs no initialize/session).
   // Errors carry .kind: http | rpc | protocol | timeout | network.
-  // One bounded read of <origin>/checkout/order-status → { completed, order, … }. The timeout matters:
+  // One bounded read of <store base>/checkout/order-status → { completed, order, … }. The timeout matters:
   // an unanswered request must never leave the page waiting forever (typed errors, like the MCP client).
   api.createOrderStatus = function (opts) {
     var doFetch = opts.fetch, timeoutMs = opts.timeoutMs || 10000;
-    return function (origin, orderId) {
+    return function (base, orderId) {
       var controller = new AbortController();
       var timer = setTimeout(function () { controller.abort(); }, timeoutMs);
       return Promise.resolve().then(function () {
-        return doFetch(origin + '/checkout/order-status?orderId=' + encodeURIComponent(orderId),
+        return doFetch(base + '/checkout/order-status?orderId=' + encodeURIComponent(orderId),
           { credentials: 'omit', signal: controller.signal });
       }).then(function (res) {
         if (!res.ok) throw mcpError('http', 'HTTP ' + res.status, res.status);
@@ -1450,12 +1450,20 @@ var CADemo = (function () {
   // "Order record" — the store's own order-status URL for THIS checkout — rewritten onto this site's
   // store proxy so it stays on this domain. Anything else → null (dropped).
   var X509_TOOL = 'https://tools.multipaz.org/x509#', VERIFIER_TOOL = 'https://tools.multipaz.org/verifier';
+  // Where the store serves its pages: the checkout URL minus its '/checkout?…' — the origin, plus the
+  // path a proxy mounts the store under (https://credentagent.ai/marketplace-dev/checkout?… →
+  // https://credentagent.ai/marketplace-dev). Null for anything that isn't an https checkout URL.
+  api.storeBaseOf = function (checkoutUrl) {
+    if (!api.isHttpsUrl(checkoutUrl)) return null;
+    var m = /^(https:\/\/[^\/?#]+(?:\/[^?#]*?)?)\/checkout(?:[?#]|$)/i.exec(checkoutUrl);
+    return m ? m[1] : null;
+  };
   api.widgetLinkTarget = function (checkout, url, storeBase) {
     if (typeof url !== 'string') return null;
     if (api.isInspectUrl(url) || url === VERIFIER_TOOL || (url.indexOf(X509_TOOL) === 0 && url.length > X509_TOOL.length)) return url;
     if (checkout && checkout.ok && api.isHttpsUrl(checkout.checkoutUrl) && checkout.orderId) {
-      var origin = checkout.checkoutUrl.match(/^https:\/\/[^\/?#]+/i)[0];
-      if (url === origin + '/checkout/order-status?orderId=' + encodeURIComponent(checkout.orderId)) return api.orderStatusUrl(storeBase, checkout.orderId);
+      var base = api.storeBaseOf(checkout.checkoutUrl);
+      if (base && url === base + '/checkout/order-status?orderId=' + encodeURIComponent(checkout.orderId)) return api.orderStatusUrl(storeBase, checkout.orderId);
     }
     return null;
   };
@@ -2440,9 +2448,9 @@ var CADemo = (function () {
     if (state.done || state.checking || !state.checkout) return;
     state.checking = true;
     var co = state.checkout;                   // the reply must belong to the order we asked about
-    var origin = new URL(co.checkoutUrl).origin;
+    var base = D.storeBaseOf(co.checkoutUrl) || new URL(co.checkoutUrl).origin;   // the store, path included
     // Bounded: a stalled request times out, so `checking` always clears and the next check can run.
-    orderStatus(origin, co.orderId)
+    orderStatus(base, co.orderId)
       .then(function(s){
         state.checking = false;
         if (!guard.isCurrent(token) || state.done || state.checkout !== co) return;
