@@ -1445,6 +1445,20 @@ var CADemo = (function () {
   api.isInspectUrl = function (url) {
     return typeof url === 'string' && url.indexOf(INSPECTOR) === 0 && url.length > INSPECTOR.length;
   };
+  // What the page opens when the widget asks (besides the checkout hand-off): a Multipaz Tools link
+  // (the credential viewer or the X.509 viewer with a payload, or the verifier) as-is; or the widget's
+  // "Order record" — the store's own order-status URL for THIS checkout — rewritten onto this site's
+  // store proxy so it stays on this domain. Anything else → null (dropped).
+  var X509_TOOL = 'https://tools.multipaz.org/x509#', VERIFIER_TOOL = 'https://tools.multipaz.org/verifier';
+  api.widgetLinkTarget = function (checkout, url, storeBase) {
+    if (typeof url !== 'string') return null;
+    if (api.isInspectUrl(url) || url === VERIFIER_TOOL || (url.indexOf(X509_TOOL) === 0 && url.length > X509_TOOL.length)) return url;
+    if (checkout && checkout.ok && api.isHttpsUrl(checkout.checkoutUrl) && checkout.orderId) {
+      var origin = checkout.checkoutUrl.match(/^https:\/\/[^\/?#]+/i)[0];
+      if (url === origin + '/checkout/order-status?orderId=' + encodeURIComponent(checkout.orderId)) return api.orderStatusUrl(storeBase, checkout.orderId);
+    }
+    return null;
+  };
   // The store's order record (JSON, with the order's proofs), reached through THIS site's same-origin
   // store proxy (e.g. '/marketplace-dev' on credentagent.ai and the local dev server) — never the
   // store's own host. Only a root-relative base is accepted.
@@ -1477,8 +1491,9 @@ var CADemo = (function () {
     var id = order.orderId || checkout.orderId;
     if (id) rows.push({ k: 'Order', v: String(id) });
     // Credential proofs only — payment proofs are the "Paid with" row below.
-    var proofs = (Array.isArray(order.proofs) ? order.proofs : []).filter(function (p) {
-      return p && typeof p.gate === 'string' && p.rail !== 'dc-payment' && p.rail !== 'passkey' && !/^Pay\b/.test(p.gate);
+    var allProofs = (Array.isArray(order.proofs) ? order.proofs : []).filter(function (p) { return p && typeof p.gate === 'string'; });
+    var proofs = allProofs.filter(function (p) {
+      return p.rail !== 'dc-payment' && p.rail !== 'passkey' && !/^Pay\b/.test(p.gate);
     });
     if (proofs.length) {
       proofs.forEach(function (p) {
@@ -1489,6 +1504,15 @@ var CADemo = (function () {
         rows.push(row);
       });
     } else if (checkout.gated) rows.push({ k: checkout.ageLabel || 'Age', v: '✓ proven' });
+    // Who signed each wallet credential (payment included), and one independent signature check.
+    var anyWallet = false;
+    allProofs.forEach(function (p) {
+      if (p.rail === 'instant-demo' || !p.presentation) return;
+      if (api.isInspectUrl(p.presentation.inspectUrl)) anyWallet = true;
+      var c = p.presentation.issuerCertUrl;
+      if (typeof c === 'string' && c.indexOf(X509_TOOL) === 0 && c.length > X509_TOOL.length) rows.push({ k: p.gate + ' issuer', v: 'certificate', href: c });
+    });
+    if (anyWallet) rows.push({ k: 'Signatures', v: 'check with Multipaz', href: VERIFIER_TOOL });
     if (typeof checkout.total === 'number' && typeof order.amount === 'number' && checkout.total - order.amount > 0.004) {
       var off = checkout.total - order.amount;
       rows.push({ k: 'Member discount', v: '−' + api.fmtMoney(off, order.currency) + ' (' + Math.round(off / checkout.total * 100) + '% off)' });
@@ -2254,9 +2278,11 @@ var CADemo = (function () {
       onSize: function(h){ if (typeof h === 'number' && h > 0) { frame.style.height = Math.min(h, 1400) + 'px'; placeBar(); } },
       onOpenLink: function(url){
         if (!guard.isCurrent(token)) return;
-        // The widget's "Inspect ↗" (the wallet's credential in Multipaz Tools) opens in a new tab;
-        // every other link is still only the checkout hand-off.
-        if (D.isInspectUrl(url)) { window.open(url, '_blank', 'noopener'); return; }
+        // The widget's Multipaz Tools links (Inspect, Issuer, Check with Multipaz) and its Order record
+        // (rewritten onto this site's store proxy) open in a new tab; anything else is still only the
+        // checkout hand-off.
+        var target = D.widgetLinkTarget(state.checkout, url, ENDPOINT.replace(/\/mcp$/, ''));
+        if (target) { window.open(target, '_blank', 'noopener'); return; }
         handOff(token, state, url);
       },
       onModelContext: function(){ if (guard.isCurrent(token)) finish(token, state); }
