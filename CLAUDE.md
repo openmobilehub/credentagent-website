@@ -55,7 +55,11 @@ co-presented with Multipaz. Two npm packages, versioned in lockstep, both live a
   on `orders.serve` / `orders.create` / `orders.retrieve`, prerequisites, go-live box, gate-vs-storefront
   chooser) → use cases (policy line per tile) → go further (tabbed code: grants / defineHost / webhooks /
   defineCredential) → **Status · honest by design** (real / demo-grade / before-production summary + the
-  full trust table in a `<details>`) → built-on-open-standards → footer. Every code sample must match the
+  full trust table in a `<details>` + **check a credential yourself** (`#verify`: open the wallet's ISO
+  mdoc in tools.multipaz.org's viewer / verifier / X.509 viewer; demo issuer = Utopia Demo IACA; says
+  plainly the gate doesn't check the issuer signature) → built-on-open-standards → footer. The
+  `inspectPresentations` line there is labeled "coming in the next gate release" (library PR #223) —
+  drop that label once it ships. Every code sample must match the
   published gate README — verify against the library's release tag before changing one.
 - **Full rationale:** `docs/2026-06-28-attesto-website-design.md` (a synced copy; the canonical version
   lives in the demo repo — see Links).

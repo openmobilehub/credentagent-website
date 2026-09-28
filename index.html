@@ -505,6 +505,11 @@
   details.more summary{cursor:pointer;padding:1rem 0;font-weight:700;color:var(--ink)}
   details.more summary:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
   details.more .rails{margin-top:0}
+  .verify-own{margin-top:2.6rem;scroll-margin-top:72px}
+  .verify-own>h3{font-size:1.25rem;margin-bottom:.4rem}
+  .verify-own .card p{color:var(--mut);font-size:.88rem;line-height:1.5;margin-top:.5rem}
+  .verify-own .card a{color:var(--link);text-decoration:underline;text-underline-offset:2px}
+  .verify-own .card code{font-family:ui-monospace,Menlo,monospace;font-size:.86em;color:var(--primary)}
   details.more[open]{padding-bottom:1.2rem}
   .foot-links{display:flex;gap:1.2rem;flex-wrap:wrap}
   .foot-links a:hover{color:var(--ink)}
@@ -981,6 +986,27 @@ host.<span class="c-fn">publish</span>(app);                           <span cla
     </div>
       <p class="sub" style="margin-top:1rem;font-size:.95rem">The wire crypto is real; the issuer trust anchor is not yet — a self-crafted credential would still pass. Wallet-signed grants go one step further (the signature is real), but without an anchor they are still a demo. <b style="color:var(--ink)">A presence-only gate is never sold as a real safety control.</b> Branding can restyle the consent pages, but never the honesty footer.</p>
     </details>
+
+    <div class="verify-own" id="verify">
+      <h3>Don't take our word for it — check a credential yourself</h3>
+      <p class="sub">What the wallet sends isn't a CredentAgent token. It's a standard <b style="color:var(--ink)">ISO 18013-5 mdoc</b>: issuer-signed claims, a signed list of their digests, and a signature from the phone's own key. Independent tools from the OpenWallet Foundation's Multipaz project open it.</p>
+      <div class="status-cols">
+        <div class="card">
+          <h3>1 · Look inside</h3>
+          <p>Paste any mdoc <code>DeviceResponse</code> into <a href="https://tools.multipaz.org/mdocDeviceResponse" target="_blank" rel="noopener">Multipaz Tools' viewer</a>: document type, every disclosed claim, validity dates, per-claim digests, the device key. It decodes in your browser — nothing is uploaded.</p>
+          <p>Coming in the next gate release: <code>inspectPresentations: true</code> puts an <b>Inspect this presentation</b> link on the consent page (<a href="https://github.com/openmobilehub/credentagent/pull/223" target="_blank" rel="noopener">PR #223</a>).</p>
+        </div>
+        <div class="card">
+          <h3>2 · Check the signatures</h3>
+          <p><a href="https://tools.multipaz.org/verifier" target="_blank" rel="noopener">Multipaz Tools' verifier</a> asks your wallet for a credential itself, then runs the Multipaz SDK's checks: the issuer's signature, each claim's digest, the device signature, and the validity window.</p>
+        </div>
+        <div class="card">
+          <h3>3 · See who signed it</h3>
+          <p>The demo credentials are signed by <b>Utopia Demo IACA</b> — a certificate authority generated for this demo, not a trusted issuer. Open <a href="https://github.com/openmobilehub/credentagent/blob/main/tools/demo-pki/certs/iaca-cert.pem" target="_blank" rel="noopener">its certificate</a> in the <a href="https://tools.multipaz.org/x509" target="_blank" rel="noopener">X.509 viewer</a>.</p>
+        </div>
+      </div>
+      <p class="sub" style="margin-top:1rem;font-size:.95rem">What this shows: the credentials are real, standard, and signed. What it doesn't: that the issuer deserves trust — the demo CA is ours, and the gate itself doesn't check the issuer signature yet (<b style="color:var(--ink)">presence-only-demo</b>, above).</p>
+    </div>
   </div></section>
 
   <!-- BUILT ON / PARTNERS -->
