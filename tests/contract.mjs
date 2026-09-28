@@ -39,8 +39,9 @@ try {
   check(phones.ok && !phones.gated, 'checkout(aurora-headphones) has no age gate', phones.chip);
 
   if (whiskey.checkoutUrl) {
-    const origin = new URL(whiskey.checkoutUrl).origin;
-    const res = await fetch(`${origin}/checkout/order-status?orderId=${encodeURIComponent(whiskey.orderId)}`);
+    const base = D.storeBaseOf(whiskey.checkoutUrl);   // origin, plus the store's path behind a proxy
+    check(!!base, 'checkoutUrl is <store>/checkout?…', whiskey.checkoutUrl);
+    const res = await fetch(`${base}/checkout/order-status?orderId=${encodeURIComponent(whiskey.orderId)}`);
     check(res.ok && res.headers.get('access-control-allow-origin') === '*', 'order-status is readable cross-origin');
     const body = await res.json();
     check(body && body.completed === false, 'order-status reports an unpaid order as not completed');

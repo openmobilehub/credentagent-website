@@ -660,6 +660,33 @@ test('widgetLinkTarget opens Multipaz Tools and the order record — through the
   assert.equal(D.widgetLinkTarget(null, 'https://tools.multipaz.org/verifier', base), 'https://tools.multipaz.org/verifier');
 });
 
+// A store served under a path by a proxy (library #226): its checkout URL carries the path, and so do
+// the store's other pages — the order record the widget links and the status the page polls.
+test('storeBaseOf is the checkout URL minus /checkout — origin plus any path prefix', () => {
+  assert.equal(D.storeBaseOf('https://credentagent-demo-dev.vercel.app/checkout?order=O1&cart=x'), 'https://credentagent-demo-dev.vercel.app');
+  assert.equal(D.storeBaseOf('https://credentagent.ai/marketplace-dev/checkout?order=O1'), 'https://credentagent.ai/marketplace-dev');
+  assert.equal(D.storeBaseOf('https://credentagent.ai/a/b/checkout'), 'https://credentagent.ai/a/b');
+  for (const u of ['http://credentagent.ai/checkout?order=O1', 'https://credentagent.ai/checkoutx?order=O1',
+    'https://credentagent.ai/marketplace-dev/pay?order=O1', 'javascript:alert(1)', null, undefined]) {
+    assert.equal(D.storeBaseOf(u), null, String(u));
+  }
+});
+
+test('widgetLinkTarget matches the order record under a path-prefixed store too', () => {
+  const co = { ok: true, orderId: 'O1', checkoutUrl: 'https://credentagent.ai/marketplace-dev/checkout?order=O1' };
+  assert.equal(D.widgetLinkTarget(co, 'https://credentagent.ai/marketplace-dev/checkout/order-status?orderId=O1', '/marketplace-dev'),
+    '/marketplace-dev/checkout/order-status?orderId=O1');
+  // The same record WITHOUT the store's path is not this store's record.
+  assert.equal(D.widgetLinkTarget(co, 'https://credentagent.ai/checkout/order-status?orderId=O1', '/marketplace-dev'), null);
+});
+
+test('createOrderStatus reads <store base>/checkout/order-status, path included', async () => {
+  let seen = null;
+  const check = D.createOrderStatus({ fetch: (url) => { seen = url; return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ completed: false }) }); } });
+  await check('https://credentagent.ai/marketplace-dev', 'O 1');
+  assert.equal(seen, 'https://credentagent.ai/marketplace-dev/checkout/order-status?orderId=O%201');
+});
+
 test('doneSummary adds the issuer certificate and the Multipaz verifier for a wallet proof', () => {
   const cert = 'https://tools.multipaz.org/x509#MIIC';
   const order = { orderId: 'O', proofs: [
