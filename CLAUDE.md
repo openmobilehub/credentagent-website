@@ -101,9 +101,11 @@ co-presented with Multipaz. Two npm packages, versioned in lockstep, both live a
   shown/hidden, **never moved** (moving an iframe reloads it and would drop the picker's cart). Esc closes
   it and returns focus to the opener.
 - Unit tests (zero deps): `node --test "tests/*.test.mjs"`
-- Live contract vs. the endpoint: `node tests/contract.mjs` (defaults to the production store — the
-  hosted connector); `node tests/contract.mjs https://credentagent.ai/marketplace-dev/mcp` checks library
-  `main`, which the in-browser demo uses — run it in any library PR that changes the storefront's tools, transport, or MCP Apps widget, before a release.
+- Live contract vs. the endpoint: `node tests/contract.mjs` defaults to the production store (the hosted
+  connector) — **not** the store the demo uses. `node tests/contract.mjs https://credentagent.ai/marketplace-dev/mcp`
+  checks library `main`, which the in-browser demo uses — run it in any library PR that changes the
+  storefront's tools, transport, or MCP Apps widget, and again after it merges (that merge is what the
+  live demo runs).
 - QR round trip (macOS): `node tests/qr-roundtrip.mjs`
 - Local same-origin run: `python3 tools/dev-server.py` → http://localhost:8787/#try (hard-reload after
   edits — the stdlib server lets Chrome cache the page). If the proxy fails with
@@ -115,7 +117,10 @@ co-presented with Multipaz. Two npm packages, versioned in lockstep, both live a
   `checkout`, so each visitor gets their own cart and an invented or edited id is refused. The page needs
   no code for this — it forwards the `browse-products` result to the widget. (Before 0.5.0 the hosted
   stores ran `statelessMcp` with one shared cart key for every visitor; verified fixed on both
-  `/marketplace-dev` and `/marketplace` on 2026-09-26.)
+  `/marketplace-dev` and `/marketplace` on 2026-09-26.) A completed order **empties** that cart, even
+  when the completion lands on a different serverless instance than the checkout (library #227, live on
+  `/marketplace-dev` 2026-09-27). Before it, "Order complete" could be followed by a `get-cart` that still
+  listed the bought items — a store bug, not the page's: the page only shows what `get-cart` returns.
 - **Keep the dock minimal (less is more):** opened, it shows one sentence, **one** start button (🥃 whiskey,
   the gated path), and the Ask input pinned at the bottom — no intro paragraph, no second scenario, no
   wallet box (the checkout card says which wallet, when it matters). The agent does what the button
@@ -154,12 +159,17 @@ co-presented with Multipaz. Two npm packages, versioned in lockstep, both live a
   open (e.g. the AI's `add-to-cart`) is pushed into the open picker as a new `tool-result`, so its cart
   updates in place. Picker actions go page → store via the bridge, never through the AI.
 
-## Current state (2026-09-26)
+## Current state (2026-09-27)
 
 - The site reflects the published **0.5.0** packages (released 2026-09-26: claude.ai's MCP 2026-07-28
   revision, wallet-signed spending grants, a cart per conversation). The in-browser demo uses the dev
   store `/marketplace-dev/mcp` (library `main`, since 2026-09-27). Hosted connector: `https://credentagent.ai/marketplace/mcp`
   (dev twin running library `main`: `/marketplace-dev/mcp`).
+- **A library fix reaches the live demo on merge — no release needed.** The library's `deploy-dev`
+  workflow redeploys `/marketplace-dev` on every merge to `main`; confirm with
+  `curl https://credentagent.ai/marketplace-dev/version` (`"build": "dev.<sha>"`). A release only matters
+  for the hosted connector (`/marketplace`) and the npm packages — don't tell someone a demo fix is
+  waiting on one.
 - **Trust levels (0.5.0):** `presence-only-demo` (age, membership, payment), `device-signed` (wallet-signed
   grants: real device signature over the grant's limits, no issuer anchor — still a demo),
   `server-issued-demo` (opt-in click-to-approve grants), `issuer-verified` (only via an external verifier;
