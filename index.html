@@ -1013,7 +1013,7 @@ host.<span class="c-fn">publish</span>(app);                           <span cla
         </div>
         <div class="card">
           <h3>3 · See who signed it</h3>
-          <p>The demo credentials are signed by <b>Utopia Demo IACA</b> — a certificate authority generated for this demo, not a trusted issuer. Open <a href="https://github.com/openmobilehub/credentagent/blob/main/tools/demo-pki/certs/iaca-cert.pem" target="_blank" rel="noopener">its certificate</a> in the <a href="https://tools.multipaz.org/x509" target="_blank" rel="noopener">X.509 viewer</a>.</p>
+          <p>Every credential carries the certificate that signed it — the payment page's <b>Issuer certificate ›</b> link opens it in the <a href="https://tools.multipaz.org/x509" target="_blank" rel="noopener">X.509 viewer</a>. Multipaz Wallet's built-in test credentials are signed by <b>OWF Multipaz TEST IACA</b>; the CredentAgent demo passes by <b>Utopia Demo IACA</b> (<a href="https://github.com/openmobilehub/credentagent/blob/main/tools/demo-pki/certs/iaca-cert.pem" target="_blank" rel="noopener">certificate</a>). Both are test authorities, not trusted issuers.</p>
         </div>
       </div>
       <p class="sub" style="margin-top:1rem;font-size:.95rem">What this shows: the credentials are real, standard, and signed. What it doesn't: that the issuer deserves trust — the demo CA is ours, and the gate itself doesn't check the issuer signature yet (<b style="color:var(--ink)">presence-only-demo</b>, above).</p>
@@ -1434,9 +1434,37 @@ var CADemo = (function () {
     };
   };
 
-  // The widget's ui/open-link is honoured only for the checkout URL the page itself received.
+  // The widget's ui/open-link is honoured only for the checkout URL the page itself received…
   api.isHandoffUrl = function (checkout, url) {
     return !!(checkout && checkout.ok && typeof url === 'string' && url === checkout.checkoutUrl && api.isHttpsUrl(url));
+  };
+  // …or for a Multipaz Tools inspector link: the wallet's credential, decoded in the visitor's browser
+  // (the payload rides in the #fragment, never sent to a server). The only other link a widget may open,
+  // and the only link a proof row may carry.
+  var INSPECTOR = 'https://tools.multipaz.org/mdocDeviceResponse#';
+  api.isInspectUrl = function (url) {
+    return typeof url === 'string' && url.indexOf(INSPECTOR) === 0 && url.length > INSPECTOR.length;
+  };
+  // What the page opens when the widget asks (besides the checkout hand-off): a Multipaz Tools link
+  // (the credential viewer or the X.509 viewer with a payload, or the verifier) as-is; or the widget's
+  // "Order record" — the store's own order-status URL for THIS checkout — rewritten onto this site's
+  // store proxy so it stays on this domain. Anything else → null (dropped).
+  var X509_TOOL = 'https://tools.multipaz.org/x509#', VERIFIER_TOOL = 'https://tools.multipaz.org/verifier';
+  api.widgetLinkTarget = function (checkout, url, storeBase) {
+    if (typeof url !== 'string') return null;
+    if (api.isInspectUrl(url) || url === VERIFIER_TOOL || (url.indexOf(X509_TOOL) === 0 && url.length > X509_TOOL.length)) return url;
+    if (checkout && checkout.ok && api.isHttpsUrl(checkout.checkoutUrl) && checkout.orderId) {
+      var origin = checkout.checkoutUrl.match(/^https:\/\/[^\/?#]+/i)[0];
+      if (url === origin + '/checkout/order-status?orderId=' + encodeURIComponent(checkout.orderId)) return api.orderStatusUrl(storeBase, checkout.orderId);
+    }
+    return null;
+  };
+  // The store's order record (JSON, with the order's proofs), reached through THIS site's same-origin
+  // store proxy (e.g. '/marketplace-dev' on credentagent.ai and the local dev server) — never the
+  // store's own host. Only a root-relative base is accepted.
+  api.orderStatusUrl = function (storeBase, orderId) {
+    if (typeof storeBase !== 'string' || !/^\/(?!\/)[\w\-\/]*$/.test(storeBase) || !orderId) return null;
+    return storeBase.replace(/\/+$/, '') + '/checkout/order-status?orderId=' + encodeURIComponent(orderId);
   };
 
   // Built from the SETTLED order (order-status), never the cart — a member discount changes the amount.
@@ -1452,29 +1480,39 @@ var CADemo = (function () {
   //             proof the store kept links to Multipaz Tools; an instant-demo tap says so.
   //   Discount — the checkout total minus what was actually charged, when that's less.
   //   Paid with / Transaction — the record's method and settlement (provider, network, txId, explorer).
-  var INSPECTOR = 'https://tools.multipaz.org/mdocDeviceResponse#';   // the only link a proof row may carry
   var PAID_WITH = { passkey: 'Passkey', 'dc-payment': 'Wallet · payment credential', delegated: 'Spending grant', demo: 'Instant demo' };
   function niceNetwork(n) { n = String(n).replace(/[-_]+/g, ' '); return n.charAt(0).toUpperCase() + n.slice(1); }
   function shortTx(t) { t = String(t); return t.length > 22 ? t.slice(0, 12) + '…' + t.slice(-6) : t; }
-  api.doneSummary = function (order, checkout) {
-    order = order || {}; checkout = checkout || {};
+  // opts.storeBase — the site's same-origin store proxy path (e.g. '/marketplace-dev') for the record link.
+  api.doneSummary = function (order, checkout, opts) {
+    order = order || {}; checkout = checkout || {}; opts = opts || {};
     var money = api.fmtMoney(order.amount, order.currency);
     var rows = [];
     var id = order.orderId || checkout.orderId;
     if (id) rows.push({ k: 'Order', v: String(id) });
     // Credential proofs only — payment proofs are the "Paid with" row below.
-    var proofs = (Array.isArray(order.proofs) ? order.proofs : []).filter(function (p) {
-      return p && typeof p.gate === 'string' && p.rail !== 'dc-payment' && p.rail !== 'passkey' && !/^Pay\b/.test(p.gate);
+    var allProofs = (Array.isArray(order.proofs) ? order.proofs : []).filter(function (p) { return p && typeof p.gate === 'string'; });
+    var proofs = allProofs.filter(function (p) {
+      return p.rail !== 'dc-payment' && p.rail !== 'passkey' && !/^Pay\b/.test(p.gate);
     });
     if (proofs.length) {
       proofs.forEach(function (p) {
         var u = p.presentation && p.presentation.inspectUrl;
-        var inspect = typeof u === 'string' && u.indexOf(INSPECTOR) === 0 ? u : null;
+        var inspect = api.isInspectUrl(u) ? u : null;
         var row = { k: p.gate, v: p.rail === 'instant-demo' ? '✓ instant demo' : inspect ? '✓ proven · inspect' : '✓ proven' };
         if (inspect) row.href = inspect;
         rows.push(row);
       });
     } else if (checkout.gated) rows.push({ k: checkout.ageLabel || 'Age', v: '✓ proven' });
+    // Who signed each wallet credential (payment included), and one independent signature check.
+    var anyWallet = false;
+    allProofs.forEach(function (p) {
+      if (p.rail === 'instant-demo' || !p.presentation) return;
+      if (api.isInspectUrl(p.presentation.inspectUrl)) anyWallet = true;
+      var c = p.presentation.issuerCertUrl;
+      if (typeof c === 'string' && c.indexOf(X509_TOOL) === 0 && c.length > X509_TOOL.length) rows.push({ k: p.gate + ' issuer', v: 'certificate', href: c });
+    });
+    if (anyWallet) rows.push({ k: 'Signatures', v: 'check with Multipaz', href: VERIFIER_TOOL });
     if (typeof checkout.total === 'number' && typeof order.amount === 'number' && checkout.total - order.amount > 0.004) {
       var off = checkout.total - order.amount;
       rows.push({ k: 'Member discount', v: '−' + api.fmtMoney(off, order.currency) + ' (' + Math.round(off / checkout.total * 100) + '% off)' });
@@ -1486,6 +1524,9 @@ var CADemo = (function () {
       rows.push({ k: 'Paid with', v: [how, rail].filter(Boolean).join(' · ') });
     }
     if (st && st.txId) rows.push({ k: 'Transaction', v: shortTx(st.txId), href: api.isHttpsUrl(st.hashscanUrl) ? st.hashscanUrl : null });
+    // The raw record behind this card — the store's order-status JSON, proofs included.
+    var record = api.orderStatusUrl(opts.storeBase, id);
+    if (record) rows.push({ k: 'Order record', v: 'order-status JSON', href: record });
     return { title: 'Order complete', detail: money ? money + ' paid' : 'Paid', rows: rows };
   };
   // Confetti for the order-complete moment: n pieces bursting up and out from (x, y) in a w-wide box.
@@ -2235,7 +2276,15 @@ var CADemo = (function () {
         if (onShown) pause(300).then(function(){ if (guard.isCurrent(token)) onShown(); });
       },
       onSize: function(h){ if (typeof h === 'number' && h > 0) { frame.style.height = Math.min(h, 1400) + 'px'; placeBar(); } },
-      onOpenLink: function(url){ if (guard.isCurrent(token)) handOff(token, state, url); },
+      onOpenLink: function(url){
+        if (!guard.isCurrent(token)) return;
+        // The widget's Multipaz Tools links (Inspect, Issuer, Check with Multipaz) and its Order record
+        // (rewritten onto this site's store proxy) open in a new tab; anything else is still only the
+        // checkout hand-off.
+        var target = D.widgetLinkTarget(state.checkout, url, ENDPOINT.replace(/\/mcp$/, ''));
+        if (target) { window.open(target, '_blank', 'noopener'); return; }
+        handOff(token, state, url);
+      },
       onModelContext: function(){ if (guard.isCurrent(token)) finish(token, state); }
     });
 
@@ -2361,7 +2410,8 @@ var CADemo = (function () {
   // place, and the dock script (ca-order-complete) throws confetti — or saves it for when the dock opens.
   function celebrate(state, order){
     if (state.card) state.card.classList.add('settled');
-    var sum = D.doneSummary(order, state.checkout);
+    // The record link goes through this site's store proxy (ENDPOINT minus /mcp), not the store's own host.
+    var sum = D.doneSummary(order, state.checkout, { storeBase: ENDPOINT.replace(/\/mcp$/, '') });
     var done = el('div', 'd-done');
     done.setAttribute('role', 'status');
     done.appendChild(el('div', 'tick', '✓'));

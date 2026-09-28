@@ -629,3 +629,61 @@ test('cartBar: disabled Checkout when the cart is empty or unknown', () => {
     { summary: '🛒 Cart is empty', label: 'Checkout', aria: 'Checkout', enabled: false });
   assert.equal(D.cartBar(null).enabled, false);
 });
+
+// The widget's "Inspect ↗" (the wallet's credential in Multipaz Tools) is the one link besides the
+// checkout that the page will open for it — anything else stays dropped.
+test('isInspectUrl allows only a Multipaz Tools DeviceResponse link with a payload', () => {
+  assert.equal(D.isInspectUrl('https://tools.multipaz.org/mdocDeviceResponse#o2d2'), true);
+  assert.equal(D.isInspectUrl('https://tools.multipaz.org/mdocDeviceResponse#'), false);        // no payload
+  assert.equal(D.isInspectUrl('https://tools.multipaz.org/x509#o2d2'), false);                  // another tool
+  assert.equal(D.isInspectUrl('https://tools.multipaz.org.evil.example/mdocDeviceResponse#x'), false);
+  assert.equal(D.isInspectUrl('javascript:alert(1)'), false);
+  assert.equal(D.isInspectUrl(null), false);
+});
+
+// What the page opens when the widget asks: Multipaz Tools links as-is; the widget's "Order record"
+// (the store's own order-status URL for THIS checkout) rewritten onto the site's store proxy.
+test('widgetLinkTarget opens Multipaz Tools and the order record — through the proxy — and nothing else', () => {
+  const co = { ok: true, orderId: 'O1', checkoutUrl: 'https://credentagent-demo-dev.vercel.app/checkout?order=O1' };
+  const base = '/marketplace-dev';
+  for (const u of ['https://tools.multipaz.org/mdocDeviceResponse#o2d2', 'https://tools.multipaz.org/x509#MIIC', 'https://tools.multipaz.org/verifier']) {
+    assert.equal(D.widgetLinkTarget(co, u, base), u);
+  }
+  assert.equal(D.widgetLinkTarget(co, 'https://credentagent-demo-dev.vercel.app/checkout/order-status?orderId=O1', base),
+    '/marketplace-dev/checkout/order-status?orderId=O1');
+  // Another order's record, another host, empty tool payloads, other tools, anything else → not opened.
+  for (const u of ['https://credentagent-demo-dev.vercel.app/checkout/order-status?orderId=O2',
+    'https://evil.example/checkout/order-status?orderId=O1', 'https://tools.multipaz.org/x509#',
+    'https://tools.multipaz.org/verifier/x', 'https://tools.multipaz.org/mpzpass#x', 'javascript:alert(1)']) {
+    assert.equal(D.widgetLinkTarget(co, u, base), null, u);
+  }
+  assert.equal(D.widgetLinkTarget(null, 'https://tools.multipaz.org/verifier', base), 'https://tools.multipaz.org/verifier');
+});
+
+test('doneSummary adds the issuer certificate and the Multipaz verifier for a wallet proof', () => {
+  const cert = 'https://tools.multipaz.org/x509#MIIC';
+  const order = { orderId: 'O', proofs: [
+    { gate: 'Age 21+', rail: 'credential', presentation: { inspectUrl: 'https://tools.multipaz.org/mdocDeviceResponse#x', issuerCertUrl: cert } },
+  ] };
+  const rows = plain(D.doneSummary(order, {})).rows;
+  assert.deepEqual(rows.find((r) => r.k === 'Age 21+ issuer'), { k: 'Age 21+ issuer', v: 'certificate', href: cert });
+  assert.deepEqual(rows.find((r) => r.k === 'Signatures'), { k: 'Signatures', v: 'check with Multipaz', href: 'https://tools.multipaz.org/verifier' });
+  // An instant-demo proof, or a non-Multipaz cert URL → neither row.
+  const demo = plain(D.doneSummary({ proofs: [{ gate: 'Age 21+', rail: 'instant-demo', presentation: { issuerCertUrl: 'https://evil.example/x' } }] }, {})).rows;
+  assert.equal(demo.some((r) => r.k === 'Signatures' || /issuer/.test(r.k)), false);
+});
+
+// The record link stays on THIS site: it goes through the same-origin store proxy the page already
+// talks MCP through (credentagent.ai/marketplace-dev → the dev store), never the store's own host.
+test('doneSummary links the order record through the site’s own store proxy', () => {
+  const checkout = { ok: true, orderId: 'O', checkoutUrl: 'https://credentagent-demo-dev.vercel.app/checkout?order=O', total: 5 };
+  const rows = plain(D.doneSummary({ orderId: 'O', amount: 5, currency: 'USD' }, checkout, { storeBase: '/marketplace-dev' })).rows;
+  assert.deepEqual(rows.find((r) => r.k === 'Order record'),
+    { k: 'Order record', v: 'order-status JSON', href: '/marketplace-dev/checkout/order-status?orderId=O' });
+  assert.equal(D.orderStatusUrl('/marketplace-dev', 'a&b'), '/marketplace-dev/checkout/order-status?orderId=a%26b');
+  // No base, an absolute or protocol-relative base, or no order id → no record row.
+  for (const storeBase of [undefined, 'https://evil.example', '//evil.example', 'javascript:x']) {
+    assert.equal(plain(D.doneSummary({ orderId: 'O' }, checkout, { storeBase })).rows.some((r) => r.k === 'Order record'), false);
+  }
+  assert.equal(D.orderStatusUrl('/marketplace-dev', ''), null);
+});
