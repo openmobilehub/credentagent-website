@@ -404,6 +404,17 @@
   .demo-start{display:flex;flex-direction:column;align-items:flex-start;gap:.8rem;padding:.4rem 0 1rem}
   .demo-start p{color:var(--mut);font-size:.95rem;line-height:1.5}
   .demo-start b{color:var(--ink)}
+  /* Pinned cart bar: Checkout stays in reach once the picker has scrolled up out of the conversation. */
+  .dock-cart{display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding:8px 14px;border-top:1px solid var(--line);background:var(--sunk)}
+  .dock-cart[hidden]{display:none}
+  .dock-cart-sum{font-size:.85rem;color:var(--ink);min-width:0}
+  .dock-cart-acts{display:flex;gap:.45rem;flex:none}
+  .dock-cart-picker{font:inherit;font-size:.88rem;font-weight:700;color:var(--link);background:transparent;border:1px solid color-mix(in srgb,var(--link) 45%,transparent);border-radius:9px;padding:.45rem .8rem;cursor:pointer}
+  .dock-cart-picker:hover{background:color-mix(in srgb,var(--link) 10%,transparent)}
+  .dock-cart-go{font:inherit;font-size:.88rem;font-weight:700;color:var(--on-primary);background:var(--primary);border:none;border-radius:9px;padding:.5rem .95rem;cursor:pointer;flex:none}
+  .dock-cart-go:hover:not(:disabled){background:var(--primary-hover)}
+  .dock-cart-go:disabled{color:var(--dim);background:var(--line);cursor:not-allowed}
+  .dock-cart-picker:focus-visible,.dock-cart-go:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
   .ask{padding:10px 14px 12px;border-top:1px solid var(--line);background:var(--surface)}
   .ask-row{display:flex;gap:.5rem}
   .ask-q{flex:1;min-width:0;font:inherit;font-size:.9rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:.6rem .75rem}
@@ -1019,6 +1030,13 @@ host.<span class="c-fn">publish</span>(app);                           <span cla
       <div class="demo-log" id="demo-log" role="log" aria-live="polite" aria-label="Agent conversation"></div>
     </div>
   </div>
+  <div class="dock-cart" id="dock-cart" hidden>
+    <span class="dock-cart-sum" id="dock-cart-view">🛒 Cart is empty</span>
+    <span class="dock-cart-acts">
+      <button class="dock-cart-picker" id="dock-cart-picker" type="button" title="Bring the product picker down here">🛍 Products</button>
+      <button class="dock-cart-go" id="dock-cart-go" type="button" disabled>Checkout</button>
+    </span>
+  </div>
   <form class="ask" id="ask-form" autocomplete="off">
     <div class="ask-row">
       <input class="ask-q" id="ask-q" name="q" type="text" maxlength="500" placeholder="Ask about your order or the products…" aria-label="Ask AI about your order or the products" enterkeyhint="send">
@@ -1299,6 +1317,28 @@ var CADemo = (function () {
   };
   // The agent has already put the product in the cart (add-to-cart); the visitor's one step is Checkout.
   api.tapLine = function (s) { return 'I added the ' + s.product + ' to your cart — tap Checkout.'; };
+
+  // The cart a shopping tool result carries — structuredContent.cart, the picker's _meta cart, or (the
+  // widget's own set-quantity reply) the priced cart as JSON text. → { itemCount, total, currency } | null
+  api.cartFrom = function (result) {
+    if (!result || result.isError) return null;
+    var c = (result.structuredContent && result.structuredContent.cart) || (result._meta && result._meta['product-picker/cart']);
+    if (!c) {
+      var t = result.content && result.content[0] && result.content[0].text;
+      try { c = typeof t === 'string' ? JSON.parse(t) : null; } catch (e) { c = null; }
+    }
+    if (!c || !Array.isArray(c.lines) || typeof c.itemCount !== 'number' || c.itemCount < 0) return null;
+    return { itemCount: c.itemCount, total: Number(c.total) || 0, currency: typeof c.currency === 'string' ? c.currency : 'USD' };
+  };
+  // The pinned cart bar: Checkout is always shown — disabled while the cart is empty, else with its count.
+  api.cartBar = function (cart) {
+    var n = cart ? cart.itemCount : 0;
+    if (!n) return { summary: '🛒 Cart is empty', label: 'Checkout', aria: 'Checkout', enabled: false };
+    var money;
+    try { money = new Intl.NumberFormat('en-US', { style: 'currency', currency: cart.currency }).format(cart.total); }
+    catch (e) { money = cart.total.toFixed(2) + ' ' + cart.currency; }
+    return { summary: '🛒 ' + n + ' in cart · ' + money, label: 'Checkout (' + n + ')', aria: 'Checkout ' + n + (n === 1 ? ' item' : ' items'), enabled: true };
+  };
 
   api.isDemoOrigin = function (hostname) {
     return ['credentagent.ai', 'www.credentagent.ai', 'localhost', '127.0.0.1'].indexOf(hostname) !== -1;
@@ -1944,6 +1984,9 @@ var CADemo = (function () {
   var ASK_ENDPOINT = '/api/ask';              // the credentagent.ai router (library repo, deploy/router/api/ask.mjs)
   var askCtx = { cartId: null, orderId: null }, askHistory = [], asking = false;
   var scnBtns = [].slice.call(root.querySelectorAll('.demo-scn'));
+  var dockBody = document.getElementById('dock-body');
+  var bar = document.getElementById('dock-cart'), barView = document.getElementById('dock-cart-view'), barGo = document.getElementById('dock-cart-go');
+  var barCart = null, barBusy = false;
 
   if (!D.isDemoOrigin(location.hostname)) {
     document.getElementById('demo-offsite').hidden = false;
@@ -2006,6 +2049,42 @@ var CADemo = (function () {
     return rpc(token, 'tools/call', { name: name, arguments: args || {} }, name, args, describe);
   }
 
+  // The pinned cart bar mirrors the picker's footer (count + Checkout) and shows only while that footer —
+  // the bottom of the picker frame — has scrolled out of view. The cart comes from every tool result.
+  function setCart(result){
+    var c = D.cartFrom(result);
+    if (c) { barCart = c; renderBar(); }
+  }
+  function renderBar(){
+    var b = D.cartBar(barCart);
+    barView.textContent = b.summary;
+    barGo.textContent = barBusy ? 'Opening…' : b.label;
+    barGo.setAttribute('aria-label', barBusy ? 'Opening checkout' : b.aria);
+    barGo.disabled = barBusy || !b.enabled;
+    placeBar();
+  }
+  function placeBar(){
+    var frame = run && run.frame;
+    if (!frame || !frame.isConnected) { bar.hidden = true; return; }
+    var f = frame.getBoundingClientRect(), v = dockBody.getBoundingClientRect();
+    bar.hidden = f.bottom <= v.bottom && f.bottom > v.top + 40;   // the picker's own footer is on screen
+  }
+  dockBody.addEventListener('scroll', placeBar, { passive: true });
+  window.addEventListener('resize', placeBar);
+  if (window.ResizeObserver) new ResizeObserver(placeBar).observe(log);
+  new MutationObserver(placeBar).observe(log, { childList: true });
+  // 🛍 Products: bring the picker down to the end of the conversation. moveBefore keeps the iframe (and its
+  // bridge) alive; where it doesn't exist, moving would reload the app, so scroll back to it instead.
+  document.getElementById('dock-cart-picker').addEventListener('click', function(){
+    var frame = run && run.frame;
+    if (!frame || !frame.isConnected) return;
+    if (typeof log.moveBefore === 'function' && frame !== log.lastElementChild) {
+      try { log.moveBefore(frame, null); } catch (e) { /* not movable here: scroll to it instead */ }
+    }
+    frame.scrollIntoView({ block: 'end', behavior: reduce ? 'auto' : 'smooth' });
+  });
+  barGo.addEventListener('click', function(){ if (run && run.checkoutFromBar) run.checkoutFromBar(); });
+
   function teardown(){
     if (!run) return;
     clearTimeout(run.readyTimer);
@@ -2014,6 +2093,7 @@ var CADemo = (function () {
     if (run.bridge) run.bridge.teardown();
     if (run.frame && run.frame.parentNode) run.frame.parentNode.removeChild(run.frame);
     run = null;
+    bar.hidden = true;
   }
   function reset(){
     guard.next();
@@ -2023,6 +2103,7 @@ var CADemo = (function () {
     resetBtn.hidden = true;
     askCtx = { cartId: null, orderId: null };
     askHistory = [];
+    barCart = null; barBusy = false; renderBar();
     startBox.hidden = false;
   }
   function retryRow(message, retry){
@@ -2068,6 +2149,7 @@ var CADemo = (function () {
         if (!added || added.isError) throw new Error('couldn’t add the ' + s.product + ' to the cart');
         state.browse = added;                  // the picker opens on the cart that already holds it
         askCtx.cartId = D.cartIdFrom(added) || askCtx.cartId;
+        setCart(added);
         return rpc(token, 'resources/read', { uri: widget.uri }, 'resources/read', { uri: widget.uri });
       }).then(function(read){
         if (!guard.isCurrent(token)) return;
@@ -2096,6 +2178,7 @@ var CADemo = (function () {
       callTool: function(name, args){
         var describe = name === 'checkout' ? function(res){ return D.summarizeCheckout(res).chip; } : null;
         return tool(token, name, args, describe).then(function(result){
+          if (guard.isCurrent(token)) setCart(result);
           if (guard.isCurrent(token) && name === 'checkout') onCheckout(token, state, result);
           return result;
         });
@@ -2110,7 +2193,7 @@ var CADemo = (function () {
         bridge.notify('ui/notifications/tool-result', state.browse);
         if (onShown) pause(300).then(function(){ if (guard.isCurrent(token)) onShown(); });
       },
-      onSize: function(h){ if (typeof h === 'number' && h > 0) frame.style.height = Math.min(h, 1400) + 'px'; },
+      onSize: function(h){ if (typeof h === 'number' && h > 0) { frame.style.height = Math.min(h, 1400) + 'px'; placeBar(); } },
       onOpenLink: function(url){ if (guard.isCurrent(token)) handOff(token, state, url); },
       onModelContext: function(){ if (guard.isCurrent(token)) finish(token, state); }
     });
@@ -2121,6 +2204,21 @@ var CADemo = (function () {
     };
     window.addEventListener('message', onMessage);
     r.frame = frame; r.bridge = bridge; r.onMessage = onMessage;
+    // The bar's Checkout: the same checkout tool on this conversation's cart, then the same hand-off the
+    // widget's own button leads to (the URL is the one this page just received).
+    r.checkoutFromBar = function(){
+      if (barBusy || !guard.isCurrent(token)) return;
+      barBusy = true; renderBar();
+      var args = askCtx.cartId ? { cartId: askCtx.cartId } : {};
+      tool(token, 'checkout', args, function(res){ return D.summarizeCheckout(res).chip; }).then(function(result){
+        if (!guard.isCurrent(token)) return;
+        onCheckout(token, state, result);
+        if (state.checkout && state.checkout.ok) handOff(token, state, state.checkout.checkoutUrl);
+        else say('agent', 'I couldn’t start the checkout just now — try again in a moment.', 'err');
+      }, function(){
+        if (guard.isCurrent(token)) say('agent', 'I couldn’t start the checkout just now — try again in a moment.', 'err');
+      }).then(function(){ barBusy = false; renderBar(); });
+    };
     r.readyTimer = setTimeout(function(){
       if (!guard.isCurrent(token) || r.ready) return;
       teardown();
@@ -2133,6 +2231,7 @@ var CADemo = (function () {
   // the page reads the store's own tools/list and ui:// resource, and hands the app the AI's tool result.
   // What the visitor then does in the app goes page → store through the bridge, never through the AI.
   function showApp(app){
+    setCart(app.result);
     if (run && run.frame) {                  // one live app at a time: the open picker takes the new result
       if (run.ready && run.bridge) run.bridge.notify('ui/notifications/tool-result', app.result);
       return;
@@ -2241,6 +2340,7 @@ var CADemo = (function () {
       done.appendChild(dl);
     }
     add(done);
+    if (barCart) { barCart = { itemCount: 0, total: 0, currency: barCart.currency }; renderBar(); }   // the gate empties the cart
     document.dispatchEvent(new CustomEvent('ca-order-complete', { detail: { el: done } }));
   }
 
