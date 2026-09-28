@@ -577,3 +577,33 @@ test('askApp: accepts only a well-formed MCP App from /api/ask, else null', () =
   assert.equal(D.askApp({ app: { tool: 7, resourceUri: 'ui://p/a.html', result } }), null);
   assert.equal(D.askApp({ app: { tool: 'get-cart', resourceUri: 'ui://p/a.html', result: { isError: true } } }), null);
 });
+
+// ---- cartFrom / cartBar (the pinned cart bar under the chat log) ----
+const pricedCart = { lines: [{ id: 'oak-whiskey', quantity: 2 }], itemCount: 2, total: 248, currency: 'USD', unknownIds: [] };
+
+test('cartFrom reads the cart a shopping tool result carries', () => {
+  assert.deepEqual(plain(D.cartFrom({ structuredContent: { products: [], cart: pricedCart, cartId: 'c1' } })), { itemCount: 2, total: 248, currency: 'USD' });
+  assert.deepEqual(plain(D.cartFrom({ _meta: { 'product-picker/cart': pricedCart } })), { itemCount: 2, total: 248, currency: 'USD' });
+  // the widget's own set-quantity reply: the priced cart as JSON text
+  assert.deepEqual(plain(D.cartFrom({ content: [{ type: 'text', text: JSON.stringify(pricedCart) }] })), { itemCount: 2, total: 248, currency: 'USD' });
+});
+
+test('cartFrom ignores results that are not a cart', () => {
+  assert.equal(D.cartFrom(null), null);
+  assert.equal(D.cartFrom({ isError: true, structuredContent: { cart: pricedCart } }), null);
+  assert.equal(D.cartFrom({ content: [{ type: 'text', text: '{"orderId":"o1","checkoutUrl":"https://x.test/c"}' }] }), null);
+  assert.equal(D.cartFrom({ content: [{ type: 'text', text: 'not json' }] }), null);
+  assert.equal(D.cartFrom({ structuredContent: { cart: { lines: [], itemCount: -1, total: 0, currency: 'USD' } } }), null);
+});
+
+test('cartBar: enabled Checkout with the count when the cart has items', () => {
+  assert.deepEqual(plain(D.cartBar({ itemCount: 2, total: 248, currency: 'USD' })),
+    { summary: '🛒 2 in cart · $248.00', label: 'Checkout (2)', aria: 'Checkout 2 items', enabled: true });
+  assert.equal(D.cartBar({ itemCount: 1, total: 124, currency: 'USD' }).aria, 'Checkout 1 item');
+});
+
+test('cartBar: disabled Checkout when the cart is empty or unknown', () => {
+  assert.deepEqual(plain(D.cartBar({ itemCount: 0, total: 0, currency: 'USD' })),
+    { summary: '🛒 Cart is empty', label: 'Checkout', aria: 'Checkout', enabled: false });
+  assert.equal(D.cartBar(null).enabled, false);
+});
