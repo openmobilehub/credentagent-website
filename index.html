@@ -1445,11 +1445,12 @@ var CADemo = (function () {
   api.isInspectUrl = function (url) {
     return typeof url === 'string' && url.indexOf(INSPECTOR) === 0 && url.length > INSPECTOR.length;
   };
-  // The store's own order record (JSON, with the order's proofs) — the same URL the page polls.
-  api.orderStatusUrl = function (checkout, orderId) {
-    if (!checkout || !api.isHttpsUrl(checkout.checkoutUrl) || !orderId) return null;
-    var origin = checkout.checkoutUrl.match(/^https:\/\/[^\/?#]+/i)[0];   // isHttpsUrl guarantees a match
-    return origin + '/checkout/order-status?orderId=' + encodeURIComponent(orderId);
+  // The store's order record (JSON, with the order's proofs), reached through THIS site's same-origin
+  // store proxy (e.g. '/marketplace-dev' on credentagent.ai and the local dev server) — never the
+  // store's own host. Only a root-relative base is accepted.
+  api.orderStatusUrl = function (storeBase, orderId) {
+    if (typeof storeBase !== 'string' || !/^\/(?!\/)[\w\-\/]*$/.test(storeBase) || !orderId) return null;
+    return storeBase.replace(/\/+$/, '') + '/checkout/order-status?orderId=' + encodeURIComponent(orderId);
   };
 
   // Built from the SETTLED order (order-status), never the cart — a member discount changes the amount.
@@ -1468,8 +1469,9 @@ var CADemo = (function () {
   var PAID_WITH = { passkey: 'Passkey', 'dc-payment': 'Wallet · payment credential', delegated: 'Spending grant', demo: 'Instant demo' };
   function niceNetwork(n) { n = String(n).replace(/[-_]+/g, ' '); return n.charAt(0).toUpperCase() + n.slice(1); }
   function shortTx(t) { t = String(t); return t.length > 22 ? t.slice(0, 12) + '…' + t.slice(-6) : t; }
-  api.doneSummary = function (order, checkout) {
-    order = order || {}; checkout = checkout || {};
+  // opts.storeBase — the site's same-origin store proxy path (e.g. '/marketplace-dev') for the record link.
+  api.doneSummary = function (order, checkout, opts) {
+    order = order || {}; checkout = checkout || {}; opts = opts || {};
     var money = api.fmtMoney(order.amount, order.currency);
     var rows = [];
     var id = order.orderId || checkout.orderId;
@@ -1499,7 +1501,7 @@ var CADemo = (function () {
     }
     if (st && st.txId) rows.push({ k: 'Transaction', v: shortTx(st.txId), href: api.isHttpsUrl(st.hashscanUrl) ? st.hashscanUrl : null });
     // The raw record behind this card — the store's order-status JSON, proofs included.
-    var record = api.orderStatusUrl(checkout, id);
+    var record = api.orderStatusUrl(opts.storeBase, id);
     if (record) rows.push({ k: 'Order record', v: 'order-status JSON', href: record });
     return { title: 'Order complete', detail: money ? money + ' paid' : 'Paid', rows: rows };
   };
@@ -2382,7 +2384,8 @@ var CADemo = (function () {
   // place, and the dock script (ca-order-complete) throws confetti — or saves it for when the dock opens.
   function celebrate(state, order){
     if (state.card) state.card.classList.add('settled');
-    var sum = D.doneSummary(order, state.checkout);
+    // The record link goes through this site's store proxy (ENDPOINT minus /mcp), not the store's own host.
+    var sum = D.doneSummary(order, state.checkout, { storeBase: ENDPOINT.replace(/\/mcp$/, '') });
     var done = el('div', 'd-done');
     done.setAttribute('role', 'status');
     done.appendChild(el('div', 'tick', '✓'));

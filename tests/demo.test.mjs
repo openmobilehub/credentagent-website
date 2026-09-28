@@ -641,12 +641,17 @@ test('isInspectUrl allows only a Multipaz Tools DeviceResponse link with a paylo
   assert.equal(D.isInspectUrl(null), false);
 });
 
-test('doneSummary links the store’s own order record (order-status JSON) — https only', () => {
-  const checkout = { ok: true, orderId: 'O', checkoutUrl: 'https://store.example/checkout?order=O', total: 5 };
-  const rows = plain(D.doneSummary({ orderId: 'O', amount: 5, currency: 'USD' }, checkout)).rows;
+// The record link stays on THIS site: it goes through the same-origin store proxy the page already
+// talks MCP through (credentagent.ai/marketplace-dev → the dev store), never the store's own host.
+test('doneSummary links the order record through the site’s own store proxy', () => {
+  const checkout = { ok: true, orderId: 'O', checkoutUrl: 'https://credentagent-demo-dev.vercel.app/checkout?order=O', total: 5 };
+  const rows = plain(D.doneSummary({ orderId: 'O', amount: 5, currency: 'USD' }, checkout, { storeBase: '/marketplace-dev' })).rows;
   assert.deepEqual(rows.find((r) => r.k === 'Order record'),
-    { k: 'Order record', v: 'order-status JSON', href: 'https://store.example/checkout/order-status?orderId=O' });
-  // No (or a non-https) checkout URL → no record row.
-  assert.equal(plain(D.doneSummary({ orderId: 'O' }, { checkoutUrl: 'http://x/c' })).rows.some((r) => r.k === 'Order record'), false);
-  assert.equal(plain(D.doneSummary({ orderId: 'O' }, {})).rows.some((r) => r.k === 'Order record'), false);
+    { k: 'Order record', v: 'order-status JSON', href: '/marketplace-dev/checkout/order-status?orderId=O' });
+  assert.equal(D.orderStatusUrl('/marketplace-dev', 'a&b'), '/marketplace-dev/checkout/order-status?orderId=a%26b');
+  // No base, an absolute or protocol-relative base, or no order id → no record row.
+  for (const storeBase of [undefined, 'https://evil.example', '//evil.example', 'javascript:x']) {
+    assert.equal(plain(D.doneSummary({ orderId: 'O' }, checkout, { storeBase })).rows.some((r) => r.k === 'Order record'), false);
+  }
+  assert.equal(D.orderStatusUrl('/marketplace-dev', ''), null);
 });
