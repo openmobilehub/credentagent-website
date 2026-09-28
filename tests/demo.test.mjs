@@ -208,6 +208,28 @@ test('doneSummary never claims what it wasn’t told', () => {
   assert.deepEqual(plain(D.doneSummary(null)), { title: 'Order complete', detail: 'Paid', rows: [] });
 });
 
+// The library's order proof receipt (credentagent #224): the settled order carries `proofs`. One row
+// per credential proof; a wallet proof the store kept links to Multipaz Tools; an instant-demo tap says
+// so; payment proofs stay in "Paid with". No proofs → today's single "proven" row.
+test('doneSummary lists the order’s proofs and links a wallet proof to the inspector', () => {
+  const url = 'https://tools.multipaz.org/mdocDeviceResponse#o2d2';
+  const order = { orderId: 'O', amount: 124, currency: 'USD', method: 'dc-payment', proofs: [
+    { gate: 'Age 21+', rail: 'credential', trust_level: 'presence-only-demo', presentation: { inspectUrl: url } },
+    { gate: 'Membership', rail: 'instant-demo', trust_level: 'presence-only-demo' },
+    { gate: 'Pay (USD)', rail: 'dc-payment', trust_level: 'presence-only-demo' },
+  ] };
+  const rows = plain(D.doneSummary(order, { gated: true, ageLabel: 'Age 21+', total: 124 })).rows;
+  assert.deepEqual(rows.find((r) => r.k === 'Age 21+'), { k: 'Age 21+', v: '✓ proven · inspect', href: url });
+  assert.deepEqual(rows.find((r) => r.k === 'Membership'), { k: 'Membership', v: '✓ instant demo' });
+  assert.equal(rows.filter((r) => r.k === 'Age 21+').length, 1);          // never twice with the fallback row
+  assert.equal(rows.filter((r) => /^Pay\b/.test(r.k)).length, 0);         // payment stays in "Paid with"
+  // A wallet proof without kept bytes, or with a non-Multipaz link, is proven but never linked.
+  const plainProof = plain(D.doneSummary({ proofs: [{ gate: 'Age 21+', rail: 'credential' }] }, {})).rows;
+  assert.deepEqual(plainProof.find((r) => r.k === 'Age 21+'), { k: 'Age 21+', v: '✓ proven' });
+  const bad = plain(D.doneSummary({ proofs: [{ gate: 'Age 21+', rail: 'credential', presentation: { inspectUrl: 'javascript:x' } }] }, {})).rows;
+  assert.deepEqual(bad.find((r) => r.k === 'Age 21+'), { k: 'Age 21+', v: '✓ proven' });
+});
+
 test('summarizeCheckout keeps the pre-discount total and the age label for the receipt', () => {
   const s = plain(D.summarizeCheckout({ content: [{ type: 'text', text: JSON.stringify({ orderId: 'O', checkoutUrl: 'https://x/c',
     cart: { total: 124 }, requires: [{ credential: 'age', required: true, label: 'Age 21+' }] }) }] }));
