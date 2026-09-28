@@ -1013,7 +1013,7 @@ host.<span class="c-fn">publish</span>(app);                           <span cla
         </div>
         <div class="card">
           <h3>3 · See who signed it</h3>
-          <p>The demo credentials are signed by <b>Utopia Demo IACA</b> — a certificate authority generated for this demo, not a trusted issuer. Open <a href="https://github.com/openmobilehub/credentagent/blob/main/tools/demo-pki/certs/iaca-cert.pem" target="_blank" rel="noopener">its certificate</a> in the <a href="https://tools.multipaz.org/x509" target="_blank" rel="noopener">X.509 viewer</a>.</p>
+          <p>Every credential carries the certificate that signed it — the payment page's <b>Issuer certificate ›</b> link opens it in the <a href="https://tools.multipaz.org/x509" target="_blank" rel="noopener">X.509 viewer</a>. Multipaz Wallet's built-in test credentials are signed by <b>OWF Multipaz TEST IACA</b>; the CredentAgent demo passes by <b>Utopia Demo IACA</b> (<a href="https://github.com/openmobilehub/credentagent/blob/main/tools/demo-pki/certs/iaca-cert.pem" target="_blank" rel="noopener">certificate</a>). Both are test authorities, not trusted issuers.</p>
         </div>
       </div>
       <p class="sub" style="margin-top:1rem;font-size:.95rem">What this shows: the credentials are real, standard, and signed. What it doesn't: that the issuer deserves trust — the demo CA is ours, and the gate itself doesn't check the issuer signature yet (<b style="color:var(--ink)">presence-only-demo</b>, above).</p>
