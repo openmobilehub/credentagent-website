@@ -407,12 +407,14 @@
   /* Pinned cart bar: Checkout stays in reach once the picker has scrolled up out of the conversation. */
   .dock-cart{display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding:8px 14px;border-top:1px solid var(--line);background:var(--sunk)}
   .dock-cart[hidden]{display:none}
-  .dock-cart-view{font:inherit;font-size:.85rem;color:var(--ink);background:transparent;border:none;padding:.3rem 0;cursor:pointer;text-align:left}
-  .dock-cart-view:hover{text-decoration:underline;text-underline-offset:2px}
+  .dock-cart-sum{font-size:.85rem;color:var(--ink);min-width:0}
+  .dock-cart-acts{display:flex;gap:.45rem;flex:none}
+  .dock-cart-picker{font:inherit;font-size:.88rem;font-weight:700;color:var(--link);background:transparent;border:1px solid color-mix(in srgb,var(--link) 45%,transparent);border-radius:9px;padding:.45rem .8rem;cursor:pointer}
+  .dock-cart-picker:hover{background:color-mix(in srgb,var(--link) 10%,transparent)}
   .dock-cart-go{font:inherit;font-size:.88rem;font-weight:700;color:var(--on-primary);background:var(--primary);border:none;border-radius:9px;padding:.5rem .95rem;cursor:pointer;flex:none}
   .dock-cart-go:hover:not(:disabled){background:var(--primary-hover)}
   .dock-cart-go:disabled{color:var(--dim);background:var(--line);cursor:not-allowed}
-  .dock-cart-view:focus-visible,.dock-cart-go:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+  .dock-cart-picker:focus-visible,.dock-cart-go:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
   .ask{padding:10px 14px 12px;border-top:1px solid var(--line);background:var(--surface)}
   .ask-row{display:flex;gap:.5rem}
   .ask-q{flex:1;min-width:0;font:inherit;font-size:.9rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:.6rem .75rem}
@@ -1029,8 +1031,11 @@ host.<span class="c-fn">publish</span>(app);                           <span cla
     </div>
   </div>
   <div class="dock-cart" id="dock-cart" hidden>
-    <button class="dock-cart-view" id="dock-cart-view" type="button" title="Scroll back to the product picker">🛒 Cart is empty</button>
-    <button class="dock-cart-go" id="dock-cart-go" type="button" disabled>Checkout</button>
+    <span class="dock-cart-sum" id="dock-cart-view">🛒 Cart is empty</span>
+    <span class="dock-cart-acts">
+      <button class="dock-cart-picker" id="dock-cart-picker" type="button" title="Bring the product picker down here">🛍 Products</button>
+      <button class="dock-cart-go" id="dock-cart-go" type="button" disabled>Checkout</button>
+    </span>
   </div>
   <form class="ask" id="ask-form" autocomplete="off">
     <div class="ask-row">
@@ -2068,8 +2073,15 @@ var CADemo = (function () {
   window.addEventListener('resize', placeBar);
   if (window.ResizeObserver) new ResizeObserver(placeBar).observe(log);
   new MutationObserver(placeBar).observe(log, { childList: true });
-  barView.addEventListener('click', function(){
-    if (run && run.frame) run.frame.scrollIntoView({ block: 'end', behavior: reduce ? 'auto' : 'smooth' });
+  // 🛍 Products: bring the picker down to the end of the conversation. moveBefore keeps the iframe (and its
+  // bridge) alive; where it doesn't exist, moving would reload the app, so scroll back to it instead.
+  document.getElementById('dock-cart-picker').addEventListener('click', function(){
+    var frame = run && run.frame;
+    if (!frame || !frame.isConnected) return;
+    if (typeof log.moveBefore === 'function' && frame !== log.lastElementChild) {
+      try { log.moveBefore(frame, null); } catch (e) { /* not movable here: scroll to it instead */ }
+    }
+    frame.scrollIntoView({ block: 'end', behavior: reduce ? 'auto' : 'smooth' });
   });
   barGo.addEventListener('click', function(){ if (run && run.checkoutFromBar) run.checkoutFromBar(); });
 
