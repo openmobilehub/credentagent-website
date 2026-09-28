@@ -629,3 +629,24 @@ test('cartBar: disabled Checkout when the cart is empty or unknown', () => {
     { summary: '🛒 Cart is empty', label: 'Checkout', aria: 'Checkout', enabled: false });
   assert.equal(D.cartBar(null).enabled, false);
 });
+
+// The widget's "Inspect ↗" (the wallet's credential in Multipaz Tools) is the one link besides the
+// checkout that the page will open for it — anything else stays dropped.
+test('isInspectUrl allows only a Multipaz Tools DeviceResponse link with a payload', () => {
+  assert.equal(D.isInspectUrl('https://tools.multipaz.org/mdocDeviceResponse#o2d2'), true);
+  assert.equal(D.isInspectUrl('https://tools.multipaz.org/mdocDeviceResponse#'), false);        // no payload
+  assert.equal(D.isInspectUrl('https://tools.multipaz.org/x509#o2d2'), false);                  // another tool
+  assert.equal(D.isInspectUrl('https://tools.multipaz.org.evil.example/mdocDeviceResponse#x'), false);
+  assert.equal(D.isInspectUrl('javascript:alert(1)'), false);
+  assert.equal(D.isInspectUrl(null), false);
+});
+
+test('doneSummary links the store’s own order record (order-status JSON) — https only', () => {
+  const checkout = { ok: true, orderId: 'O', checkoutUrl: 'https://store.example/checkout?order=O', total: 5 };
+  const rows = plain(D.doneSummary({ orderId: 'O', amount: 5, currency: 'USD' }, checkout)).rows;
+  assert.deepEqual(rows.find((r) => r.k === 'Order record'),
+    { k: 'Order record', v: 'order-status JSON', href: 'https://store.example/checkout/order-status?orderId=O' });
+  // No (or a non-https) checkout URL → no record row.
+  assert.equal(plain(D.doneSummary({ orderId: 'O' }, { checkoutUrl: 'http://x/c' })).rows.some((r) => r.k === 'Order record'), false);
+  assert.equal(plain(D.doneSummary({ orderId: 'O' }, {})).rows.some((r) => r.k === 'Order record'), false);
+});

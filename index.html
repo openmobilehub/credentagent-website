@@ -1434,9 +1434,22 @@ var CADemo = (function () {
     };
   };
 
-  // The widget's ui/open-link is honoured only for the checkout URL the page itself received.
+  // The widget's ui/open-link is honoured only for the checkout URL the page itself received…
   api.isHandoffUrl = function (checkout, url) {
     return !!(checkout && checkout.ok && typeof url === 'string' && url === checkout.checkoutUrl && api.isHttpsUrl(url));
+  };
+  // …or for a Multipaz Tools inspector link: the wallet's credential, decoded in the visitor's browser
+  // (the payload rides in the #fragment, never sent to a server). The only other link a widget may open,
+  // and the only link a proof row may carry.
+  var INSPECTOR = 'https://tools.multipaz.org/mdocDeviceResponse#';
+  api.isInspectUrl = function (url) {
+    return typeof url === 'string' && url.indexOf(INSPECTOR) === 0 && url.length > INSPECTOR.length;
+  };
+  // The store's own order record (JSON, with the order's proofs) — the same URL the page polls.
+  api.orderStatusUrl = function (checkout, orderId) {
+    if (!checkout || !api.isHttpsUrl(checkout.checkoutUrl) || !orderId) return null;
+    var origin = checkout.checkoutUrl.match(/^https:\/\/[^\/?#]+/i)[0];   // isHttpsUrl guarantees a match
+    return origin + '/checkout/order-status?orderId=' + encodeURIComponent(orderId);
   };
 
   // Built from the SETTLED order (order-status), never the cart — a member discount changes the amount.
@@ -1452,7 +1465,6 @@ var CADemo = (function () {
   //             proof the store kept links to Multipaz Tools; an instant-demo tap says so.
   //   Discount — the checkout total minus what was actually charged, when that's less.
   //   Paid with / Transaction — the record's method and settlement (provider, network, txId, explorer).
-  var INSPECTOR = 'https://tools.multipaz.org/mdocDeviceResponse#';   // the only link a proof row may carry
   var PAID_WITH = { passkey: 'Passkey', 'dc-payment': 'Wallet · payment credential', delegated: 'Spending grant', demo: 'Instant demo' };
   function niceNetwork(n) { n = String(n).replace(/[-_]+/g, ' '); return n.charAt(0).toUpperCase() + n.slice(1); }
   function shortTx(t) { t = String(t); return t.length > 22 ? t.slice(0, 12) + '…' + t.slice(-6) : t; }
@@ -1469,7 +1481,7 @@ var CADemo = (function () {
     if (proofs.length) {
       proofs.forEach(function (p) {
         var u = p.presentation && p.presentation.inspectUrl;
-        var inspect = typeof u === 'string' && u.indexOf(INSPECTOR) === 0 ? u : null;
+        var inspect = api.isInspectUrl(u) ? u : null;
         var row = { k: p.gate, v: p.rail === 'instant-demo' ? '✓ instant demo' : inspect ? '✓ proven · inspect' : '✓ proven' };
         if (inspect) row.href = inspect;
         rows.push(row);
@@ -1486,6 +1498,9 @@ var CADemo = (function () {
       rows.push({ k: 'Paid with', v: [how, rail].filter(Boolean).join(' · ') });
     }
     if (st && st.txId) rows.push({ k: 'Transaction', v: shortTx(st.txId), href: api.isHttpsUrl(st.hashscanUrl) ? st.hashscanUrl : null });
+    // The raw record behind this card — the store's order-status JSON, proofs included.
+    var record = api.orderStatusUrl(checkout, id);
+    if (record) rows.push({ k: 'Order record', v: 'order-status JSON', href: record });
     return { title: 'Order complete', detail: money ? money + ' paid' : 'Paid', rows: rows };
   };
   // Confetti for the order-complete moment: n pieces bursting up and out from (x, y) in a w-wide box.
@@ -2235,7 +2250,13 @@ var CADemo = (function () {
         if (onShown) pause(300).then(function(){ if (guard.isCurrent(token)) onShown(); });
       },
       onSize: function(h){ if (typeof h === 'number' && h > 0) { frame.style.height = Math.min(h, 1400) + 'px'; placeBar(); } },
-      onOpenLink: function(url){ if (guard.isCurrent(token)) handOff(token, state, url); },
+      onOpenLink: function(url){
+        if (!guard.isCurrent(token)) return;
+        // The widget's "Inspect ↗" (the wallet's credential in Multipaz Tools) opens in a new tab;
+        // every other link is still only the checkout hand-off.
+        if (D.isInspectUrl(url)) { window.open(url, '_blank', 'noopener'); return; }
+        handOff(token, state, url);
+      },
       onModelContext: function(){ if (guard.isCurrent(token)) finish(token, state); }
     });
 
