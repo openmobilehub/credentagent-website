@@ -66,6 +66,17 @@ test('no raw colour literals outside the two token blocks', () => {
   assert.deepEqual(hits, [], 'use a token (or color-mix of one) instead of: ' + hits.join(', '));
 });
 
+test('the browser bar is tinted to each theme\'s --bg (theme-color metas track the tokens)', () => {
+  const head = html.slice(0, html.indexOf('</head>'));
+  for (const [scheme, t] of [['light', LIGHT()], ['dark', DARK()]]) {
+    const metas = [...head.matchAll(/<meta\b[^>]*>/gi)].map((m) => m[0]).filter((m) => /\bname="theme-color"/i.test(m)
+      && m.includes(`media="(prefers-color-scheme: ${scheme})"`));
+    assert.equal(metas.length, 1, `expected one theme-color meta for prefers-color-scheme: ${scheme}`);
+    const content = (metas[0].match(/\bcontent="([^"]*)"/i) || [])[1] || '';
+    assert.equal(content.toLowerCase(), t.bg.toLowerCase(), `${scheme} theme-color must equal --bg (${t.bg})`);
+  }
+});
+
 test('--attention and --brand-mark are never used as a text colour (except the wordmark)', () => {
   const noWordmark = style.replace(/\.wordmark em\{[^}]*\}/, '');
   assert.equal(/[^-]color:var\(--(attention|brand-mark)\)/.test(noWordmark), false);
