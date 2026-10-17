@@ -1,0 +1,194 @@
+[
+  {
+    "kind": "image",
+    "file": "before-light-01.png",
+    "caption": "before (light): page on load, before any key press",
+    "side": "before",
+    "session": "before-light",
+    "url": "http://localhost:4560/",
+    "at": "2026-10-17T07:13:43.454Z"
+  },
+  {
+    "kind": "image",
+    "file": "before-light-02.png",
+    "caption": "before (light): after one Tab, focus lands on \"CredentAgent\" inside the nav — no skip link exists; DOM has 0 <main> element(s)",
+    "side": "before",
+    "session": "before-light",
+    "url": "http://localhost:4560/",
+    "at": "2026-10-17T07:13:44.104Z"
+  },
+  {
+    "kind": "image",
+    "file": "before-light-03.png",
+    "caption": "before (light): after three Tabs focus is still in the nav (\"Get started\", insideNav=true) — keyboard users must walk the whole nav",
+    "side": "before",
+    "session": "before-light",
+    "url": "http://localhost:4560/",
+    "at": "2026-10-17T07:13:45.176Z"
+  },
+  {
+    "kind": "events",
+    "session": "before-light",
+    "side": "before",
+    "events": [],
+    "at": "2026-10-17T07:13:45.289Z"
+  },
+  {
+    "kind": "video",
+    "file": "before-light.webm",
+    "caption": "before (light): load, then Tab — focus goes straight into the nav, no skip link",
+    "side": "before",
+    "session": "before-light",
+    "at": "2026-10-17T07:13:45.290Z"
+  },
+  {
+    "kind": "image",
+    "file": "before-dark-01.png",
+    "caption": "before (dark): page on load, before any key press",
+    "side": "before",
+    "session": "before-dark",
+    "url": "http://localhost:4560/",
+    "at": "2026-10-17T07:13:46.651Z"
+  },
+  {
+    "kind": "image",
+    "file": "before-dark-02.png",
+    "caption": "before (dark): after one Tab, focus lands on \"CredentAgent\" inside the nav — no skip link exists; DOM has 0 <main> element(s)",
+    "side": "before",
+    "session": "before-dark",
+    "url": "http://localhost:4560/",
+    "at": "2026-10-17T07:13:47.300Z"
+  },
+  {
+    "kind": "image",
+    "file": "before-dark-03.png",
+    "caption": "before (dark): after three Tabs focus is still in the nav (\"Get started\", insideNav=true) — keyboard users must walk the whole nav",
+    "side": "before",
+    "session": "before-dark",
+    "url": "http://localhost:4560/",
+    "at": "2026-10-17T07:13:48.379Z"
+  },
+  {
+    "kind": "events",
+    "session": "before-dark",
+    "side": "before",
+    "events": [],
+    "at": "2026-10-17T07:13:48.486Z"
+  },
+  {
+    "kind": "video",
+    "file": "before-dark.webm",
+    "caption": "before (dark): load, then Tab — focus goes straight into the nav, no skip link",
+    "side": "before",
+    "session": "before-dark",
+    "at": "2026-10-17T07:13:48.487Z"
+  },
+  {
+    "kind": "image",
+    "file": "after-light-01.png",
+    "caption": "after (light): page on load, before any key press — looks identical to main, skip link is hidden",
+    "side": "after",
+    "session": "after-light",
+    "url": "http://localhost:4561/",
+    "at": "2026-10-17T07:13:50.160Z"
+  },
+  {
+    "kind": "image",
+    "file": "after-light-02.png",
+    "caption": "after (light): after one Tab, a \"Skip to content\" link (href=#main) appears top-left in theme colours; DOM has 1 <main id=\"main\">",
+    "side": "after",
+    "session": "after-light",
+    "url": "http://localhost:4561/",
+    "at": "2026-10-17T07:13:50.819Z"
+  },
+  {
+    "kind": "image",
+    "file": "after-light-03.png",
+    "caption": "after (light): pressing Enter on the skip link goes to #main; the next Tab focuses \"NEW0.5 — wallet-signed spending grants, \" (insideNav=false) — the nav links are skipped",
+    "side": "after",
+    "session": "after-light",
+    "url": "http://localhost:4561/#main",
+    "at": "2026-10-17T07:13:52.306Z"
+  },
+  {
+    "kind": "events",
+    "session": "after-light",
+    "side": "after",
+    "events": [],
+    "at": "2026-10-17T07:13:52.412Z"
+  },
+  {
+    "kind": "video",
+    "file": "after-light.webm",
+    "caption": "after (light): load, Tab reveals \"Skip to content\", Enter jumps to #main, next Tab lands past the nav",
+    "side": "after",
+    "session": "after-light",
+    "at": "2026-10-17T07:13:52.413Z"
+  },
+  {
+    "kind": "image",
+    "file": "after-dark-01.png",
+    "caption": "after (dark): page on load, before any key press — looks identical to main, skip link is hidden",
+    "side": "after",
+    "session": "after-dark",
+    "url": "http://localhost:4561/",
+    "at": "2026-10-17T07:13:53.784Z"
+  },
+  {
+    "kind": "image",
+    "file": "after-dark-02.png",
+    "caption": "after (dark): after one Tab, a \"Skip to content\" link (href=#main) appears top-left in theme colours; DOM has 1 <main id=\"main\">",
+    "side": "after",
+    "session": "after-dark",
+    "url": "http://localhost:4561/",
+    "at": "2026-10-17T07:13:54.435Z"
+  },
+  {
+    "kind": "image",
+    "file": "after-dark-03.png",
+    "caption": "after (dark): pressing Enter on the skip link goes to #main; the next Tab focuses \"NEW0.5 — wallet-signed spending grants, \" (insideNav=false) — the nav links are skipped",
+    "side": "after",
+    "session": "after-dark",
+    "url": "http://localhost:4561/#main",
+    "at": "2026-10-17T07:13:55.939Z"
+  },
+  {
+    "kind": "events",
+    "session": "after-dark",
+    "side": "after",
+    "events": [],
+    "at": "2026-10-17T07:13:56.054Z"
+  },
+  {
+    "kind": "video",
+    "file": "after-dark.webm",
+    "caption": "after (dark): load, Tab reveals \"Skip to content\", Enter jumps to #main, next Tab lands past the nav",
+    "side": "after",
+    "session": "after-dark",
+    "at": "2026-10-17T07:13:56.055Z"
+  },
+  {
+    "kind": "image",
+    "file": "test-proof-01.png",
+    "caption": "Test proof: the pipeline's own gate runs, and the changed tests failing on main's code and passing on the fix",
+    "side": "proof",
+    "session": "test-proof",
+    "url": "about:blank",
+    "at": "2026-10-17T07:14:16.546Z"
+  },
+  {
+    "kind": "events",
+    "session": "test-proof",
+    "side": "proof",
+    "events": [],
+    "at": "2026-10-17T07:14:19.770Z"
+  },
+  {
+    "kind": "video",
+    "file": "test-proof.webm",
+    "caption": "Test proof: the pipeline's own gate runs, and the changed tests failing on main's code and passing on the fix",
+    "side": "proof",
+    "session": "test-proof",
+    "at": "2026-10-17T07:14:19.772Z"
+  }
+]
