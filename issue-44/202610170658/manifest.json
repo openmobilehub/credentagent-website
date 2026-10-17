@@ -1,0 +1,158 @@
+[
+  {
+    "kind": "image",
+    "file": "before-light-01.png",
+    "caption": "before (light): the page as served, unchanged",
+    "side": "before",
+    "session": "before-light",
+    "url": "http://localhost:4540/",
+    "at": "2026-10-17T07:00:05.230Z"
+  },
+  {
+    "kind": "image",
+    "file": "before-light-02.png",
+    "caption": "before (light): <head> has 0 theme-color metas, so the toolbar stays the browser default instead of --bg",
+    "side": "before",
+    "session": "before-light",
+    "url": "http://localhost:4540/",
+    "at": "2026-10-17T07:00:06.125Z"
+  },
+  {
+    "kind": "events",
+    "session": "before-light",
+    "side": "before",
+    "events": [],
+    "at": "2026-10-17T07:00:06.288Z"
+  },
+  {
+    "kind": "video",
+    "file": "before-light.webm",
+    "caption": "before (light): load page, then show the theme-color evidence overlay",
+    "side": "before",
+    "session": "before-light",
+    "at": "2026-10-17T07:00:06.290Z"
+  },
+  {
+    "kind": "image",
+    "file": "before-dark-01.png",
+    "caption": "before (dark): the page as served, unchanged",
+    "side": "before",
+    "session": "before-dark",
+    "url": "http://localhost:4540/",
+    "at": "2026-10-17T07:00:07.348Z"
+  },
+  {
+    "kind": "image",
+    "file": "before-dark-02.png",
+    "caption": "before (dark): <head> has 0 theme-color metas, so the toolbar stays the browser default instead of --bg",
+    "side": "before",
+    "session": "before-dark",
+    "url": "http://localhost:4540/",
+    "at": "2026-10-17T07:00:08.232Z"
+  },
+  {
+    "kind": "events",
+    "session": "before-dark",
+    "side": "before",
+    "events": [],
+    "at": "2026-10-17T07:00:08.394Z"
+  },
+  {
+    "kind": "video",
+    "file": "before-dark.webm",
+    "caption": "before (dark): load page, then show the theme-color evidence overlay",
+    "side": "before",
+    "session": "before-dark",
+    "at": "2026-10-17T07:00:08.395Z"
+  },
+  {
+    "kind": "image",
+    "file": "after-light-01.png",
+    "caption": "after (light): the page as served, unchanged",
+    "side": "after",
+    "session": "after-light",
+    "url": "http://localhost:4541/",
+    "at": "2026-10-17T07:00:09.750Z"
+  },
+  {
+    "kind": "image",
+    "file": "after-light-02.png",
+    "caption": "after (light): <head> has both theme-color metas; the light one matches and equals --bg (#F2F4F0)",
+    "side": "after",
+    "session": "after-light",
+    "url": "http://localhost:4541/",
+    "at": "2026-10-17T07:00:10.645Z"
+  },
+  {
+    "kind": "events",
+    "session": "after-light",
+    "side": "after",
+    "events": [],
+    "at": "2026-10-17T07:00:10.806Z"
+  },
+  {
+    "kind": "video",
+    "file": "after-light.webm",
+    "caption": "after (light): load page, then show the theme-color evidence overlay",
+    "side": "after",
+    "session": "after-light",
+    "at": "2026-10-17T07:00:10.807Z"
+  },
+  {
+    "kind": "image",
+    "file": "after-dark-01.png",
+    "caption": "after (dark): the page as served, unchanged",
+    "side": "after",
+    "session": "after-dark",
+    "url": "http://localhost:4541/",
+    "at": "2026-10-17T07:00:11.867Z"
+  },
+  {
+    "kind": "image",
+    "file": "after-dark-02.png",
+    "caption": "after (dark): <head> has both theme-color metas; the dark one matches and equals --bg (#0E1220)",
+    "side": "after",
+    "session": "after-dark",
+    "url": "http://localhost:4541/",
+    "at": "2026-10-17T07:00:12.768Z"
+  },
+  {
+    "kind": "events",
+    "session": "after-dark",
+    "side": "after",
+    "events": [],
+    "at": "2026-10-17T07:00:12.957Z"
+  },
+  {
+    "kind": "video",
+    "file": "after-dark.webm",
+    "caption": "after (dark): load page, then show the theme-color evidence overlay",
+    "side": "after",
+    "session": "after-dark",
+    "at": "2026-10-17T07:00:12.958Z"
+  },
+  {
+    "kind": "image",
+    "file": "test-proof-01.png",
+    "caption": "Test proof: the pipeline's own gate runs, and the changed tests failing on main's code and passing on the fix",
+    "side": "proof",
+    "session": "test-proof",
+    "url": "about:blank",
+    "at": "2026-10-17T07:00:33.932Z"
+  },
+  {
+    "kind": "events",
+    "session": "test-proof",
+    "side": "proof",
+    "events": [],
+    "at": "2026-10-17T07:00:37.224Z"
+  },
+  {
+    "kind": "video",
+    "file": "test-proof.webm",
+    "caption": "Test proof: the pipeline's own gate runs, and the changed tests failing on main's code and passing on the fix",
+    "side": "proof",
+    "session": "test-proof",
+    "at": "2026-10-17T07:00:37.225Z"
+  }
+]
