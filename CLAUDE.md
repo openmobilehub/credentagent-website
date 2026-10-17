@@ -71,7 +71,9 @@ co-presented with Multipaz. Two npm packages, versioned in lockstep, both live a
   ```bash
   grep -ioE '<script[^>]+src=|<link[^>]+rel="stylesheet"|<img[^>]+src=|url\(\s*https?:' index.html | grep -i http | wc -l   # must be 0
   ```
-  Note: the YouTube `<iframe>` embed is intentional and exempt from this check. So is the in-browser
+  Note: the YouTube `<iframe>` embed (from `www.youtube-nocookie.com/embed/…`, privacy-enhanced mode — no
+  tracking cookies until the visitor plays it; `tests/embed.test.mjs` guards it) is intentional and exempt
+  from this check. So is the in-browser
   demo's **same-origin** `fetch` to `/marketplace-dev/mcp` — the dev twin running library `main`, so
   unreleased changes show on the site first (switched 2026-09-27; the credentagent.ai router proxies it).
   Point the `ENDPOINT` constant in the demo script back at `/marketplace/mcp` to use the latest published
