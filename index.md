@@ -1,5 +1,7 @@
 # CredentAgent — make AI agents ask before they buy
 
+**Let AI agents shop your store. CredentAgent makes them ask first.**
+
 > An open-source Node library for MCP servers. Put any tool — checkout, a 21+ item, a member price — behind
 > proof from the shopper's phone wallet. The agent does the shopping; the human approves what matters, and
 > your server enforces it.
