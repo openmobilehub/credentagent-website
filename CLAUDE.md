@@ -81,8 +81,15 @@ co-presented with Multipaz. Two npm packages, versioned in lockstep, both live a
 - **Accessibility:** keep the `@media (prefers-reduced-motion: reduce)` guard and the responsive
   breakpoints (`@media (max-width:880px)` and `…520px`).
 - **DCO:** sign off every commit with `git commit -s` (the OpenWallet Foundation org enforces it).
-- **Workflow:** make changes on a branch and open a PR to `main`; merging auto-deploys via Pages. Don't
-  push straight to `main` without sign-off.
+- **Workflow:** make changes on a branch and open a PR to `main`; merging auto-deploys via Pages. `main` is
+  protected: a PR needs the `test` check (`.github/workflows/test.yml` — the unit tests plus the
+  self-contained grep above) and an approving review.
+- **Issue agent:** label an issue **`agent`** (write access needed) and the library's issue agent
+  implements it and opens a **draft PR** with acceptance criteria, its own test runs, three reviews and
+  before/after screenshots — it never merges. The pipeline lives in the library
+  (`ci/issue-agent/README.md`, "Using it in another repo"); `.github/issue-agent.json` tells it how to
+  test this site, and `.github/workflows/issue-agent.yml` calls it. The agents read this file, so the
+  rules here bind them too.
 - **Honesty rule (load-bearing):** the **"Honest by design"** trust table mirrors the SDK's
   `trust_level`. The site must **never** claim a stronger guarantee than the library actually provides.
   Canonical source: `docs/reference/trust-model.md` in https://github.com/openmobilehub/credentagent. When the

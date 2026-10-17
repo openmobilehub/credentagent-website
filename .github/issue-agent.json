@@ -1,0 +1,29 @@
+{
+  "$comment": "How the issue agent (openmobilehub/credentagent, ci/issue-agent) works on this repo: label an issue `agent`. Fields: ci/issue-agent/config.mjs. The agent never changes .github/, so it can't edit this file.",
+  "install": null,
+  "build": null,
+  "gates": [{ "name": "test", "cmd": ["node", "--test", "tests/*.test.mjs"] }],
+  "fastTest": null,
+  "testRunner": ["node", "--test"],
+  "testFile": "^tests/.+\\.test\\.mjs$",
+  "source": "^[^/]+\\.(html|md|txt|xml)$",
+  "sourceExclude": "^(README|CLAUDE)\\.md$",
+  "testSummary": "(?<=^[#ℹ] )(?:pass|fail) \\d+$",
+  "checkTools": ["Bash(node --test*)", "Bash(node tests/*)"],
+  "focusedTest": "node --test <file>",
+  "reproduce": "node --test \"tests/*.test.mjs\"",
+  "docs": ["CLAUDE.md"],
+  "audience": "a developer visiting credentagent.ai",
+  "implementNotes": [
+    "Page logic lives in the pure `ca-demo-core` script inside index.html; tests reach it through tests/load-core.mjs, and page-level checks read index.html directly (tests/theme.test.mjs).",
+    "Keep index.html self-contained: run the grep in CLAUDE.md (\"Conventions — do not regress\") before you finish; it must print 0.",
+    "The honesty rule is load-bearing: never claim a stronger guarantee than the library's trust_level, and every code sample must match the published gate README.",
+    "Keep the colour tokens, the prefers-reduced-motion guard and the 880px / 520px breakpoints; no raw colour literals outside the token blocks."
+  ],
+  "lenses": {
+    "security": "the HONESTY + SAFETY lens: the honesty rule in CLAUDE.md (no copy or sample implying a stronger guarantee than the library's trust_level); nothing external loaded (the self-contained rule and its exemptions); no agent- or store-supplied text reaching innerHTML or a URL unescaped; the in-browser demo still only talks to the same-origin endpoints CLAUDE.md lists. For each new or changed test, check it would FAIL if the behavior it guards were removed.",
+    "dx": "the QUALITY lens: accessibility (focus, keyboard, contrast via the token rules, reduced motion, the two breakpoints), copy that is accurate and plain, code samples that match the gate README, and correctness bugs anywhere in the diff."
+  },
+  "reviewRules": "Every lens applies these checks:\n- A behavior change needs a test that fails without it (ask \"which test fails if this line is reverted?\"); no answer → blocking.\n- Review what ships, not just the diff: copy, samples and status that the change makes stale elsewhere on the page, in CLAUDE.md or in README.md are findings.\n- Fix it or flag it: anything broken the author must have seen is fixed inline (small and safe) or called out — never silently ignored.\n- Read every changed file region in full, plus the code a finding depends on.",
+  "serveHint": "cmd \"python3 tools/dev-server.py $PORT\" serves the page at / and proxies /marketplace-dev and /api/ask to credentagent.ai, so the in-browser demo works; readyPath \"/\""
+}

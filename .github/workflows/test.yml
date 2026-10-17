@@ -1,0 +1,29 @@
+name: test
+# The unit tests and the self-contained check (CLAUDE.md, "Conventions — do not regress") on every PR
+# and every push to main. Required by branch protection, so a merge — which deploys — needs them green.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Unit tests
+        run: node --test "tests/*.test.mjs"
+      - name: index.html loads nothing external
+        run: |
+          n=$(grep -ioE '<script[^>]+src=|<link[^>]+rel="stylesheet"|<img[^>]+src=|url\(\s*https?:' index.html | grep -ic http || true)
+          if [ "$n" -ne 0 ]; then echo "::error file=index.html::loads $n external resource(s) — everything must be inline"; exit 1; fi
