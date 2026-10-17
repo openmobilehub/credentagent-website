@@ -48,6 +48,10 @@
      Licensed under the SIL Open Font License 1.1 (openfontlicense.org). */
   @font-face{font-family:"CA Space Grotesk";font-weight:600;font-style:normal;font-display:block;src:url(data:font/woff2;base64,d09GMgABAAAAAAU8ABAAAAAAC2AAAATgAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGjAbgXgcVgZgP1NUQVQcAGQRCAqFcIUDATYCJAMoCxYABCAFiBgHIAwHG8kJCC4GnDKNh2FkrZy6PBr/iLOThj55FA/f79fOve+j0jxEOskkZAiFjUjztqHipdG8NIsbSUSGB1Xt/fXs7cUfogqRoFBRRYVGKBRKvGdBGIRESKSkGD5P/6XyIKcdnBVeoQmpUjj5BA+Xv+OHfAJkdWu33oUoJLGQo1YY2SjG377+BwCGvbSm9q9sgSSmoCsMoK2srjEEaVldWeLGitFvRk4YBj1WrNSEm3B2wsu9DRHtK4BzlCYmTSRCYv9XJGAQpgHJSCFVZRIZEqnEKX4h6HdOhLSq1NkAr4USIcDjoP4Pgth3xUKAAQHBmcI0J5AhhzAHkUJKnYrkAwUOLEaWAFDfh/oT6osA1E8AQH1Xlv/QUZS/sdXXrfA1jo4CkFxSO4ERI74BcX/vlhdDiaN4et6jJ5wuYXt53pJ6ARXZRgmws53YA6IoAMQ9vNH6DgCeLSHK3f+HNCdQIQACRCfHgHnkTcWYHEceYx4Cko6AApPI1sdRvAFGCZBhiYwLJiSGqBQz58+6aYftNlpnbUJo0Pxb8yE0YBIwDH/EIgCgAUhi7AC7W68fUnjp9GxeMj8BX5U9wh5idXNsA+x+Frr4NqH++RJBf/S/LQ44ky95hAZ0YQtdgWv/NdLY5IE3tZ8oGJuaOtxfAgYfBCO/1LXxavSzd0O6Dt0ls6GBd8c4Gn0Rat/9rD2xHH10mJMHDK5qJ/tDf/Vwvft2Nq19kEOfl+SmgQYMtOxgtp+NQWP5dOIaVUwt20E9TcG9tGuPA51DM9vKhfsXtlvOnLl4yWTaeKZUbdNpbf2mw0bbgFZ325TGjedNHtkNzIfasJb2qElgwrj75i+s/oruiePExiKSuCwNXOBAzKZOls5k7EAsRh2r02IC5UPaCILE9BxDezSMaNR+pDWqK8PT9IrmJtPjYfi+rqf8TMtfWNpc3yhpBvAv39AewloQpVrIiZNEdMKJsM5ZlJW9Im6n5U4NgrW0h8hyxGxQsdQmfQdi0atZKosBaH6iirgLMqGiuacWHugoxXPaDje0K0ydv/DXmuOOtxa2uRHRzcZsQF1YKCyaNTJrB75j+cjy+OxMx4gmDo+Ek2MfPy5zjH87wOkzCEg0p3EfR/htXxnk8Acf1/mbAHS+pa/AZG0iPc/z6GZA4E/LlUuTQOIWAkn0G+h7Tmr+3vQ2ZwBhKoCwhQFNLODKc6YKbxII+l0FzEKuGnVaoaaCdySQSyfBjP1DcO/HUrdCtIpqSM5DDcUuAksrwMBLLDYfwihO0HkYu883MJVe8rUzrPJwT8FgeQUyYRGTxHhhPAi5RGBOc9kU4kpYSxnlKMYqMWEExfkBTTLxocPlYolxCB5hMbhcpe4XESJwLWrUwHiNrXHsqmF0WFANt8DsSC9UiB/qE4rrC6mBL+JZBVt72ZJZ3X4tCxfsi4GAjkg1mLVaKXV2MbeZqnkV0x1aTugVXpKL83dZrtx0U67ONnNa6I4SEvC5ZhRNMnQy9CafVjrQXFaBuHHCZNUl19gJ8HK4tHAuTqU1TohTIrEscXyqoevLRpGZaQHLdU6kcsaMGGGIh17TrPGxpShqfEHvgcp2AUN6wlsJmELxZQmz5NdIy4yZlXGOlNKR3BB3xersdgKmhpGSbnqOr2xqZXpiUpGM+Kpbuzb4kf/njbIMAAA=) format("woff2")}
 
+  /* ---------- skip link: off-screen until keyboard focus ---------- */
+  .skip-link{position:absolute;left:12px;top:12px;z-index:30;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+  .skip-link:focus{width:auto;height:auto;overflow:visible;clip:auto;clip-path:none;padding:10px 16px;border-radius:8px;background:var(--primary);color:var(--on-primary);font-weight:600;outline:3px solid var(--ink);outline-offset:2px}
+
   /* ---------- top nav ---------- */
   nav{
     display:flex;align-items:center;justify-content:space-between;
@@ -577,6 +581,7 @@
 </style>
 </head>
 <body>
+  <a class="skip-link" href="#main">Skip to content</a>
 
   <nav>
     <div class="nav-left">
@@ -597,6 +602,7 @@
     </div>
   </nav>
 
+  <main id="main">
   <section class="hero">
     <div class="col-left">
       <a class="news" href="https://github.com/openmobilehub/credentagent/releases/tag/v0.5.0"><b>NEW</b><span>0.5 — wallet-signed spending grants, a cart per conversation →</span></a>
@@ -1026,6 +1032,7 @@ host.<span class="c-fn">publish</span>(app);                           <span cla
     <div class="logos"><span>OpenID4VP</span><span>WebAuthn</span><span>ISO mdoc</span><span>AP2</span><span>MCP</span><span>Multipaz</span></div>
     <p class="sub" style="margin-top:1rem;font-size:.95rem">An OpenMobileHub project with the OpenWallet Foundation and the AAIF Foundation. Apache-2.0.</p>
   </div></section>
+  </main>
 
   <footer><div class="wrap foot"><a class="logo logo-sm" href="#" aria-label="CredentAgent home"><svg class="logo-mark" width="18" height="18" viewBox="12 8 78 78" fill="none" stroke-linecap="square" aria-hidden="true"><path class="frame" d="M66 20H28a8 8 0 0 0-8 8v40a8 8 0 0 0 8 8h40a8 8 0 0 0 8-8V47" stroke-width="9"/><path class="check" d="M34 49l12 12 38-45" stroke-width="9"/></svg><span class="wordmark">Credent<em>Agent</em></span></a>
     <div class="foot-links">
