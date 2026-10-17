@@ -1,0 +1,38 @@
+{
+  "before": {
+    "attrs": {
+      "src": "https://www.youtube.com/embed/biTqHo2dL7M",
+      "title": "CredentAgent — consent flow demo",
+      "allowfullscreen": true,
+      "loading": "lazy"
+    },
+    "allYtEmbeds": [
+      "https://www.youtube.com/embed/biTqHo2dL7M"
+    ],
+    "ytDocumentRequests": [
+      "https://www.youtube.com/embed/biTqHo2dL7M"
+    ],
+    "youtubeCookiesBeforePlay": [
+      ".youtube.com:__Secure-YNID",
+      ".youtube.com:YSC",
+      ".youtube.com:__Secure-ROLLOUT_TOKEN",
+      ".youtube.com:VISITOR_INFO1_LIVE",
+      ".youtube.com:VISITOR_PRIVACY_METADATA"
+    ]
+  },
+  "after": {
+    "attrs": {
+      "src": "https://www.youtube-nocookie.com/embed/biTqHo2dL7M",
+      "title": "CredentAgent — consent flow demo",
+      "allowfullscreen": true,
+      "loading": "lazy"
+    },
+    "allYtEmbeds": [
+      "https://www.youtube-nocookie.com/embed/biTqHo2dL7M"
+    ],
+    "ytDocumentRequests": [
+      "https://www.youtube-nocookie.com/embed/biTqHo2dL7M"
+    ],
+    "youtubeCookiesBeforePlay": []
+  }
+}

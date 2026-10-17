@@ -1,0 +1,74 @@
+[
+  {
+    "kind": "image",
+    "file": "before-demo-video-tab-01.png",
+    "caption": "before (main): the \"In Claude / ChatGPT / Goose\" tab's demo iframe loads from www.youtube.com (src https://www.youtube.com/embed/biTqHo2dL7M) — the tracking-cookie host",
+    "side": "before",
+    "session": "before-demo-video-tab",
+    "url": "http://localhost:4520/",
+    "at": "2026-10-17T06:46:43.108Z"
+  },
+  {
+    "kind": "events",
+    "session": "before-demo-video-tab",
+    "side": "before",
+    "events": [],
+    "at": "2026-10-17T06:46:43.324Z"
+  },
+  {
+    "kind": "video",
+    "file": "before-demo-video-tab.webm",
+    "caption": "before (main): opening the In Claude / ChatGPT / Goose tab; the readout shows the embed is www.youtube.com/embed/biTqHo2dL7M",
+    "side": "before",
+    "session": "before-demo-video-tab",
+    "at": "2026-10-17T06:46:43.325Z"
+  },
+  {
+    "kind": "image",
+    "file": "after-demo-video-tab-01.png",
+    "caption": "after (fix): the same tab's demo iframe now loads from www.youtube-nocookie.com (src https://www.youtube-nocookie.com/embed/biTqHo2dL7M) — same video id, title, allowfullscreen and loading=\"lazy\"",
+    "side": "after",
+    "session": "after-demo-video-tab",
+    "url": "http://localhost:4521/",
+    "at": "2026-10-17T06:46:49.254Z"
+  },
+  {
+    "kind": "events",
+    "session": "after-demo-video-tab",
+    "side": "after",
+    "events": [],
+    "at": "2026-10-17T06:46:49.431Z"
+  },
+  {
+    "kind": "video",
+    "file": "after-demo-video-tab.webm",
+    "caption": "after (fix): opening the same tab; the readout shows the embed is www.youtube-nocookie.com/embed/biTqHo2dL7M",
+    "side": "after",
+    "session": "after-demo-video-tab",
+    "at": "2026-10-17T06:46:49.432Z"
+  },
+  {
+    "kind": "image",
+    "file": "test-proof-01.png",
+    "caption": "Test proof: the pipeline's own gate runs, and the changed tests failing on main's code and passing on the fix",
+    "side": "proof",
+    "session": "test-proof",
+    "url": "about:blank",
+    "at": "2026-10-17T06:47:05.920Z"
+  },
+  {
+    "kind": "events",
+    "session": "test-proof",
+    "side": "proof",
+    "events": [],
+    "at": "2026-10-17T06:47:09.119Z"
+  },
+  {
+    "kind": "video",
+    "file": "test-proof.webm",
+    "caption": "Test proof: the pipeline's own gate runs, and the changed tests failing on main's code and passing on the fix",
+    "side": "proof",
+    "session": "test-proof",
+    "at": "2026-10-17T06:47:09.119Z"
+  }
+]
