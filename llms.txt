@@ -1,0 +1,61 @@
+# CredentAgent
+
+> CredentAgent is an open-source (Apache-2.0) Node library for MCP servers. It puts a consequential MCP tool —
+> a checkout, a 21+ item, a member price, a payment — behind a verifiable credential the human proves from
+> their phone wallet (OpenID4VP, ISO mdoc). The agent never holds the credential: the tool returns an approve
+> link, the wallet presents the proof to the server, and the server completes the action. Pre-1.0 (v0.5).
+
+## When to use CredentAgent
+
+Reach for CredentAgent when you are building or extending an MCP server and an agent's tool call must not
+complete until a human proves something:
+
+- An age-restricted purchase must not complete until the buyer proves they are over 21 (or another age).
+- A member price or discount should apply only when the shopper proves membership.
+- A payment needs the human's explicit approval of this exact amount and payee.
+- A tool needs any other credential a wallet can hold (prescription, license, employee status) — define it
+  with `defineCredential()` and a DCQL request.
+- An agent should buy unattended within a budget the human signed (spending grants), re-checked server-side
+  on every spend, with a kill-switch.
+- You need human-in-the-loop consent that works in any MCP client (Claude, ChatGPT, Goose) without a client
+  plugin — the tool just returns text and a link.
+
+Don't use it (yet) when:
+
+- You need production-grade issuer verification. Wallet credential checks are `presence-only-demo` today:
+  the wire crypto is real, but there is no issuer trust anchor, so a self-crafted credential would pass.
+  Issuer-verified trust is the next milestone.
+- You need a wallet. CredentAgent is the server side; the demo uses Multipaz Wallet (Android & iOS).
+- Your server isn't Node, or isn't an Express-style app.
+
+## How an agent or developer should use it
+
+1. Install: `npm i @openmobilehub/credentagent-gate` (Node 20+, no MCP SDK dependency).
+2. At startup: `const credentagent = new CredentAgent({ walletOrigin })` then `credentagent.orders.serve(app)`.
+3. In the checkout tool: `const { id, approveUrl } = await credentagent.orders.create({ order, policy: [required(age.over(21)), required(payment.in("usd"))] })`
+   and return `approveUrl` to the agent, which hands it to the human.
+4. In an order-status tool: `await credentagent.orders.retrieve(id)` — MCP has no push, so the agent polls.
+5. Before going live: `credentagent.doctor({ print: true })`.
+
+To try it as an agent, connect the hosted demo store as an MCP server and order the whiskey — the age gate
+fires at checkout: `https://credentagent.ai/marketplace/mcp` (latest release) or
+`https://credentagent.ai/marketplace-dev/mcp` (library `main`).
+
+## Docs
+
+- [Homepage as Markdown](https://credentagent.ai/index.md): what it is, how it works, get started, honest status
+- [Gate README](https://github.com/openmobilehub/credentagent/tree/main/packages/credentagent-gate#readme): the full API of `@openmobilehub/credentagent-gate`
+- [API reference](https://github.com/openmobilehub/credentagent/tree/main/docs/reference): trust model, policies, orders, grants, webhooks
+- [Examples](https://github.com/openmobilehub/credentagent/tree/main/examples): runnable servers, including a whole gated storefront
+
+## Packages
+
+- [@openmobilehub/credentagent-gate](https://www.npmjs.com/package/@openmobilehub/credentagent-gate): the gate — policies, orders, grants, webhooks, `defineHost()`, `doctor()`
+- [@openmobilehub/credentagent-storefront](https://www.npmjs.com/package/@openmobilehub/credentagent-storefront): a ready-to-run MCP store (nine shopping tools, a product widget, a gated checkout); install at the same version as the gate
+
+## Optional
+
+- [Source on GitHub](https://github.com/openmobilehub/credentagent)
+- [Release notes](https://github.com/openmobilehub/credentagent/releases)
+- [About](https://credentagent.ai/about), [Contact](https://credentagent.ai/contact), [Privacy](https://credentagent.ai/privacy)
+- [Sitemap](https://credentagent.ai/sitemap.xml)

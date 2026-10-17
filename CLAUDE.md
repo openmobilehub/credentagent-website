@@ -185,6 +185,23 @@ co-presented with Multipaz. Two npm packages, versioned in lockstep, both live a
   demo credential, so a visitor can complete a proof without installing anything. Must stay labeled
   `presence-only-demo` per the honesty rule.
 
+## Agent-readiness files (is-agentic.com)
+
+Besides `index.html`, the repo publishes files that AI agents and crawlers read. `tests/agent-files.test.mjs` checks them
+the way https://is-agentic.com/scan/credentagent.ai does, so keep it green:
+
+- `llms.txt`: the site for agents, with a **"When to use CredentAgent"** section. `index.md` is the homepage in
+  Markdown. **Keep both in step with `index.html`** whenever the copy, the code samples, the version or the
+  trust levels change (the honesty rule applies to them too).
+- `sitemap.xml` + `robots.txt`; `404.html` / `404.md`; `about.html`, `contact.html`, `privacy.html` (≥500 characters
+  each; GitHub Pages serves them extensionless, as `/about` etc.). The three pages are small and self-contained, and
+  copy the `:root` token blocks and theme boot from `index.html`. If a token changes, copy it across.
+  `privacy.html` must match what the site and demo really do (Ask AI's model providers, the YouTube embed, the demo store).
+- JSON-LD (`SoftwareApplication` + `Organization` + `WebSite`) in `index.html`'s `<head>`. Bump `softwareVersion` with each
+  release. `og.png` is the 1200×630 social card: edit `tools/og-card.html` and run `sh tools/build-og.sh`.
+- credentagent.ai only serves these if the router forwards them (library `deploy/router/vercel.json`, issue #369).
+  Markdown negotiation on `/` and Markdown 404s are the router's job too (#370, #371).
+
 ## Links
 
 - **Library (public):** https://github.com/openmobilehub/credentagent

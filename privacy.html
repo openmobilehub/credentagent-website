@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<script>/* ca-theme-boot:begin */(function(){var t='light';try{if(localStorage.getItem('credentagent.theme')==='dark')t='dark';}catch(e){}document.documentElement.setAttribute('data-theme',t);document.documentElement.style.colorScheme=t;})();/* ca-theme-boot:end */</script>
+<title>Privacy — CredentAgent</title>
+<meta name="description" content="What credentagent.ai and its live demo collect, who receives it, and why.">
+<link rel="canonical" href="https://credentagent.ai/privacy">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none' stroke-linecap='square'%3E%3Crect width='100' height='100' rx='22' fill='%230E1220'/%3E%3Cg transform='translate(50 50) scale(.95) translate(-53 -45)'%3E%3Cpath d='M66 20H28a8 8 0 0 0-8 8v40a8 8 0 0 0 8 8h40a8 8 0 0 0 8-8V47' stroke='%23F2F4F0' stroke-width='9'/%3E%3Cpath d='M34 49l12 12 38-45' stroke='%23C6F53C' stroke-width='9'/%3E%3C/g%3E%3C/svg%3E">
+<style>
+  :root{
+    /* Theme tokens — light is the default; :root[data-theme="dark"] overrides. Palette: CredentAgent brand
+       (ink #0E1220 · paper #F2F4F0 · volt #C6F53C / volt-lt #7FA800) + Precision Hydration purple/orange.
+       Rules: --attention and --brand-mark are never text colours; see tests/theme.test.mjs. */
+    color-scheme:light;
+    --bg:#F2F4F0; --surface:#FFFFFF; --sunk:#E9ECE5; --ink:#0E1220; --mut:#4A5163; --dim:#5C6478; --line:#DCE0D8;
+    --primary:#420A98; --primary-hover:#2E0770; --on-primary:#FFFFFF; --link:#420A98; --accent2:#8A1A9B;
+    --attention:#FF5100; --on-attention:#0E1220; --brand-mark:#7FA800;
+    --ok:#4F6B00; --warn:#A04A00; --err:#B42318;
+    --code-bg:#0E1220; --code-ink:#F2F4F0; --c-key:#C9A7FF; --c-fn:#C6F53C; --c-str:#FFB38A; --c-num:#F0A8FF; --c-cm:#8A93A8;
+    --qr-bg:#FFFFFF; --nav-bg:rgba(242,244,240,.92); --shadow:rgba(14,18,32,.18);
+    --bar-1:#420A98; --bar-2:#8A1A9B; --bar-3:#FF5100;
+  }
+  :root[data-theme="dark"]{
+    color-scheme:dark;
+    --bg:#0E1220; --surface:#151A2C; --sunk:#0A0D18; --ink:#F2F4F0; --mut:#9AA1B4; --dim:#7C849A; --line:#232A40;
+    --primary:#C6F53C; --primary-hover:#A8D62A; --on-primary:#0E1220; --link:#C9A7FF; --accent2:#D78AE6;
+    --attention:#FF5100; --on-attention:#0E1220; --brand-mark:#C6F53C;
+    --ok:#C6F53C; --warn:#FFB072; --err:#F87171;
+    --code-bg:#0A0D18; --code-ink:#F2F4F0;
+    --qr-bg:#FFFFFF; --nav-bg:rgba(14,18,32,.92); --shadow:rgba(0,0,0,.6);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  a{color:var(--link)}
+  header,main,footer{max-width:760px;margin:0 auto;padding:0 20px}
+  header{display:flex;align-items:center;justify-content:space-between;padding-top:22px;padding-bottom:22px;border-bottom:1px solid var(--line)}
+  .logo{display:inline-flex;align-items:center;gap:8px;color:var(--ink);text-decoration:none;font-weight:600;font-size:18px}
+  .logo em{font-style:normal;color:var(--primary)}
+  .theme{background:none;border:1px solid var(--line);color:var(--mut);border-radius:8px;padding:4px 10px;font:inherit;font-size:14px;cursor:pointer}
+  main{padding-top:40px;padding-bottom:56px}
+  h1{font-size:34px;line-height:1.2;margin-bottom:10px}
+  .lede{color:var(--mut);font-size:18px;margin-bottom:28px}
+  h2{font-size:20px;margin:32px 0 8px}
+  p,ul{margin-bottom:12px}
+  ul{padding-left:22px}
+  code{background:var(--sunk);border-radius:4px;padding:1px 5px;font-size:.92em}
+  .note{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;color:var(--mut)}
+  footer{border-top:1px solid var(--line);padding-top:20px;padding-bottom:40px;color:var(--dim);font-size:14px}
+  footer nav{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:8px}
+  @media (max-width:520px){h1{font-size:28px}}
+</style>
+</head>
+<body>
+<header><a class="logo" href="./" aria-label="CredentAgent home"><svg width="22" height="22" viewBox="12 8 78 78" fill="none" stroke-linecap="square" aria-hidden="true"><path d="M66 20H28a8 8 0 0 0-8 8v40a8 8 0 0 0 8 8h40a8 8 0 0 0 8-8V47" stroke="var(--ink)" stroke-width="9"/><path d="M34 49l12 12 38-45" stroke="var(--brand-mark)" stroke-width="9"/></svg><span>Credent<em>Agent</em></span></a><button class="theme" id="theme" type="button">&#9790; Dark</button></header>
+<main>
+<h1>Privacy</h1>
+<p class="lede">What this website and its live demo collect, who receives it, and why. Last updated 2026-10-16.</p>
+<h2>The website</h2>
+<p>credentagent.ai is a static page with no analytics, no advertising and no cookies of its own. It is served by Vercel, which proxies pages hosted on GitHub Pages; both keep standard server logs (such as IP address, user agent and the page requested) under their own privacy policies. Your light/dark theme choice is saved only in your browser's <code>localStorage</code> under <code>credentagent.theme</code>.</p>
+<p>The "In Claude / ChatGPT / Goose" tab embeds a YouTube video. It loads only when that tab is shown; your browser then fetches it from YouTube (Google), which handles that request under Google's privacy policy.</p>
+<h2>The live demo</h2>
+<p>The in-browser demo talks to a demo MCP store hosted by the project on Vercel. The store keeps your cart and order — the products, quantities, prices and order status — so the demo can work. If you complete a checkout with a wallet, the store receives what the wallet presents and records the result of the check on the order. All of this is demo data in a demo store: use only the test credentials the demo describes, never real payment details.</p>
+<h2>Ask AI</h2>
+<p>When you type a question into the demo's Ask box, it is sent with your recent questions and answers and your demo cart or order id to a function on credentagent.ai, which forwards it to an AI model provider — currently Nebius and Z.ai — to produce the answer. Requests are rate-limited by IP address. Don't type personal information into it. The AI can read the demo store and edit your demo cart; it can never check out, pay or touch a spending grant.</p>
+<h2>The library</h2>
+<p>The CredentAgent npm packages run on your own servers and send nothing to the project. What a deployment collects is up to the merchant running it.</p>
+<h2>Questions</h2>
+<p>Email <a href="mailto:info@openmobilehub.org">info@openmobilehub.org</a>, or see the <a href="./contact">contact page</a>.</p>
+</main>
+<footer><nav><a href="./">Home</a><a href="./about">About</a><a href="./contact">Contact</a><a href="./privacy">Privacy</a><a href="./llms.txt">llms.txt</a><a href="https://github.com/openmobilehub/credentagent">GitHub</a></nav>
+Apache-2.0 · An Open Mobile Hub project (Linux Foundation / OpenWallet Foundation)</footer>
+<script>(function(){var b=document.getElementById('theme');function s(){var d=document.documentElement.getAttribute('data-theme')==='dark';b.textContent=d?'\u2600 Light':'\u263E Dark';}s();b.addEventListener('click',function(){var t=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',t);document.documentElement.style.colorScheme=t;try{localStorage.setItem('credentagent.theme',t);}catch(e){}s();});})();</script>
+</body>
+</html>
