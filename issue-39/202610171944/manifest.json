@@ -1,0 +1,146 @@
+[
+  {
+    "kind": "image",
+    "file": "before-hero-01.png",
+    "caption": "before (main), 1280px light: H1 reads \"Let AI agents shop your store. Make them ask first.\" — H1 names CredentAgent: false; hero mentions open source: true, MCP: true; horizontal overflow: 0px",
+    "side": "before",
+    "session": "before-hero",
+    "url": "http://localhost:4490/",
+    "at": "2026-10-17T19:46:25.532Z"
+  },
+  {
+    "kind": "image",
+    "file": "before-hero-02.png",
+    "caption": "before (main), 880px light: H1 reads \"Let AI agents shop your store. Make them ask first.\" — H1 names CredentAgent: false; hero mentions open source: true, MCP: true; horizontal overflow: 0px",
+    "side": "before",
+    "session": "before-hero",
+    "url": "http://localhost:4490/",
+    "at": "2026-10-17T19:46:26.483Z"
+  },
+  {
+    "kind": "image",
+    "file": "before-hero-03.png",
+    "caption": "before (main), 520px light: H1 reads \"Let AI agents shop your store. Make them ask first.\" — H1 names CredentAgent: false; hero mentions open source: true, MCP: true; horizontal overflow: 0px",
+    "side": "before",
+    "session": "before-hero",
+    "url": "http://localhost:4490/",
+    "at": "2026-10-17T19:46:27.427Z"
+  },
+  {
+    "kind": "image",
+    "file": "before-hero-04.png",
+    "caption": "before (main), 1280px dark: H1 reads \"Let AI agents shop your store. Make them ask first.\" — H1 names CredentAgent: false; hero mentions open source: true, MCP: true; horizontal overflow: 0px",
+    "side": "before",
+    "session": "before-hero",
+    "url": "http://localhost:4490/",
+    "at": "2026-10-17T19:46:29.017Z"
+  },
+  {
+    "kind": "image",
+    "file": "before-hero-05.png",
+    "caption": "before (main), 520px dark: H1 reads \"Let AI agents shop your store. Make them ask first.\" — H1 names CredentAgent: false; hero mentions open source: true, MCP: true; horizontal overflow: 0px",
+    "side": "before",
+    "session": "before-hero",
+    "url": "http://localhost:4490/",
+    "at": "2026-10-17T19:46:29.959Z"
+  },
+  {
+    "kind": "events",
+    "session": "before-hero",
+    "side": "before",
+    "events": [],
+    "at": "2026-10-17T19:46:30.080Z"
+  },
+  {
+    "kind": "video",
+    "file": "before-hero.webm",
+    "caption": "before (main): hero at 1280/880/520px in light and dark",
+    "side": "before",
+    "session": "before-hero",
+    "at": "2026-10-17T19:46:30.081Z"
+  },
+  {
+    "kind": "image",
+    "file": "after-hero-01.png",
+    "caption": "after (fix), 1280px light: H1 reads \"Let AI agents shop your store. CredentAgent makes them ask first.\" — H1 names CredentAgent: true; hero mentions open source: true, MCP: true; horizontal overflow: 0px",
+    "side": "after",
+    "session": "after-hero",
+    "url": "http://localhost:4491/",
+    "at": "2026-10-17T19:46:32.286Z"
+  },
+  {
+    "kind": "image",
+    "file": "after-hero-02.png",
+    "caption": "after (fix), 880px light: H1 reads \"Let AI agents shop your store. CredentAgent makes them ask first.\" — H1 names CredentAgent: true; hero mentions open source: true, MCP: true; horizontal overflow: 0px",
+    "side": "after",
+    "session": "after-hero",
+    "url": "http://localhost:4491/",
+    "at": "2026-10-17T19:46:33.250Z"
+  },
+  {
+    "kind": "image",
+    "file": "after-hero-03.png",
+    "caption": "after (fix), 520px light: H1 reads \"Let AI agents shop your store. CredentAgent makes them ask first.\" — H1 names CredentAgent: true; hero mentions open source: true, MCP: true; horizontal overflow: 0px",
+    "side": "after",
+    "session": "after-hero",
+    "url": "http://localhost:4491/",
+    "at": "2026-10-17T19:46:34.192Z"
+  },
+  {
+    "kind": "image",
+    "file": "after-hero-04.png",
+    "caption": "after (fix), 1280px dark: H1 reads \"Let AI agents shop your store. CredentAgent makes them ask first.\" — H1 names CredentAgent: true; hero mentions open source: true, MCP: true; horizontal overflow: 0px",
+    "side": "after",
+    "session": "after-hero",
+    "url": "http://localhost:4491/",
+    "at": "2026-10-17T19:46:35.805Z"
+  },
+  {
+    "kind": "image",
+    "file": "after-hero-05.png",
+    "caption": "after (fix), 520px dark: H1 reads \"Let AI agents shop your store. CredentAgent makes them ask first.\" — H1 names CredentAgent: true; hero mentions open source: true, MCP: true; horizontal overflow: 0px",
+    "side": "after",
+    "session": "after-hero",
+    "url": "http://localhost:4491/",
+    "at": "2026-10-17T19:46:36.761Z"
+  },
+  {
+    "kind": "events",
+    "session": "after-hero",
+    "side": "after",
+    "events": [],
+    "at": "2026-10-17T19:46:36.955Z"
+  },
+  {
+    "kind": "video",
+    "file": "after-hero.webm",
+    "caption": "after (fix): hero at 1280/880/520px in light and dark",
+    "side": "after",
+    "session": "after-hero",
+    "at": "2026-10-17T19:46:36.956Z"
+  },
+  {
+    "kind": "image",
+    "file": "test-proof-01.png",
+    "caption": "Test proof: the pipeline's own gate runs, and the changed tests failing on main's code and passing on the fix",
+    "side": "proof",
+    "session": "test-proof",
+    "url": "about:blank",
+    "at": "2026-10-17T19:46:53.795Z"
+  },
+  {
+    "kind": "events",
+    "session": "test-proof",
+    "side": "proof",
+    "events": [],
+    "at": "2026-10-17T19:46:57.041Z"
+  },
+  {
+    "kind": "video",
+    "file": "test-proof.webm",
+    "caption": "Test proof: the pipeline's own gate runs, and the changed tests failing on main's code and passing on the fix",
+    "side": "proof",
+    "session": "test-proof",
+    "at": "2026-10-17T19:46:57.042Z"
+  }
+]

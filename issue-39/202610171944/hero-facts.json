@@ -1,0 +1,106 @@
+{
+  "before": {
+    "1280-light": {
+      "h1": "Let AI agents shop your store. Make them ask first.",
+      "h1HasBrand": false,
+      "hasAskSpan": true,
+      "heroHasOpenSource": true,
+      "heroHasMCP": true,
+      "canonical": "https://credentagent.ai/",
+      "title": "CredentAgent — make AI agents ask before they buy",
+      "overflowX": 0
+    },
+    "880-light": {
+      "h1": "Let AI agents shop your store. Make them ask first.",
+      "h1HasBrand": false,
+      "hasAskSpan": true,
+      "heroHasOpenSource": true,
+      "heroHasMCP": true,
+      "canonical": "https://credentagent.ai/",
+      "title": "CredentAgent — make AI agents ask before they buy",
+      "overflowX": 0
+    },
+    "520-light": {
+      "h1": "Let AI agents shop your store. Make them ask first.",
+      "h1HasBrand": false,
+      "hasAskSpan": true,
+      "heroHasOpenSource": true,
+      "heroHasMCP": true,
+      "canonical": "https://credentagent.ai/",
+      "title": "CredentAgent — make AI agents ask before they buy",
+      "overflowX": 0
+    },
+    "1280-dark": {
+      "h1": "Let AI agents shop your store. Make them ask first.",
+      "h1HasBrand": false,
+      "hasAskSpan": true,
+      "heroHasOpenSource": true,
+      "heroHasMCP": true,
+      "canonical": "https://credentagent.ai/",
+      "title": "CredentAgent — make AI agents ask before they buy",
+      "overflowX": 0
+    },
+    "520-dark": {
+      "h1": "Let AI agents shop your store. Make them ask first.",
+      "h1HasBrand": false,
+      "hasAskSpan": true,
+      "heroHasOpenSource": true,
+      "heroHasMCP": true,
+      "canonical": "https://credentagent.ai/",
+      "title": "CredentAgent — make AI agents ask before they buy",
+      "overflowX": 0
+    }
+  },
+  "after": {
+    "1280-light": {
+      "h1": "Let AI agents shop your store. CredentAgent makes them ask first.",
+      "h1HasBrand": true,
+      "hasAskSpan": true,
+      "heroHasOpenSource": true,
+      "heroHasMCP": true,
+      "canonical": "https://credentagent.ai/",
+      "title": "CredentAgent — make AI agents ask before they buy",
+      "overflowX": 0
+    },
+    "880-light": {
+      "h1": "Let AI agents shop your store. CredentAgent makes them ask first.",
+      "h1HasBrand": true,
+      "hasAskSpan": true,
+      "heroHasOpenSource": true,
+      "heroHasMCP": true,
+      "canonical": "https://credentagent.ai/",
+      "title": "CredentAgent — make AI agents ask before they buy",
+      "overflowX": 0
+    },
+    "520-light": {
+      "h1": "Let AI agents shop your store. CredentAgent makes them ask first.",
+      "h1HasBrand": true,
+      "hasAskSpan": true,
+      "heroHasOpenSource": true,
+      "heroHasMCP": true,
+      "canonical": "https://credentagent.ai/",
+      "title": "CredentAgent — make AI agents ask before they buy",
+      "overflowX": 0
+    },
+    "1280-dark": {
+      "h1": "Let AI agents shop your store. CredentAgent makes them ask first.",
+      "h1HasBrand": true,
+      "hasAskSpan": true,
+      "heroHasOpenSource": true,
+      "heroHasMCP": true,
+      "canonical": "https://credentagent.ai/",
+      "title": "CredentAgent — make AI agents ask before they buy",
+      "overflowX": 0
+    },
+    "520-dark": {
+      "h1": "Let AI agents shop your store. CredentAgent makes them ask first.",
+      "h1HasBrand": true,
+      "hasAskSpan": true,
+      "heroHasOpenSource": true,
+      "heroHasMCP": true,
+      "canonical": "https://credentagent.ai/",
+      "title": "CredentAgent — make AI agents ask before they buy",
+      "overflowX": 0
+    }
+  }
+}
