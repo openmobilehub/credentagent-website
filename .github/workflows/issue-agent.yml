@@ -1,0 +1,49 @@
+name: issue-agent
+# In the Actions list: which issue, and what started it (a run for another label shows that label and is skipped).
+run-name: "issue-agent #${{ github.event.issue.number || inputs.issue }} · ${{ github.event_name == 'workflow_dispatch' && 'run by hand' || format('labelled {0} · {1}', github.event.label.name, github.event.issue.title) }}"
+
+# Label an issue `agent` (write access needed) → agents implement it and a draft PR comes back with
+# acceptance criteria, the pipeline's own test runs, three reviews and before/after screenshots.
+# The pipeline is the library's (openmobilehub/credentagent, ci/issue-agent/README.md); this repo's
+# .github/issue-agent.json tells it how to test this site.
+#
+# Needs: the CLAUDE_CODE_OAUTH_TOKEN secret (or ANTHROPIC_API_KEY with the CLAUDE_AUTH variable "api").
+# The PR always opens as a draft for a human (`review_loop: false`: this repo has no Claude review loop).
+# An optional AGENT_GH_TOKEN secret lets the draft start the `test` workflow on its own.
+
+on:
+  issues:
+    types: [labeled]
+  workflow_dispatch:
+    inputs:
+      issue:
+        description: "Issue number"
+        required: true
+      force:
+        description: "Skip the preflight (labels / existing PRs)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: issue-agent-${{ github.event.issue.number || inputs.issue }}
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  run:
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'agent'
+    uses: openmobilehub/credentagent/.github/workflows/issue-agent-run.yml@main
+    # The most any job gets; each narrows it (the agents' job: contents read, no token).
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    with:
+      issue: ${{ format('{0}', github.event.issue.number || inputs.issue) }}
+      sender: ${{ github.event.sender.login || github.actor }}
+      snapshot_at: ${{ github.event.issue.updated_at }}
+      force: ${{ inputs.force == true }}
+      claude_auth: ${{ vars.CLAUDE_AUTH }}
+      review_loop: false
+    secrets: inherit
