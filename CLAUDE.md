@@ -21,7 +21,7 @@ directly from `file://`.
 CredentAgent: an AI agent proves a verifiable credential from the user's wallet **before** a consequential
 action completes. **Identity leads; payments is one application.** An OpenMobileHub / OpenWallet
 Foundation / AAIF Foundation project, heading to the Global Digital Collaboration Conference (Sept 1–2)
-co-presented with Multipaz. Two npm packages, versioned in lockstep, both live at `0.5.0`:
+co-presented with Multipaz. Two npm packages, versioned in lockstep, both live at `0.6.0`:
 `@openmobilehub/credentagent-gate` (the Gate — `new CredentAgent()`, `credentagent.mount(app)`, policy of
 `required()`/`optional()` credentials, plus `orders`, `grants`, `webhooks`, `defineHost()`, `doctor()`,
 `branding`) and `@openmobilehub/credentagent-storefront`.
@@ -170,8 +170,10 @@ co-presented with Multipaz. Two npm packages, versioned in lockstep, both live a
 
 ## Current state (2026-09-27)
 
-- The site reflects the published **0.5.0** packages (released 2026-09-26: claude.ai's MCP 2026-07-28
-  revision, wallet-signed spending grants, a cart per conversation). The in-browser demo uses the dev
+- The site reflects the published **0.6.0** packages (released 2026-10-19: an AI agent can spend a
+  permission you signed on your phone, AP2 delegation end to end; path-prefix support; `/version`).
+  On every library release, bump the version strings here: `index.html` (JSON-LD `softwareVersion`,
+  nav pill, NEW strip, storefront `npm i` line), `index.md`, `llms.txt` and this file. The in-browser demo uses the dev
   store `/marketplace-dev/mcp` (library `main`, since 2026-09-27). Hosted connector: `https://credentagent.ai/marketplace/mcp`
   (dev twin running library `main`: `/marketplace-dev/mcp`).
 - **A library fix reaches the live demo on merge — no release needed.** The library's `deploy-dev`
