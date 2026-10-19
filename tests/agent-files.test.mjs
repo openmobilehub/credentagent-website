@@ -84,3 +84,18 @@ test('the new pages stay self-contained (no external script, stylesheet or image
     assert.deepEqual(hits, [], `${f} loads something external`);
   }
 });
+
+test('the hero names the brand: CredentAgent in the H1; H1 + subhead say open source and MCP', () => {
+  const h1 = html.match(/<h1>([\s\S]*?)<\/h1>/);
+  assert.ok(h1, 'index.html has no <h1>');
+  assert.match(h1[1], /class="h1-ask"/, 'the H1 lost its .h1-ask accent');
+  assert.match(text(h1[1]).replace(/\s+/g, ''), /CredentAgent/, 'the H1 does not name CredentAgent');
+  const sub = html.match(/<p class="subhead">([\s\S]*?)<\/p>/);
+  assert.ok(sub, 'the hero has no subhead');
+  const hero = text(h1[1]) + ' ' + text(sub[1]);
+  assert.match(hero, /open[- ]source/i, 'the hero does not say open source');
+  assert.match(hero, /\bMCP\b/, 'the hero does not say MCP');
+  assert.match(html.match(/<title>([^<]*)<\/title>/)[1], /CredentAgent/);
+  assert.match(read('index.md').split('\n')[0], /^# .*CredentAgent/);
+  assert.match(read('llms.txt').split('\n')[0], /^# CredentAgent/);
+});
