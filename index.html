@@ -1576,19 +1576,24 @@ var CADemo = (function () {
 
   // Only plain https origins (optionally *.subdomain / :port) and data: may enter the policy.
   var CSP_SOURCE = /^(https:\/\/(\*\.)?[a-z0-9-]+(\.[a-z0-9-]+)*(:\d{1,5})?|data:)$/i;
-  function cspSources(list) {
-    var ok = (Array.isArray(list) ? list : []).filter(function (s) { return typeof s === 'string' && CSP_SOURCE.test(s); });
+  // base: sources the host always allows, ahead of the declared ones (deduplicated).
+  function cspSources(list, base) {
+    var ok = (base || []).concat((Array.isArray(list) ? list : []).filter(function (s) { return typeof s === 'string' && CSP_SOURCE.test(s); }));
+    ok = ok.filter(function (s, i) { return ok.indexOf(s) === i; });
     return ok.length ? ok.join(' ') : "'none'";
   }
 
-  // Enforce the widget's own declared CSP (_meta.ui.csp) inside the sandboxed frame.
+  // Enforce the widget's own declared CSP (_meta.ui.csp) inside the sandboxed frame, on top of the
+  // MCP Apps default view CSP's `data:` for images and media — widgets don't declare the bare scheme
+  // (scanners refuse it), and the storefront's product images are inline data: SVGs.
   api.buildSrcdoc = function (html, csp) {
     csp = csp || {};
     var res = cspSources(csp.resourceDomains);
+    var inline = cspSources(csp.resourceDomains, ['data:']);
     var conn = cspSources(csp.connectDomains);
     var policy = [
       "default-src 'none'", "script-src 'unsafe-inline'", "style-src 'unsafe-inline'",
-      'img-src ' + res, 'font-src ' + res, 'media-src ' + res, 'connect-src ' + conn,
+      'img-src ' + inline, 'font-src ' + res, 'media-src ' + inline, 'connect-src ' + conn,
       "form-action 'none'", "base-uri 'none'"
     ].join('; ');
     var meta = '<meta http-equiv="Content-Security-Policy" content="' + policy.replace(/"/g, '&quot;') + '">';

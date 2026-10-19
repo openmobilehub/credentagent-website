@@ -294,15 +294,16 @@ test('buildSrcdoc enforces the widget’s declared CSP', () => {
   });
   assert.ok(out.includes(
     '<head><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src \'unsafe-inline\'; ' +
-    'style-src \'unsafe-inline\'; img-src https://picsum.photos data:; font-src https://picsum.photos data:; ' +
-    'media-src https://picsum.photos data:; connect-src https://credentagent-demo-dev.vercel.app; ' +
+    'style-src \'unsafe-inline\'; img-src data: https://picsum.photos; font-src https://picsum.photos data:; ' +
+    'media-src data: https://picsum.photos; connect-src https://credentagent-demo-dev.vercel.app; ' +
     'form-action \'none\'; base-uri \'none\'"><title>'));
 });
 
 test('buildSrcdoc locks everything down when no CSP is declared', () => {
   const out = D.buildSrcdoc('<p>hi</p>', undefined);
   assert.ok(out.startsWith('<meta http-equiv="Content-Security-Policy"'));
-  assert.ok(out.includes("img-src 'none'"));
+  assert.ok(out.includes('img-src data:;'));         // the MCP Apps baseline: inline images always allowed
+  assert.ok(out.includes("font-src 'none'"));
   assert.ok(out.includes("connect-src 'none'"));
   assert.ok(out.endsWith('<p>hi</p>'));
 });
@@ -313,8 +314,22 @@ test('buildSrcdoc drops CSP sources that are not plain https origins or data:', 
     connectDomains: ['https://api.example:8443', 'https://evil.example/path', '*'],
   });
   assert.ok(!out.includes('worker-src'));
-  assert.ok(out.includes('img-src https://ok.example data:;'));
+  assert.ok(out.includes('img-src data: https://ok.example;'));
   assert.ok(out.includes('connect-src https://api.example:8443;'));
+});
+
+// The MCP Apps default view CSP has `img-src 'self' data:` and `media-src 'self' data:`, so a widget
+// needn't (and, for scanners like Is Agentic, mustn't) declare the bare `data:` scheme. The
+// storefront's product images are inline data: SVGs (openmobilehub/credentagent#385).
+test('buildSrcdoc allows data: images and media even when the widget declares only https origins', () => {
+  const out = D.buildSrcdoc('<head></head>', {
+    resourceDomains: ['https://picsum.photos', 'https://fastly.picsum.photos'],
+    connectDomains: ['https://credentagent.ai'],
+  });
+  assert.ok(out.includes('img-src data: https://picsum.photos https://fastly.picsum.photos;'));
+  assert.ok(out.includes('media-src data: https://picsum.photos https://fastly.picsum.photos;'));
+  assert.ok(out.includes('font-src https://picsum.photos https://fastly.picsum.photos;'));
+  assert.ok(out.includes('connect-src https://credentagent.ai;'));
 });
 
 test('buildSrcdoc injects into <head>, not <header>', () => {
