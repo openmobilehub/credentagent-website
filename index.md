@@ -6,7 +6,7 @@
 > proof from the shopper's phone wallet. The agent does the shopping; the human approves what matters, and
 > your server enforces it.
 
-v0.5 · Apache-2.0 · Express + any MCP client (Claude, ChatGPT, Goose) · OpenID4VP · pre-1.0, honest status
+v0.6 · Apache-2.0 · Express + any MCP client (Claude, ChatGPT, Goose) · OpenID4VP · pre-1.0, honest status
 
 ```sh
 npm i @openmobilehub/credentagent-gate

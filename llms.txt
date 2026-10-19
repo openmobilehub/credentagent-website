@@ -3,7 +3,7 @@
 > CredentAgent is an open-source (Apache-2.0) Node library for MCP servers. It puts a consequential MCP tool —
 > a checkout, a 21+ item, a member price, a payment — behind a verifiable credential the human proves from
 > their phone wallet (OpenID4VP, ISO mdoc). The agent never holds the credential: the tool returns an approve
-> link, the wallet presents the proof to the server, and the server completes the action. Pre-1.0 (v0.5).
+> link, the wallet presents the proof to the server, and the server completes the action. Pre-1.0 (v0.6).
 
 ## When to use CredentAgent
 
